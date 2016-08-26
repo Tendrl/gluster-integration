@@ -1,6 +1,6 @@
-from gevent import getcurrent
-from functools import wraps
 from contextlib import contextmanager
+from functools import wraps
+from gevent import getcurrent
 
 
 class ForbiddenYield(Exception):
@@ -25,9 +25,10 @@ def nosleep_mgr():
 
 
 def nosleep(func):
-    """
-    This decorator is used to assert that no geven greenlet yields
+    """This decorator is used to assert that no geven greenlet yields
+
     occur in the decorated function.
+
     """
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -41,13 +42,13 @@ if __name__ == '__main__':
     # Tests for nosleep()
     # ===================
 
-    import gevent.queue
     import gevent.greenlet
+    import gevent.queue
     from gevent import sleep
 
     # This should raise no exception (print doesn't yield)
     with nosleep_mgr():
-        print "test print!"
+        print("test print!")
 
     # This should raise an exception when we try push to a fixed size queue
     try:
@@ -60,7 +61,8 @@ if __name__ == '__main__':
     else:
         raise AssertionError("Failed")
 
-    # This should raise no exception when we try push to an unlimited size queue
+    # This should raise no exception when we try push to an unlimited
+    # size queue
     bigq = gevent.queue.Queue(0)
     with nosleep_mgr():
         for i in range(0, 10000):

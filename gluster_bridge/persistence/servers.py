@@ -1,9 +1,10 @@
-from etcdobj import EtcdObj, fields
+from etcdobj import EtcdObj
+from etcdobj import fields
 
 
 class Peer(EtcdObj):
-    """
-    A table of the peers seen by the pull, lazily updated
+    """A table of the peers seen by the pull, lazily updated
+
     """
     __name__ = 'gluster/peers/%s'
 
@@ -18,8 +19,8 @@ class Peer(EtcdObj):
 
 
 class Volume(EtcdObj):
-    """
-    A table of the volumes seen by the pull.
+    """A table of the volumes seen by the pull.
+
     """
     __name__ = 'gluster/volumes/%s'
 
@@ -35,8 +36,8 @@ class Volume(EtcdObj):
 
 
 class Brick(EtcdObj):
-    """
-    A table of the volumes seen by the pull.
+    """A table of the volumes seen by the pull.
+
     """
     __name__ = 'gluster/bricks/%s'
 
@@ -47,7 +48,6 @@ class Brick(EtcdObj):
     status = fields.StrField("status")
     filesystem_type = fields.StrField("fs_type")
     mount_opts = fields.StrField("mount_opts")
-
 
     def render(self):
         self.__name__ = self.__name__ % (self.path.replace("/", "_"))

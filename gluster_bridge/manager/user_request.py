@@ -1,11 +1,13 @@
 import logging
-import uuid
-
 from tendrl.gluster_bridge.common.salt_wrapper import LocalClient
-from tendrl.gluster_bridge.manager import config
+from tendrl.gluster_bridge.common.types import OsdMap
+from tendrl.gluster_bridge.common.types import PgSummary
+from tendrl.gluster_bridge.common.types import USER_REQUEST_COMPLETE
+from tendrl.gluster_bridge.common.types import USER_REQUEST_SUBMITTED
 from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.common.types import OsdMap, PgSummary, USER_REQUEST_COMPLETE, USER_REQUEST_SUBMITTED
+from tendrl.gluster_bridge.manager import config
 from tendrl.gluster_bridge.util import now
+import uuid
 
 
 class PublishError(Exception):
@@ -13,30 +15,50 @@ class PublishError(Exception):
 
 
 class UserRequestBase(object):
-    """
-    A request acts on one or more gluster_bridge-managed objects, i.e.
+    """A request acts on one or more gluster_bridge-managed objects, i.e.
+
     mon, mds, osd, pg.
 
     Amidst the terminology mess of 'jobs', 'commands', 'operations', this class
+
     is named for clarity: it's an operation at an end-user level of
+
     granularity, something that might be a button in the UI.
 
     UserRequests are usually remotely executed on a mon.  However, there
+
     may be a final step of updating the state of ClusterMonitor in order
+
     that subsequent REST API consumer reads return values consistent with
+
     the job having completed, e.g. waiting for the OSD map to be up
+
     to date before calling a pool creation complete.  For this reason,
+
     UserRequests have a local ID and completion state that is independent
+
     of their remote ID (salt jid).  UserRequests may also execute more than
+
     one JID in the course of their lifetime.
 
     Requests have the following lifecycle:
+
      NEW object is created, it has all the information needed to do its job
+
          other than where it should execute.
-     SUBMITTED the request has started executing, usually this will have involved sending
-               out a salt job, so .jid is often set but not always.
-     COMPLETE no further action, this instance will remain constant from this point on.
-              this does not indicate anything about success or failure.
+
+     SUBMITTED the request has started executing, usually this will have
+
+               involved sending out a salt job, so .jid is often set but
+
+               not always.
+
+     COMPLETE no further action, this instance will remain constant from
+
+              this point on. this does not indicate anything about success
+
+              or failure.
+
     """
 
     NEW = 'new'
@@ -45,11 +67,14 @@ class UserRequestBase(object):
     states = [NEW, SUBMITTED, COMPLETE]
 
     def __init__(self, fsid, cluster_name):
-        """
-        Requiring cluster_name and fsid is redundant (ideally everything would
+        """Requiring cluster_name and fsid is redundant (ideally everything would
+
         speak in terms of fsid) but convenient, because the librados interface
+
         wants a cluster name when you create a client, and otherwise we would
+
         have to look up via ceph.conf.
+
         """
         # getChild isn't in 2.6
         logname = '.'.join((log.name, self.__class__.__name__))
@@ -85,25 +110,30 @@ class UserRequestBase(object):
 
     @property
     def associations(self):
-        """
-        A dictionary of Event-compatible assocations for this request, indicating
-        which cluster/server/services we are affecting.
+        """A dictionary of Event-compatible assocations for this request,
+
+        indicating which cluster/server/services we are affecting.
+
         """
         return {}
 
     @property
     def headline(self):
-        """
-        Single line describing what the request is trying to accomplish.
+        """Single line describing what the request is trying to accomplish.
+
         """
         raise NotImplementedError()
 
     @property
     def status(self):
-        """
-        Single line describing which phase of the request is currently happening, useful
-        to distinguish what's going on for long running operations.  For simple quick
-        operations no need to return anything here as the headline tells all.
+        """Single line describing which phase of the request is currently
+
+        happening, useful to distinguish what's going on for long running
+
+        operations.  For simple quick operations no need to return anything
+
+        here as the headline tells all.
+
         """
         if self.state != self.COMPLETE:
             return "Running"
@@ -114,18 +144,20 @@ class UserRequestBase(object):
 
     @property
     def awaiting_versions(self):
-        """
-        Requests indicate that they are waiting for particular sync objects, optionally
-        specifying the particular version they are waiting for (otherwise set version
-        to None).
+        """Requests indicate that they are waiting for particular sync objects,
+
+        optionally specifying the particular version they are waiting for
+
+        (otherwise set version to None).
 
         :return dict of SyncObject subclass to (version or None)
+
         """
         return {}
 
     def submit(self, minion_id):
-        """
-        Start remote execution phase by publishing a job to salt.
+        """Start remote execution phase by publishing a job to salt.
+
         """
         assert self.state == self.NEW
 
@@ -138,34 +170,42 @@ class UserRequestBase(object):
         raise NotImplementedError()
 
     def complete_jid(self, result):
-        """
-        Call this when remote execution is done.
+        """Call this when remote execution is done.
 
-        Implementations must always update .jid appropriately here: either to the
-        jid of a new job, or to None.
+        Implementations must always update .jid appropriately here: either to
+
+        the jid of a new job, or to None.
+
         """
         self.result = result
-        self.log.info("Request %s JID %s completed with result=%s" % (self.id, self.jid, self.result))
+        self.log.info("Request %s JID %s completed with result=%s" % (
+            self.id, self.jid, self.result)
+        )
         self.jid = None
 
-        # This is a default behaviour for UserRequests which don't override this method:
-        # assume completion of a JID means the job is now done.
+        # This is a default behaviour for UserRequests which don't override
+        # this method: assume completion of a JID means the job is now done.
         self.complete()
 
     def complete(self):
-        """
-        Call this when you're all done
+        """Call this when you're all done
+
         """
         assert self.state != self.COMPLETE
         assert self.jid is None
 
-        self.log.info("Request %s completed with error=%s (%s)" % (self.id, self.error, self.error_message))
+        self.log.info(
+            "Request %s completed with error=%s (%s)" % (
+                self.id, self.error, self.error_message)
+        )
         self.state = self.COMPLETE
         self.completed_at = now()
 
     def on_map(self, sync_type, sync_object):
-        """
-        It is only valid to call this for sync_types which are currently in awaiting_versions
+        """It is only valid to call this for sync_types which are currently
+
+        in awaiting_versions
+
         """
         pass
 
@@ -183,9 +223,10 @@ class UserRequest(UserRequestBase):
 
 
 class RadosRequest(UserRequest):
+    """A user request whose remote operations consist of librados mon commands
+
     """
-    A user request whose remote operations consist of librados mon commands
-    """
+
     def __init__(self, headline, fsid, cluster_name, commands):
         self._commands = commands
         super(RadosRequest, self).__init__(headline, fsid, cluster_name)
@@ -195,7 +236,9 @@ class RadosRequest(UserRequest):
             commands = self._commands
 
         self.log.debug("%s._submit: %s/%s/%s" % (self.__class__.__name__,
-                                                 self._minion_id, self._cluster_name, commands))
+                                                 self._minion_id,
+                                                 self._cluster_name, commands)
+                       )
 
         client = LocalClient(config.get('bridge', 'salt_config_path'))
         pub_data = client.run_job(self._minion_id, 'ceph.rados_commands',
@@ -214,12 +257,15 @@ class RadosRequest(UserRequest):
 
 
 class SaltRequest(UserRequest):
-    """
-    A request whose remote operations consist of direct salt fn calls, not
+    """A request whose remote operations consist of direct salt fn calls, not
+
     specific to ceph or a ceph cluster.
+
     """
+
     def __init__(self, cmd, args):
-        super(SaltRequest, self).__init__("salt: %s: %s" % (cmd, args), None, None)
+        super(SaltRequest, self).__init__(
+            "salt: %s: %s" % (cmd, args), None, None)
         self._cmd = cmd
         self._args = args
 
@@ -240,13 +286,15 @@ class SaltRequest(UserRequest):
 
 
 class OsdMapModifyingRequest(RadosRequest):
-    """
-    Specialization of UserRequest which waits for Calamari's copy of
+    """Specialization of UserRequest which waits for Calamari's copy of
+
     the OsdMap sync object to catch up after execution of RADOS commands.
+
     """
 
     def __init__(self, headline, fsid, cluster_name, commands):
-        super(OsdMapModifyingRequest, self).__init__(headline, fsid, cluster_name, commands)
+        super(OsdMapModifyingRequest, self).__init__(
+            headline, fsid, cluster_name, commands)
         self._await_version = None
 
     @property
@@ -272,8 +320,8 @@ class OsdMapModifyingRequest(RadosRequest):
             return {}
 
     def complete_jid(self, result):
-        # My remote work is done, record the version of the map that I will wait for
-        # and start waiting for it.
+        # My remote work is done, record the version of the map that I
+        # will wait for and start waiting for it.
         self.jid = None
         self.result = result
         self._await_version = result['versions']['osd_map']
@@ -284,20 +332,29 @@ class OsdMapModifyingRequest(RadosRequest):
 
         ready = osd_map.version >= self._await_version
         if ready:
-            self.log.debug("check passed (%s >= %s)" % (osd_map.version, self._await_version))
+            self.log.debug(
+                "check passed (%s >= %s)" % (
+                    osd_map.version, self._await_version)
+            )
             self.complete()
         else:
-            self.log.debug("check pending (%s < %s)" % (osd_map.version, self._await_version))
+            self.log.debug(
+                "check pending (%s < %s)" % (
+                    osd_map.version, self._await_version)
+            )
 
 
 class PoolCreatingRequest(OsdMapModifyingRequest):
-    """
-    Like an OsdMapModifyingRequest, but additionally wait for all PGs in the resulting pool
-    to leave state 'creating' before completing.
+    """Like an OsdMapModifyingRequest, but additionally wait for all
+
+    PGs in the resulting pool to leave state 'creating' before completing.
+
     """
 
     def __init__(self, headline, fsid, cluster_name, pool_name, commands):
-        super(PoolCreatingRequest, self).__init__(headline, fsid, cluster_name, commands)
+        super(
+            PoolCreatingRequest, self
+        ).__init__(headline, fsid, cluster_name, commands)
         self._awaiting_pgs = False
         self._pool_name = pool_name
 
@@ -318,7 +375,9 @@ class PoolCreatingRequest(OsdMapModifyingRequest):
             assert sync_type == PgSummary
             pg_summary = sync_object
             pgs_not_creating = 0
-            for state_tuple, count in pg_summary.data['by_pool'][self._pool_id].items():
+            for state_tuple, count in pg_summary.data[
+                    'by_pool'
+            ][self._pool_id].items():
                 states = state_tuple.split("+")
                 if 'creating' not in states:
                     pgs_not_creating += count
@@ -338,9 +397,12 @@ class PoolCreatingRequest(OsdMapModifyingRequest):
 
                 if self._pool_id is None:
                     log.error("'{0}' not found, pools are {1}".format(
-                        self._pool_name, [p['pool_name'] for p in osd_map.pools_by_id.values()]
+                        self._pool_name,
+                        [p['pool_name'] for p in osd_map.pools_by_id.values()]
                     ))
-                    self.set_error("Expected pool '{0}' not found".format(self._pool_name))
+                    self.set_error(
+                        "Expected pool '{0}' not found".format(self._pool_name)
+                    )
                     self.complete()
 
                 self._awaiting_pgs = True
@@ -349,10 +411,12 @@ class PoolCreatingRequest(OsdMapModifyingRequest):
 
 
 class PgProgress(object):
-    """
-    Encapsulate the state that PgCreatingRequest uses for splitting up
+    """Encapsulate the state that PgCreatingRequest uses for splitting up
+
     creation operations into blocks.
+
     """
+
     def __init__(self, initial, final, block_size):
         self.initial = initial
         self.final = final
@@ -365,7 +429,9 @@ class PgProgress(object):
 
     def advance_goal(self):
         assert not self.is_final_block()
-        self._intermediate_goal = min(self.final, self._intermediate_goal + self._block_size)
+        self._intermediate_goal = min(
+            self.final, self._intermediate_goal + self._block_size
+        )
 
     def set_created_pg_count(self, pg_count):
         self._still_to_create = max(self.final - pg_count, 0)
@@ -375,28 +441,35 @@ class PgProgress(object):
         created = total_creating - self._still_to_create
 
         if self._intermediate_goal != self.final:
-            currently_creating_min = max(self._intermediate_goal - self._block_size, self.initial)
+            currently_creating_min = max(
+                self._intermediate_goal - self._block_size, self.initial)
             currently_creating_max = self._intermediate_goal
-            return "Waiting for PG creation (%s/%s), currently creating PGs %s-%s" % (
-                created, total_creating, currently_creating_min, currently_creating_max)
+            return "Waiting for PG creation (%s/%s), currently "\
+                "creating PGs %s-%s" % (
+                    created, total_creating,
+                    currently_creating_min,
+                    currently_creating_max
+                )
         else:
-            return "Waiting for PG creation (%s/%s)" % (created, total_creating)
+            return "Waiting for PG creation (%s/%s)" % (
+                created, total_creating
+            )
 
     def expected_count(self):
-        """
-        After a successful 'osd pool set' operation, what should pg_num be?
+        """After a successful 'osd pool set' operation, what should pg_num be?
+
         """
         return self._intermediate_goal
 
     def is_final_block(self):
-        """
-        Is the current expansion under way the final one?
+        """Is the current expansion under way the final one?
+
         """
         return self._intermediate_goal == self.final
 
     def is_complete(self):
-        """
-        Have all expected PGs been created?
+        """Have all expected PGs been created?
+
         """
         return self._still_to_create == 0
 
@@ -406,14 +479,18 @@ class PgProgress(object):
 
 
 class PgCreatingRequest(OsdMapModifyingRequest):
-    """
-    Specialization of OsdMapModifyingRequest to issue a request
+    """Specialization of OsdMapModifyingRequest to issue a request
+
     to issue a second set of commands after PGs created by an
+
     initial set of commands have left the 'creating' state.
 
     This handles issuing multiple smaller "osd pool set pg_num" calls when
+
     the number of new PGs requested is greater than mon_osd_max_split_count,
+
     caller is responsible for telling us how many we may create at once.
+
     """
 
     # Simple state machine for phases:
@@ -427,11 +504,20 @@ class PgCreatingRequest(OsdMapModifyingRequest):
     def __init__(self, headline, fsid, cluster_name, commands,
                  pool_id, pool_name, pgp_num,
                  initial_pg_count, final_pg_count, block_size):
-        """
-        :param commands: Commands to execute before creating PGs
-        :param initial_pg_count: How many PGs the pool has before we change anything
-        :param final_pg_count: How many PGs the pool should have when we are done
-        :param block_size: How many PGs we may create in one "osd pool set" command
+        """:param commands: Commands to execute before creating PGs
+
+        :param initial_pg_count: How many PGs the pool has before we
+
+               change anything
+
+        :param final_pg_count: How many PGs the pool should have
+
+               when we are done
+
+        :param block_size: How many PGs we may create in one
+
+               "osd pool set" command
+
         """
 
         self._await_osd_version = None
@@ -440,21 +526,33 @@ class PgCreatingRequest(OsdMapModifyingRequest):
         self._pool_name = pool_name
         self._headline = headline
 
-        self._pg_progress = PgProgress(initial_pg_count, final_pg_count, block_size)
+        self._pg_progress = PgProgress(
+            initial_pg_count,
+            final_pg_count,
+            block_size
+        )
         if initial_pg_count != final_pg_count:
             commands.append(('osd pool set', {
                 'pool': self._pool_name,
                 'var': 'pg_num',
                 'val': self._pg_progress.goal
             }))
-            self._post_create_commands = [("osd pool set", {'pool': pool_name, 'var': 'pgp_num', 'val': pgp_num})]
+            self._post_create_commands = [
+                ("osd pool set",
+                 {'pool': pool_name, 'var': 'pgp_num', 'val': pgp_num}
+                 )
+            ]
 
-        super(PgCreatingRequest, self).__init__(headline, fsid, cluster_name, commands)
+        super(
+            PgCreatingRequest,
+            self
+        ).__init__(headline, fsid, cluster_name, commands)
         self._phase = self.JID_WAIT
 
     @property
     def status(self):
-        if not self.state == self.COMPLETE and not self._pg_progress.is_complete():
+        if not self.state == self.COMPLETE and\
+           not self._pg_progress.is_complete():
             return self._pg_progress.get_status()
         else:
             return super(PgCreatingRequest, self).status
@@ -483,33 +581,46 @@ class PgCreatingRequest(OsdMapModifyingRequest):
             }
 
     def on_map(self, sync_type, sync_object):
-        self.log.debug("PgCreatingRequest %s %s" % (sync_type.str, self._phase))
+        self.log.debug(
+            "PgCreatingRequest %s %s" % (sync_type.str, self._phase))
         if self._phase == self.PG_MAP_WAIT:
             if sync_type == PgSummary:
                 # Count the PGs in this pool which are not in state 'creating'
                 pg_summary = sync_object
                 pgs_not_creating = 0
 
-                for state_tuple, count in pg_summary.data['by_pool'][self._pool_id].items():
+                for state_tuple, count in pg_summary.data[
+                        'by_pool'][self._pool_id].items():
                     states = state_tuple.split("+")
                     if 'creating' not in states:
                         pgs_not_creating += count
 
                 self._pg_progress.set_created_pg_count(pgs_not_creating)
-                self.log.debug("PgCreatingRequest.on_map: pg_counter=%s/%s (final %s)" % (
-                    pgs_not_creating, self._pg_progress.goal, self._pg_progress.final))
+                self.log.debug(
+                    "PgCreatingRequest.on_map: pg_counter=%s/%s (final %s)" % (
+                        pgs_not_creating,
+                        self._pg_progress.goal,
+                        self._pg_progress.final)
+                )
                 if pgs_not_creating >= self._pg_progress.goal:
                     if self._pg_progress.is_final_block():
-                        self.log.debug("PgCreatingRequest.on_map Creations complete")
+                        self.log.debug(
+                            "PgCreatingRequest.on_map Creations complete"
+                        )
                         if self._post_create_commands:
-                            self.log.debug("PgCreatingRequest.on_map Issuing post-create commands")
+                            self.log.debug(
+                                "PgCreatingRequest.on_map Issuing"
+                                " post-create commands"
+                            )
                             self._submit(self._post_create_commands)
                             self._phase = self.JID_WAIT
                         else:
                             self.log.debug("PgCreatingRequest.on_map All done")
                             self.complete()
                     else:
-                        self.log.debug("PgCreatingREQUEST.on_map Issuing more creates")
+                        self.log.debug(
+                            "PgCreatingREQUEST.on_map Issuing more creates"
+                        )
                         self._pg_progress.advance_goal()
                         # Request another tranche of PGs up to _block_size
                         self._submit([('osd pool set', {
@@ -519,43 +630,57 @@ class PgCreatingRequest(OsdMapModifyingRequest):
                         })])
                         self._phase = self.JID_WAIT
             elif sync_type == OsdMap:
-                # Keep an eye on the OsdMap to check that pg_num is what we expect: otherwise
-                # if forces of darkness changed pg_num then our PG creation check could
-                # get confused and fail to complete.
+                # Keep an eye on the OsdMap to check that pg_num is what we
+                # expect: otherwise if forces of darkness changed pg_num then
+                # our PG creation check could get confused and fail to
+                # complete.
                 osd_map = sync_object
                 pool = osd_map.pools_by_id[self._pool_id]
                 if pool['pg_num'] != self._pg_progress.expected_count():
-                    self.set_error("PG creation interrupted (unexpected change to pg_num)")
+                    self.set_error(
+                        "PG creation interrupted (unexpected change to pg_num)"
+                    )
                     self.complete()
                     return
             else:
-                raise NotImplementedError("Unexpected map {1} in state {2}".format(
-                    sync_type, self._phase
-                ))
+                raise NotImplementedError(
+                    "Unexpected map {1} in state {2}".format(
+                        sync_type, self._phase
+                    )
+                )
 
         elif self._phase == self.OSD_MAP_WAIT:
             # Read back the pg_num for my pool from the OSD map
             osd_map = sync_object
             pool = osd_map.pools_by_id[self._pool_id]
 
-            # In gluster_bridge <= 0.67.7, "osd pool set pg_num" will return success even if it hasn't
-            # really increased pg_num, so we must examine the OSD map to see if it really succeded
+            # In gluster_bridge <= 0.67.7, "osd pool set pg_num" will return
+            # success even if it hasn't really increased pg_num, so we must
+            # examine the OSD map to see if it really succeded
             if pool['pg_num'] != self._pg_progress.expected_count():
-                self.set_error("PG creation failed (check that there aren't already PGs in 'creating' state)")
+                self.set_error(
+                    "PG creation failed (check that there aren't already"
+                    " PGs in 'creating' state)"
+                )
                 self.complete()
                 return
 
             assert self._await_version
             ready = osd_map.version >= self._await_version
             if ready:
-                # OSD map advancement either means a PG creation round completed, or that
-                # the post_create_commands completed.  Distinguish by looking at pg_progress.
+                # OSD map advancement either means a PG creation round
+                # completed, or that the post_create_commands completed.
+                # Distinguish by looking at pg_progress.
                 if self._pg_progress.is_complete():
-                    # This was the OSD map update from the post_create_commands, we we're all done!
+                    # This was the OSD map update from the
+                    # post_create_commands, we we're all done!
                     self.complete()
                 else:
-                    # This was the OSD map update from a PG creation command, so start waiting
+                    # This was the OSD map update from a PG creation
+                    # command, so start waiting
                     # for the pgs
                     self._phase = self.PG_MAP_WAIT
         else:
-            raise NotImplementedError("Unexpected {0} in phase {1}".format(sync_type, self._phase))
+            raise NotImplementedError(
+                "Unexpected {0} in phase {1}".format(sync_type, self._phase)
+            )

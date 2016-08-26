@@ -1,16 +1,27 @@
 from collections import defaultdict
 import datetime
-import uuid
 
 import gevent.event
 import gevent.greenlet
 
+from tendrl.gluster_bridge.common.db.event import ERROR
+from tendrl.gluster_bridge.common.db.event import Event
+from tendrl.gluster_bridge.common.db.event import INFO
+from tendrl.gluster_bridge.common.db.event import RECOVERY
+from tendrl.gluster_bridge.common.db.event import severity_str
+from tendrl.gluster_bridge.common.db.event import WARNING
+from tendrl.gluster_bridge.common.types import Health
+from tendrl.gluster_bridge.common.types import MDS
+from tendrl.gluster_bridge.common.types import MON
+from tendrl.gluster_bridge.common.types import MonStatus
+from tendrl.gluster_bridge.common.types import OSD
+from tendrl.gluster_bridge.common.types import OsdMap
+from tendrl.gluster_bridge.common.types import ServiceId
 from tendrl.gluster_bridge.gevent_util import nosleep
 from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.common.types import OsdMap, Health, MonStatus, ServiceId, MON, OSD, MDS
 from tendrl.gluster_bridge.manager import config
-from tendrl.gluster_bridge.common.db.event import Event, ERROR, WARNING, RECOVERY, INFO, severity_str
 from tendrl.gluster_bridge.util import now
+import uuid
 
 
 # The tick handler is very cheap (no I/O) so we call
@@ -24,15 +35,21 @@ GRACE_PERIOD = 30
 
 # How long must a [server|cluster] be out of contact before
 # we generate an event?
-CONTACT_THRESHOLD_FACTOR = int(config.get('bridge', 'server_timeout_factor'))  # multiple of contact period
-CLUSTER_CONTACT_THRESHOLD = int(config.get('bridge', 'cluster_contact_threshold'))  # in seconds
+CONTACT_THRESHOLD_FACTOR = int(
+    config.get('bridge', 'server_timeout_factor')
+)  # multiple of contact period
+CLUSTER_CONTACT_THRESHOLD = int(
+    config.get('bridge', 'cluster_contact_threshold')
+)  # in seconds
 
 
 class Eventer(gevent.greenlet.Greenlet):
-    """
-    I listen to changes from ClusterMonitor and ServerMonitor, and feed
+    """I listen to changes from ClusterMonitor and ServerMonitor, and feed
+
     events into the event log.  I also periodically check some time-based
+
     conditions in my on_tick method.
+
     """
 
     def __init__(self, manager):
@@ -62,14 +79,20 @@ class Eventer(gevent.greenlet.Greenlet):
         log.debug("Eventer complete")
 
     def _emit(self, severity, message, **associations):
-        """
-        :param severity: One of the defined serverity values
+        """:param severity: One of the defined serverity values
+
         :param message: One line human readable string
+
         :param associations: Optional extra attributes to associate
+
                              the event with a particular cluster/server/service
+
         """
         now_utc = now()
-        log.info("Eventer._emit: %s/%s/%s" % (now_utc, severity_str(severity), message))
+        log.info(
+            "Eventer._emit: %s/%s/%s" % (
+                now_utc, severity_str(severity), message)
+        )
 
         self._events.append(Event(
             id=str(uuid.uuid4()),
@@ -80,15 +103,21 @@ class Eventer(gevent.greenlet.Greenlet):
         ))
 
     def on_user_request_begin(self, request):
-        self._emit(INFO, "Started: %s" % request.headline, **request.associations)
+        self._emit(
+            INFO, "Started: %s" % request.headline,
+            **request.associations
+        )
         self._flush()
 
     def on_user_request_complete(self, request):
         if request.error:
             self._emit(WARNING, "Failed: {headline} ({error})".format(
-                headline=request.headline, error=request.error_message), **request.associations)
+                headline=request.headline,
+                error=request.error_message), **request.associations)
         else:
-            self._emit(INFO, "Succeeded: %s" % request.headline, **request.associations)
+            self._emit(
+                INFO, "Succeeded: %s" % request.headline,
+                **request.associations)
         self._flush()
 
     def _flush(self):
@@ -96,13 +125,13 @@ class Eventer(gevent.greenlet.Greenlet):
             self._manager.persister.save_events(self._events)
             self._events = []
 
-    # TODO consume messages about ServiceState from ServerMonitor, so that
-    # we can tell people about their services in the absence of up to date
-    # cluster map information.
+    # TODO(Rohan) consume messages about ServiceState from ServerMonitor,
+    # so that we can tell people about their services in the absence of
+    # up to date cluster map information.
 
     def _humanize_service(self, service_count, service_type):
-        """
-        String helper for printing strings like "1 OSD", "2 MDSs"
+        """String helper for printing strings like "1 OSD", "2 MDSs"
+
         """
         human_singular = {
             MON: 'monitor service',
@@ -128,8 +157,8 @@ class Eventer(gevent.greenlet.Greenlet):
 
     @nosleep
     def on_server(self, server_state):
-        """
-        Tell me that a new (managed) server has appeared in our world.
+        """Tell me that a new (managed) server has appeared in our world.
+
         """
         msg = "Added server %s" % server_state.fqdn
         counts_by_type = defaultdict(int)
@@ -141,15 +170,22 @@ class Eventer(gevent.greenlet.Greenlet):
                 self._humanize_service(count, service_type)
                 for (service_type, count) in counts_by_type.items()])
 
-        self._emit(INFO, msg, fqdn=server_state.fqdn, fsid=self._server_fsid(server_state))
+        self._emit(
+            INFO, msg,
+            fqdn=server_state.fqdn,
+            fsid=self._server_fsid(server_state)
+        )
 
     @nosleep
     def on_reboot(self, server_state, expected):
-        """
-        Tell me that a server rebooted.
+        """Tell me that a server rebooted.
 
-        :param expected: True if the server was in a rebooting state already (i.e.
-                         we told it to reboot).  False indicates spontaneity)
+        :param expected: True if the server was in a rebooting
+
+        state already (i.e. we told it to reboot).
+
+        False indicates spontaneity)
+
         """
         severity = INFO if expected else WARNING
         self._emit(severity,
@@ -159,14 +195,15 @@ class Eventer(gevent.greenlet.Greenlet):
 
     @nosleep
     def on_new_version(self, server_state):
-        """
-        Tell me that the version of ceph changed
+        """Tell me that the version of ceph changed
+
         """
         if server_state.ceph_version is not None:
             msg = "gluster_bridge {version} installed on {fqdn}".format(
                 fqdn=server_state.fqdn, version=server_state.ceph_version)
         else:
-            msg = "gluster_bridge uninstalled from {fqdn}".format(fqdn=server_state.fqdn)
+            msg = "gluster_bridge uninstalled from"\
+                  " {fqdn}".format(fqdn=server_state.fqdn)
 
         self._emit(INFO, msg,
                    fqdn=server_state.fqdn,
@@ -174,9 +211,10 @@ class Eventer(gevent.greenlet.Greenlet):
 
     @nosleep
     def on_tick(self):
-        """
-        Periodically call this to drive non-event-driven events (i.e. things
+        """Periodically call this to drive non-event-driven events (i.e. things
+
         which are based on walltime checks)
+
         """
         log.debug("Eventer.on_tick")
 
@@ -189,54 +227,80 @@ class Eventer(gevent.greenlet.Greenlet):
                 continue
 
             if len(server_state.clusters) == 1:
-                # Because Events can only be associated with one FSID, we only make this
-                # association for servers with exactly one cluster.  This is a bit cheeky and
-                # kind of an unnecessary limitation in the Event DB schema.
+                # Because Events can only be associated with one FSID,
+                # we only make this association for servers with exactly
+                # one cluster.  This is a bit cheeky and kind of an
+                # unnecessary limitation in the Event DB schema.
                 fsid = server_state.clusters[0]
             else:
                 fsid = None
 
-            contact_threshold = CONTACT_THRESHOLD_FACTOR * self._manager.servers.get_contact_period(fqdn)
-            if now_utc - server_state.last_contact > datetime.timedelta(seconds=contact_threshold):
+            contact_threshold = \
+                CONTACT_THRESHOLD_FACTOR *\
+                self._manager.servers.get_contact_period(fqdn)
+            if now_utc - server_state.last_contact > datetime.timedelta(
+                    seconds=contact_threshold):
                 if fqdn not in self._servers_complained:
-                    self._emit(WARNING, "Server {fqdn} is late reporting in, last report at {last}".format(
-                        fqdn=fqdn, last=server_state.last_contact
-                    ), fqdn=fqdn, fsid=fsid)
+                    self._emit(
+                        WARNING,
+                        "Server {fqdn} is late reporting in, "
+                        "last report at {last}".format(
+                            fqdn=fqdn, last=server_state.last_contact
+                        ), fqdn=fqdn, fsid=fsid)
                     self._servers_complained.add(fqdn)
             else:
                 if fqdn in self._servers_complained:
-                    self._emit(RECOVERY, "Server {fqdn} regained contact".format(fqdn=fqdn),
-                               fqdn=fqdn, fsid=fsid)
+                    self._emit(
+                        RECOVERY,
+                        "Server {fqdn} regained contact".format(fqdn=fqdn),
+                        fqdn=fqdn, fsid=fsid)
                     self._servers_complained.discard(fqdn)
 
         for fsid, cluster_monitor in self._manager.clusters.items():
-            if cluster_monitor.update_time is None or now_utc - cluster_monitor.update_time > datetime.timedelta(
+            if cluster_monitor.update_time is None or\
+               now_utc - cluster_monitor.update_time > datetime.timedelta(
                     seconds=CLUSTER_CONTACT_THRESHOLD):
                 if fsid not in self._clusters_complained:
                     self._clusters_complained.add(fsid)
-                    self._emit(WARNING, "Cluster '{name}' is late reporting in".format(name=cluster_monitor.name),
-                               fsid=fsid)
+                    self._emit(
+                        WARNING,
+                        "Cluster '{name}' is late reporting in".format(
+                            name=cluster_monitor.name
+                        ),
+                        fsid=fsid
+                    )
             else:
                 if fsid in self._clusters_complained:
-                    self._emit(RECOVERY, "Cluster '{name}' regained contact".format(name=cluster_monitor.name),
-                               fsid=fsid)
+                    self._emit(
+                        RECOVERY,
+                        "Cluster '{name}' regained contact".format(
+                            name=cluster_monitor.name
+                        ),
+                        fsid=fsid
+                    )
                     self._clusters_complained.discard(fsid)
 
         self._flush()
 
     def _get_fqdn(self, fsid, service_type, service_id):
+        """Resolve a service to a FQDN if possible, else return None
+
         """
-        Resolve a service to a FQDN if possible, else return None
-        """
-        server = self._manager.servers.get_by_service(ServiceId(fsid, service_type, str(service_id)))
+        server = self._manager.servers.get_by_service(
+            ServiceId(fsid, service_type, str(service_id))
+        )
         if server is None:
-            log.warn("No server found for service %s %s" % (service_type, service_id))
+            log.warn(
+                "No server found for service %s %s" % (
+                    service_type, service_id)
+            )
         return server.fqdn if server else None
 
     def _get_on_server(self, fsid, service_type, service_id):
-        """
-        Get a string for appending to service messages to indicate
+        """Get a string for appending to service messages to indicate
+
         which server they're on, or "" if none.
+
         """
         fqdn = self._get_fqdn(fsid, service_type, service_id)
         if fqdn:
@@ -265,11 +329,19 @@ class Eventer(gevent.greenlet.Greenlet):
 
         # Generate events for removed OSDs
         for osd_id in deleted_osds:
-            osd_event(INFO, "OSD {name}.{id}{on_server} removed from the cluster map", osd_id)
+            osd_event(
+                INFO,
+                "OSD {name}.{id}{on_server} removed from the"
+                " cluster map", osd_id
+            )
 
         # Generate events for added OSDs
         for osd_id in created_osds:
-            osd_event(INFO, "OSD {name}.{id}{on_server} added to the cluster map", osd_id)
+            osd_event(
+                INFO,
+                "OSD {name}.{id}{on_server} added to the cluster map",
+                osd_id
+            )
 
         # Generate events for changed OSDs
         for osd_id in old_osd_ids & new_osd_ids:
@@ -277,19 +349,30 @@ class Eventer(gevent.greenlet.Greenlet):
             new_osd = new.osds_by_id[osd_id]
             if old_osd['up'] != new_osd['up']:
                 if bool(new_osd['up']):
-                    osd_event(RECOVERY, "OSD {name}.{id} came up{on_server}", osd_id)
+                    osd_event(
+                        RECOVERY,
+                        "OSD {name}.{id} came up{on_server}",
+                        osd_id
+                    )
                 else:
-                    osd_event(WARNING, "OSD {name}.{id} went down{on_server}", osd_id)
+                    osd_event(
+                        WARNING,
+                        "OSD {name}.{id} went down{on_server}",
+                        osd_id
+                    )
 
-                    # TODO: aggregate OSD notifications by server so that we can say things
-                    # like "all the OSDs on server X went down" or "2/3 OSDs on server X went down"
-                    # TODO: aggregate OSD notifications by cluster so that we can say "all OSDs
-                    # in cluster 'foo' are down"
+                    # TODO(Rohan) aggregate OSD notifications by server so that
+                    # we can say things like "all the OSDs on server X went
+                    # down" or "2/3 OSDs on server X went down"
+                    # TODO(Rohan) aggregate OSD notifications by cluster so
+                    # that we can say "all OSDs in cluster 'foo' are down"
 
-                    # TODO Generate notifications if all the OSDs on a server are 'down',
-                    # the downness OSD map is more recent than the last contact
-                    # with the server, and we haven't already reported the server laggy,
-                    # to indicate that our best guess here is that the server itself is down.
+                    # TODO(Rohan) Generate notifications if all the OSDs
+                    # on a server are 'down', the downness OSD map is more
+                    # recent than the last contact with the server, and we
+                    # haven't already reported the server laggy,
+                    # to indicate that our best guess here is that the server
+                    # itself is down.
 
     def _on_mon_status(self, fsid, new, old):
         old_quorum = set(old.data['quorum'])
@@ -306,13 +389,23 @@ class Eventer(gevent.greenlet.Greenlet):
                        fqdn=self._get_fqdn(fsid, 'mon', name))
 
         for rank in new_quorum - old_quorum:
-            _mon_event(RECOVERY, "Mon '{cluster_name}.{mon_name}' joined quorum{on_server}", rank)
+            _mon_event(RECOVERY,
+                       "Mon '{cluster_name}.{mon_name}' "
+                       " joined quorum{on_server}",
+                       rank
+                       )
 
         for rank in old_quorum - new_quorum:
-            _mon_event(WARNING, "Mon '{cluster_name}.{mon_name}' left quorum{on_server}", rank)
+            _mon_event(
+                WARNING,
+                "Mon '{cluster_name}.{mon_name}'"
+                " left quorum{on_server}",
+                rank
+            )
 
     def _on_health(self, fsid, new, old):
-        # Generate notifications for transitions between HEALTH_OK, HEALTH_WARN, HEALTH_ERR
+        # Generate notifications for transitions between
+        # HEALTH_OK, HEALTH_WARN, HEALTH_ERR
         old_status = old.data['overall_status']
         new_status = new.data['overall_status']
         health_severity = {
@@ -325,32 +418,44 @@ class Eventer(gevent.greenlet.Greenlet):
             if health_severity[new_status] < health_severity[old_status]:
                 # A worsening of health
                 event_sev = health_severity[new_status]
-                msg = "Health of cluster '{name}' degraded from {old} to {new}".format(
-                    old=old_status, new=new_status, name=self._manager.clusters[fsid].name)
+                msg = "Health of cluster '{name}' degraded"\
+                      " from {old} to {new}".format(
+                          old=old_status, new=new_status,
+                          name=self._manager.clusters[fsid].name
+                      )
             else:
                 # An improvement in health
                 event_sev = RECOVERY
-                msg = "Health of cluster '{name}' recovered from {old} to {new}".format(
-                    old=old_status, new=new_status, name=self._manager.clusters[fsid].name)
+                msg = "Health of cluster '{name}' recovered"\
+                      "from {old} to {new}".format(
+                          old=old_status,
+                          new=new_status,
+                          name=self._manager.clusters[fsid].name
+                      )
 
             if health_severity[new_status] < INFO:
-                # XXX I'm not sure how much I like this, it puts data on the screen
-                # which will soon be stale
+                # XXX I'm not sure how much I like this, it puts data on
+                # the screen which will soon be stale
                 pass
                 # msg += " (%s)" % (new.data['summary'][0]['summary'])
             self._emit(event_sev, msg, fsid=fsid)
 
     @nosleep
     def on_sync_object(self, fsid, sync_type, new, old):
-        """
-        Notification that a newer version of a SyncObject is available, or
+        """Notification that a newer version of a SyncObject is available, or
+
         the first version of a SyncObject is available at startup (wherein
+
         old will be a null SyncObject)
 
         :param fsid: The FSID of the cluster to which the object belongs
+
         :param sync_type: A SyncObject subclass
+
         :param new: A SyncObject
+
         :param old: A SyncObject (same type as new)
+
         """
         log.debug("Eventer.on_sync_object: %s" % sync_type.str)
 
@@ -366,6 +471,7 @@ class Eventer(gevent.greenlet.Greenlet):
 
         self._flush()
 
-        # TODO: generate notifications on PG map to indicate anything particularly
-        # interesting like things which are in a bad state and won't be recovering
-        # TODO: generate events from MDS map
+        # TODO(Rohan) generate notifications on PG map to indicate
+        # anything particularly interesting like things which are in
+        # a bad state and won't be recovering
+        # TODO(Rohan: generate events from MDS map

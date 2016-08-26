@@ -1,24 +1,22 @@
-import subprocess
-import traceback
-import gevent.event
 import etcd
-import uuid
+import gevent.event
 import json
-import time
-
-from tendrl.gluster_bridge.common.salt_wrapper import Key, master_config, LocalClient
-from tendrl.gluster_bridge.manager import config
+import subprocess
 from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.common.types import VOLUME
+from tendrl.gluster_bridge.manager import config
+import time
+import traceback
+import uuid
 
 
 class RpcInterface(object):
+
     def __init__(self, manager):
         self._manager = manager
 
     def __getattribute__(self, item):
-        """
-        Wrap functions with logging
+        """Wrap functions with logging
+
         """
         if item.startswith('_'):
             return object.__getattribute__(self, item)
@@ -26,11 +24,12 @@ class RpcInterface(object):
             attr = object.__getattribute__(self, item)
             if callable(attr):
                 def wrap(*args, **kwargs):
-                    log.debug("RpcInterface >> %s(%s, %s)" % (item, args, kwargs))
+                    log.debug("RpcInterface >> %s(%s, %s)" %
+                              (item, args, kwargs))
                     try:
                         rc = attr(*args, **kwargs)
                         log.debug("RpcInterface << %s" % item)
-                    except:
+                    except Exception:
                         log.exception("RpcInterface !! %s" % item)
                         raise
                     return rc
@@ -40,15 +39,20 @@ class RpcInterface(object):
 
     def create_volume(self, name, bricks):
         log.info("create_volume %s" % name)
-        subprocess.call(['gluster', 'volume', 'create', name, ' '.join(bricks), ' force'])
+        subprocess.call(['gluster', 'volume', 'create',
+                         name, ' '.join(bricks), ' force'])
         subprocess.call(['gluster', 'volume', 'start', name])
 
     def delete_volume(self, name):
         log.info("delete_volume %s" % name)
-        subprocess.Popen(['gluster', 'volume', 'stop', name], stdin=subprocess.PIPE).communicate(input="y\n")
-        subprocess.Popen(['gluster', 'volume', 'delete', name], stdin=subprocess.PIPE).communicate(input="y\n")
+        subprocess.Popen(['gluster', 'volume', 'stop', name],
+                         stdin=subprocess.PIPE).communicate(input="y\n")
+        subprocess.Popen(['gluster', 'volume', 'delete', name],
+                         stdin=subprocess.PIPE).communicate(input="y\n")
+
 
 class EtcdRPC(object):
+
     def __init__(self, methods):
         self._methods = self._filter_methods(EtcdRPC, self, methods)
         etcd_kwargs = {'port': int(config.get("bridge", "etcd_port")),
@@ -57,20 +61,18 @@ class EtcdRPC(object):
         self.client = etcd.Client(**etcd_kwargs)
         self.bridge_id = str(uuid.uuid4())
 
-
-
     @staticmethod
     def _filter_methods(cls, self, methods):
         if hasattr(methods, '__getitem__'):
             return methods
         server_methods = set(getattr(self, k) for k in dir(cls) if not
-                k.startswith('_'))
+                             k.startswith('_'))
         return dict((k, getattr(methods, k))
-                for k in dir(methods)
-                if callable(getattr(methods, k))
-                and not k.startswith('_')
-                and getattr(methods, k) not in server_methods
-                )
+                    for k in dir(methods)
+                    if callable(
+            getattr(methods, k)) and not k.startswith('_') and getattr(
+            methods, k) not in server_methods
+        )
 
     def __call__(self, method, kwargs=None, *args):
         if method not in self._methods:
@@ -80,7 +82,8 @@ class EtcdRPC(object):
     def _acceptor(self):
         while True:
             raw_jobs = self.client.read("/rawops/jobs")
-            jobs = sorted(json.loads(raw_jobs.value), key=lambda k: int(k['updated']))
+            jobs = sorted(json.loads(raw_jobs.value),
+                          key=lambda k: int(k['updated']))
             # Pick up the oldest job that is not locked by any other bridge
             try:
                 for job in jobs:
@@ -88,26 +91,29 @@ class EtcdRPC(object):
                     if not job['locked_by']:
                         # First lock the job
 
-                        log.info("%s found new job_%s" % (self.__class__.__name__, job['job_id']))
+                        log.info("%s found new job_%s" %
+                                 (self.__class__.__name__, job['job_id']))
                         log.debug(job['msg'])
                         job['locked_by'] = self.bridge_id
                         job['status'] = "in-progress"
                         job['updated'] = int(time.time())
                         raw_jobs.value = json.dumps(jobs)
                         self.client.write("/rawops/jobs", raw_jobs.value)
-                        log.info("%s Running new job_%s" % (self.__class__.__name__, job['job_id']))
-                        self.__call__(job['msg']['func'], kwargs=job['msg']['kwargs'])
+                        log.info("%s Running new job_%s" %
+                                 (self.__class__.__name__, job['job_id']))
+                        self.__call__(job['msg']['func'],
+                                      kwargs=job['msg']['kwargs'])
                         job['updated'] = int(time.time())
                         job['status'] = "complete"
                         raw_jobs.value = json.dumps(jobs)
                         self.client.write("/rawops/jobs", raw_jobs.value)
-                        log.info("%s Completed job_%s" % (self.__class__.__name__, job['job_id']))
+                        log.info("%s Completed job_%s" %
+                                 (self.__class__.__name__, job['job_id']))
 
                         break
             except Exception as ex:
                 log.error(ex)
             gevent.sleep(1)
-
 
     def run(self):
         self._acceptor()
@@ -115,10 +121,12 @@ class EtcdRPC(object):
     def stop(self):
         pass
 
+
 class EtcdThread(gevent.greenlet.Greenlet):
-    """
-    Present a ZeroRPC API for users
+    """Present a ZeroRPC API for users
+
     to request state changes.
+
     """
 
     # In case server.run throws an exception, prevent
@@ -144,7 +152,7 @@ class EtcdThread(gevent.greenlet.Greenlet):
             try:
                 log.info("%s run..." % self.__class__.__name__)
                 self._server.run()
-            except:
+            except Exception:
                 log.error(traceback.format_exc())
                 self._complete.wait(self.EXCEPTION_BACKOFF)
 

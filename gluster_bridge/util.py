@@ -1,13 +1,12 @@
 import datetime
-
 from dateutil import tz
-import gevent.greenlet
 import gevent.event
+import gevent.greenlet
 
 
 def now():
-    """
-    A tz-aware now
+    """A tz-aware now
+
     """
     return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc())
 
