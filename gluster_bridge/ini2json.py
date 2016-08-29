@@ -1,7 +1,7 @@
-import json
-import sys
-from ConfigParser import (ConfigParser, MissingSectionHeaderError,
-                          ParsingError, DEFAULTSECT)
+from ConfigParser import ConfigParser
+from ConfigParser import DEFAULTSECT
+from ConfigParser import MissingSectionHeaderError
+from ConfigParser import ParsingError
 
 
 class StrictConfigParser(ConfigParser):

@@ -1,12 +1,17 @@
 
 class RequestFactory(object):
-    """
-    A class to generate UserRequests with commands (e.g. gluster_bridge RADOS admin
-    commands) in response to C[r]UD operations.
+    """A class to generate UserRequests with commands
+
+    (e.g. gluster_bridge RADOS admin commands) in response
+
+    to C[r]UD operations.
 
     The mapping is sometimes very simple (e.g. delete on a pool is
+
     just a 'ceph osd pool delete'), and sometimes more complex (e.g.
+
     pool creation requires a 'pool create' followed by a series of
+
     'pool set' and/or 'pool set-quota' commands).
 
     """
