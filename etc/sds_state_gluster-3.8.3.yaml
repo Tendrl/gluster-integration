@@ -1,0 +1,60 @@
+---
+sds_version: gluster-3.8.3
+valid_objects:
+- volume
+- brick
+- peer
+- snapshot
+object_details:
+  volume:
+    attrs:
+    - volname
+    - stripe_count
+    - replica_count
+    - disperse_count
+    - redundancy_count
+    - transport
+    - brickdetails
+    - force
+    - directory
+    - bitrot
+    - scrub-frequency
+    - scrub-throttle
+    -
+    brickdetails:
+      datatype: String
+      value: etcd
+      help: Details of the brick
+    volname:
+      datatype: String
+      value: etcd
+      help: Gluster volume name
+
+  brick:
+    attrs:
+    - brickdetails
+    - volname
+    brickdetails:
+      datatype: String
+      value: etcd
+      help: Details of the brick
+    volname:
+      datatype: String
+      value: etcd
+      help: Gluster volume name
+
+  peer:
+    attrs:
+    - hostname
+
+  snapshot:
+    attrs:
+    - snapname
+    - volname
+    - description
+    - force
+    - clonename
+    - snap-max-hard-limit
+    - snap-max-soft-limit
+    - auto-delete
+    - activate-on-create
