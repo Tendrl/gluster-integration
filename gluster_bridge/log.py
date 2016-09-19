@@ -1,12 +1,16 @@
-import logging
+from gluster_bridge.config import CONF
+from oslo_log import log as logging
 
-from tendrl.gluster_bridge.common.config import tendrlConfig
-config = tendrlConfig()
+DOMAIN = "Tendrl"
+logging.register_options(CONF)
+logging_format = "%(asctime)s.%(msecs)03d %(process)d %(levelname)s" \
+                 "%(pathname)s.%(name)s [-] %(instance)s%(message)s"
+
+CONF.set_default("log_dir", default="/var/log/tendrl/")
+CONF.set_default("log_file", default="tendrl_gluster_bridge.log")
+CONF.set_default("logging_default_format_string",
+                 default=logging_format)
 
 
-FORMAT = "%(asctime)s - %(levelname)s - %(name)s %(message)s"
-log = logging.getLogger('gluster_bridge')
-handler = logging.FileHandler(config.get('bridge', 'log_path'))
-handler.setFormatter(logging.Formatter(FORMAT))
-log.addHandler(handler)
-log.setLevel(logging.getLevelName(config.get('bridge', 'log_level')))
+logging.setup(CONF, DOMAIN)
+LOG = logging.getLogger(__name__)
