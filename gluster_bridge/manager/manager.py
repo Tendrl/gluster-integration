@@ -4,21 +4,23 @@ import gevent.event
 import gevent.greenlet
 import greenlet
 import json
-import logging
 import signal
 import subprocess
 import sys
-from tendrl.gluster_bridge.common import ini2json
-import tendrl.gluster_bridge.log
-from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.manager.rpc import EtcdThread
-from tendrl.gluster_bridge.persistence.persister import Persister
-from tendrl.gluster_bridge.persistence.servers import Brick
-from tendrl.gluster_bridge.persistence.servers import Peer
-from tendrl.gluster_bridge.persistence.servers import Volume
+from gluster_bridge import ini2json
+from gluster_bridge import log
+from gluster_bridge.manager.rpc import EtcdThread
+from gluster_bridge.persistence.persister import Persister
+from gluster_bridge.persistence.servers import Brick
+from gluster_bridge.persistence.servers import Peer
+from gluster_bridge.persistence.servers import Volume
+from oslo_log import log as logging
+from gluster_bridge import config
 import time
 import traceback
 
+
+LOG = log.LOG
 
 # Manhole module optional for debugging.
 try:
@@ -39,7 +41,7 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
         self._complete.set()
 
     def _run(self):
-        log.info("%s running" % self.__class__.__name__)
+        LOG.info("%s running" % self.__class__.__name__)
 
         while not self._complete.is_set():
             try:
@@ -50,9 +52,9 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
                 subprocess.call(['rm', '-rf', '/tmp/glusterd-state'])
                 self._manager.on_pull(raw_data)
             except Exception as ex:
-                log.error(ex)
+                LOG.error(ex)
 
-        log.info("%s complete" % self.__class__.__name__)
+        LOG.info("%s complete" % self.__class__.__name__)
 
 
 class Manager(object):
@@ -72,32 +74,32 @@ class Manager(object):
         self.persister = Persister()
 
     def stop(self):
-        log.info("%s stopping" % self.__class__.__name__)
+        LOG.info("%s stopping" % self.__class__.__name__)
         self._user_request_thread.stop()
         self._discovery_thread.stop()
 
     def _recover(self):
-        log.debug("Recovered server")
+        LOG.debug("Recovered server")
         pass
 
     def start(self):
-        log.info("%s starting" % self.__class__.__name__)
+        LOG.info("%s starting" % self.__class__.__name__)
         self._user_request_thread.start()
         self._discovery_thread.start()
         self.persister.start()
 
     def join(self):
-        log.info("%s joining" % self.__class__.__name__)
+        LOG.info("%s joining" % self.__class__.__name__)
         self._user_request_thread.join()
         self._discovery_thread.join()
         self.persister.join()
 
     def on_pull(self, raw_data):
-        log.info("on_pull")
+        LOG.info("on_pull")
         self.persister.update_sync_object(
             updated=str(time.time()), data=json.dumps(raw_data))
         if "Peers" in raw_data:
-            log.info("on_pull, Updating Peers data")
+            LOG.info("on_pull, Updating Peers data")
             index = 1
             peers = raw_data['Peers']
             while True:
@@ -110,7 +112,7 @@ class Manager(object):
                                 'peer%s.hostname' % index],
                             state=peers['peer%s.state' % index])
                     )
-                    log.info("on_pull, Updating Peer %s/%s" %
+                    LOG.info("on_pull, Updating Peer %s/%s" %
                              (peers['peer%s.uuid' % index],
                               peers['peer%s.hostname' % index])
                              )
@@ -118,7 +120,7 @@ class Manager(object):
                 except KeyError:
                     break
         if "Volumes" in raw_data:
-            log.info("on_pull, Updating Volumes data")
+            LOG.info("on_pull, Updating Volumes data")
             index = 1
             volumes = raw_data['Volumes']
             while True:
@@ -131,7 +133,7 @@ class Manager(object):
                             status=volumes['volume%s.status' % index],
                             brick_count=volumes['volume%s.brickcount' % index])
                     )
-                    log.info("on_pull, Updating Volume %s" %
+                    LOG.info("on_pull, Updating Volume %s" %
                              volumes['volume%s.id' % index])
 
                     b_index = 1
@@ -161,7 +163,7 @@ class Manager(object):
                                             index, b_index))
                                 )
                             )
-                            log.info(
+                            LOG.info(
                                 "on_pull, Updating Brick %s for Volume %s" % (
                                     volumes[
                                         'volume%s.brick%s.path' % (
@@ -186,26 +188,15 @@ def dump_stacks():
             continue
         if not ob:
             continue
-        log.error(''.join(traceback.format_stack(ob.gr_frame)))
+        LOG.error(''.join(traceback.format_stack(ob.gr_frame)))
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='tendrl gluster_bridge Bridge')
-    parser.add_argument('--debug', dest='debug', action='store_true',
-                        default=False, help='print log to stdout')
-
-    args = parser.parse_args()
-    if args.debug:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(logging.Formatter(tendrl.log.FORMAT))
-        log.addHandler(handler)
-
-    if manhole is not None:
-        # Enable manhole for debugging.  Use oneshot mode
-        # for gevent compatibility
-        manhole.cry = lambda message: log.info("MANHOLE: %s" % message)
-        manhole.install(oneshot_on=signal.SIGUSR1)
+    argv = sys.argv
+    argv = [] if argv is None else argv
+    log.setup_logging()
+    config.parse_args(argv)
+    logging.setup(config.CONF, "gluster_bridge")
 
     m = Manager()
     m.start()
@@ -213,7 +204,7 @@ def main():
     complete = gevent.event.Event()
 
     def shutdown():
-        log.info("Signal handler: stopping")
+        LOG.info("Signal handler: stopping")
         complete.set()
 
     gevent.signal(signal.SIGTERM, shutdown)
