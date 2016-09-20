@@ -2,11 +2,12 @@ import etcd
 import gevent.event
 import json
 import subprocess
-from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.manager import config
 import time
 import traceback
 import uuid
+
+from gluster_bridge.config import CONF
+from gluster_bridge.log import LOG
 
 
 class RpcInterface(object):
@@ -15,7 +16,7 @@ class RpcInterface(object):
         self._manager = manager
 
     def __getattribute__(self, item):
-        """Wrap functions with logging
+        """Wrap functions with LOGging
 
         """
         if item.startswith('_'):
@@ -24,13 +25,13 @@ class RpcInterface(object):
             attr = object.__getattribute__(self, item)
             if callable(attr):
                 def wrap(*args, **kwargs):
-                    log.debug("RpcInterface >> %s(%s, %s)" %
+                    LOG.debug("RpcInterface >> %s(%s, %s)" %
                               (item, args, kwargs))
                     try:
                         rc = attr(*args, **kwargs)
-                        log.debug("RpcInterface << %s" % item)
+                        LOG.debug("RpcInterface << %s" % item)
                     except Exception:
-                        log.exception("RpcInterface !! %s" % item)
+                        LOG.exception("RpcInterface !! %s" % item)
                         raise
                     return rc
                 return wrap
@@ -38,13 +39,13 @@ class RpcInterface(object):
                 return attr
 
     def create_volume(self, name, bricks):
-        log.info("create_volume %s" % name)
+        LOG.info("create_volume %s" % name)
         subprocess.call(['gluster', 'volume', 'create',
                          name, ' '.join(bricks), ' force'])
         subprocess.call(['gluster', 'volume', 'start', name])
 
     def delete_volume(self, name):
-        log.info("delete_volume %s" % name)
+        LOG.info("delete_volume %s" % name)
         subprocess.Popen(['gluster', 'volume', 'stop', name],
                          stdin=subprocess.PIPE).communicate(input="y\n")
         subprocess.Popen(['gluster', 'volume', 'delete', name],
@@ -55,8 +56,8 @@ class EtcdRPC(object):
 
     def __init__(self, methods):
         self._methods = self._filter_methods(EtcdRPC, self, methods)
-        etcd_kwargs = {'port': int(config.get("bridge", "etcd_port")),
-                       'host': config.get("bridge", "etcd_connection")}
+        etcd_kwargs = {'port': CONF.bridge.etcd_port,
+                       'host': CONF.bridge.etcd_connection}
 
         self.client = etcd.Client(**etcd_kwargs)
         self.bridge_id = str(uuid.uuid4())
@@ -91,15 +92,15 @@ class EtcdRPC(object):
                     if not job['locked_by']:
                         # First lock the job
 
-                        log.info("%s found new job_%s" %
+                        LOG.info("%s found new job_%s" %
                                  (self.__class__.__name__, job['job_id']))
-                        log.debug(job['msg'])
+                        LOG.debug(job['msg'])
                         job['locked_by'] = self.bridge_id
                         job['status'] = "in-progress"
                         job['updated'] = int(time.time())
                         raw_jobs.value = json.dumps(jobs)
                         self.client.write("/rawops/jobs", raw_jobs.value)
-                        log.info("%s Running new job_%s" %
+                        LOG.info("%s Running new job_%s" %
                                  (self.__class__.__name__, job['job_id']))
                         self.__call__(job['msg']['func'],
                                       kwargs=job['msg']['kwargs'])
@@ -107,12 +108,12 @@ class EtcdRPC(object):
                         job['status'] = "complete"
                         raw_jobs.value = json.dumps(jobs)
                         self.client.write("/rawops/jobs", raw_jobs.value)
-                        log.info("%s Completed job_%s" %
+                        LOG.info("%s Completed job_%s" %
                                  (self.__class__.__name__, job['job_id']))
 
                         break
             except Exception as ex:
-                log.error(ex)
+                LOG.error(ex)
             gevent.sleep(1)
 
     def run(self):
@@ -140,7 +141,7 @@ class EtcdThread(gevent.greenlet.Greenlet):
         self._server = EtcdRPC(RpcInterface(manager))
 
     def stop(self):
-        log.info("%s stopping" % self.__class__.__name__)
+        LOG.info("%s stopping" % self.__class__.__name__)
 
         self._complete.set()
         if self._server:
@@ -150,10 +151,10 @@ class EtcdThread(gevent.greenlet.Greenlet):
 
         while not self._complete.is_set():
             try:
-                log.info("%s run..." % self.__class__.__name__)
+                LOG.info("%s run..." % self.__class__.__name__)
                 self._server.run()
             except Exception:
-                log.error(traceback.format_exc())
+                LOG.error(traceback.format_exc())
                 self._complete.wait(self.EXCEPTION_BACKOFF)
 
-        log.info("%s complete..." % self.__class__.__name__)
+        LOG.info("%s complete..." % self.__class__.__name__)

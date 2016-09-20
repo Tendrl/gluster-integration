@@ -1,4 +1,3 @@
-import datetime
 from etcdobj import Server as etcd_server
 import gevent.event
 import gevent.greenlet
@@ -9,13 +8,9 @@ try:
 except ImportError:
     msgpack = None
 
-from tendrl.gluster_bridge.log import log
-from tendrl.gluster_bridge.manager import config
-from tendrl.gluster_bridge.persistence.sync_objects import SyncObject
-
-
-CLUSTER_MAP_RETENTION = datetime.timedelta(
-    seconds=int(config.get('bridge', 'cluster_map_retention')))
+from gluster_bridge.config import CONF
+from gluster_bridge.log import LOG
+from gluster_bridge.persistence.sync_objects import SyncObject
 
 
 class deferred_call(object):
@@ -47,7 +42,7 @@ class Persister(gevent.greenlet.Greenlet):
         self._store = self.get_store()
 
     def __getattribute__(self, item):
-        """Wrap functions with logging
+        """Wrap functions with LOGging
 
         """
         if item.startswith('_'):
@@ -64,11 +59,11 @@ class Persister(gevent.greenlet.Greenlet):
                             try:
                                 dc.call_it()
                             except Exception as ex:
-                                log.exception(
+                                LOG.exception(
                                     "Persister exception persisting "
                                     "data: %s" % (dc.fn,)
                                 )
-                                log.exception(ex)
+                                LOG.exception(ex)
                         return defer
                     else:
                         return object.__getattribute__(self, item)
@@ -92,7 +87,7 @@ class Persister(gevent.greenlet.Greenlet):
             self._store.save(event)
 
     def _run(self):
-        log.info("Persister listening")
+        LOG.info("Persister listening")
 
         while not self._complete.is_set():
             gevent.sleep(0.1)
@@ -102,6 +97,6 @@ class Persister(gevent.greenlet.Greenlet):
         self._complete.set()
 
     def get_store(self):
-        etcd_kwargs = {'port': int(config.get("bridge", "etcd_port")),
-                       'host': config.get("bridge", "etcd_connection")}
+        etcd_kwargs = {'port': CONF.bridge.etcd_port,
+                       'host': CONF.bridge.etcd_connection}
         return etcd_server(etcd_kwargs=etcd_kwargs)
