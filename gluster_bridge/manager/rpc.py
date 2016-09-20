@@ -2,11 +2,12 @@ import etcd
 import gevent.event
 import json
 import subprocess
-from gluster_bridge.log import LOG
-from gluster_bridge.config import CONF
 import time
 import traceback
 import uuid
+
+from gluster_bridge.config import CONF
+from gluster_bridge.log import LOG
 
 
 class RpcInterface(object):

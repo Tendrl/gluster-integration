@@ -7,6 +7,7 @@ from oslo_config import cfg
 
 CONF = cfg.CONF
 
+
 def parse_args(argv=None, usage=None, default_config_files=None):
 
     CONF(

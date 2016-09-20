@@ -1,4 +1,3 @@
-import datetime
 from etcdobj import Server as etcd_server
 import gevent.event
 import gevent.greenlet
@@ -9,8 +8,8 @@ try:
 except ImportError:
     msgpack = None
 
-from gluster_bridge.log import LOG
 from gluster_bridge.config import CONF
+from gluster_bridge.log import LOG
 from gluster_bridge.persistence.sync_objects import SyncObject
 
 

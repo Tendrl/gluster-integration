@@ -1,4 +1,3 @@
-import argparse
 import gc
 import gevent.event
 import gevent.greenlet
@@ -7,6 +6,11 @@ import json
 import signal
 import subprocess
 import sys
+import time
+import traceback
+
+
+from gluster_bridge import config
 from gluster_bridge import ini2json
 from gluster_bridge import log
 from gluster_bridge.manager.rpc import EtcdThread
@@ -15,9 +19,6 @@ from gluster_bridge.persistence.servers import Brick
 from gluster_bridge.persistence.servers import Peer
 from gluster_bridge.persistence.servers import Volume
 from oslo_log import log as logging
-from gluster_bridge import config
-import time
-import traceback
 
 
 LOG = log.LOG
