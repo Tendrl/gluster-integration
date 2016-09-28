@@ -11,3 +11,4 @@ flows:
             #boolean returning pre/post conditions function list
             post_condition: ["atoms.<atom_name>.<condition_function>1"...]
   run: "<flows.<flow_name>.run.run(*args, **kwargs)"
+  type: Create
