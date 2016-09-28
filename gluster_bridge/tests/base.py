@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-from oslotest import base
-
-
-class TestCase(base.BaseTestCase):
+class TestCase():
 
     """Test case base class for all unit tests."""
