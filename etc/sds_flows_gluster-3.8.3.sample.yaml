@@ -1,0 +1,14 @@
+flows:
+  CreateVolume: #A flow/operation is a structure that defines relationships
+  #between atoms. You can add atoms and other flows (as subflows) to the
+  #flow, and the flow provides a way to implicitly or explicitly define how
+  #they are interdependent, flows can be linear, unordered, graph based
+  uuid: <uuid.uuid4()>
+  name: A non-unique name for this flow
+  atoms: A OrderedSet of atoms to be executed in this Linearflow
+  conditions:
+            pre_condition : ["atoms.<atom_name>.<condition_function>1"...]
+            #boolean returning pre/post conditions function list
+            post_condition: ["atoms.<atom_name>.<condition_function>1"...]
+  run: "<flows.<flow_name>.run.run(*args, **kwargs)"
+  type: Create
