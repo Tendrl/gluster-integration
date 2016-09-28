@@ -6,7 +6,7 @@ object_details:
         info:
           type: "get"
         create:
-          where: "<atoms.<atom_name>.run.run(*args, **kwargs)"
+          run: "<atoms.<atom_name>.run.run(*args, **kwargs)"
           type: "create"
           conditions:
             pre_condition : ["atoms.<atom_name>.<condition_function>1"...]
