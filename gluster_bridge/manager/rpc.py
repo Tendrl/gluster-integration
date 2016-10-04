@@ -2,7 +2,7 @@ import etcd
 import gevent.event
 import json
 import subprocess
-import time
+import re
 import traceback
 import uuid
 
@@ -38,11 +38,6 @@ class RpcInterface(object):
             else:
                 return attr
 
-    def create_volume(self, name, bricks):
-        LOG.info("create_volume %s" % name)
-        subprocess.call(['gluster', 'volume', 'create',
-                         name, ' '.join(bricks), ' force'])
-        subprocess.call(['gluster', 'volume', 'start', name])
 
     def delete_volume(self, name):
         LOG.info("delete_volume %s" % name)
@@ -82,45 +77,45 @@ class EtcdRPC(object):
 
     def _acceptor(self):
         while True:
-            raw_jobs = self.client.read("/rawops/jobs")
-            jobs = sorted(json.loads(raw_jobs.value),
-                          key=lambda k: int(k['updated']))
-            # Pick up the oldest job that is not locked by any other bridge
-            try:
-                for job in jobs:
-
-                    if not job['locked_by']:
-                        # First lock the job
-
-                        LOG.info("%s found new job_%s" %
-                                 (self.__class__.__name__, job['job_id']))
-                        LOG.debug(job['msg'])
-                        job['locked_by'] = self.bridge_id
-                        job['status'] = "in-progress"
-                        job['updated'] = int(time.time())
-                        raw_jobs.value = json.dumps(jobs)
-                        self.client.write("/rawops/jobs", raw_jobs.value)
-                        LOG.info("%s Running new job_%s" %
-                                 (self.__class__.__name__, job['job_id']))
-                        self.__call__(job['msg']['func'],
-                                      kwargs=job['msg']['kwargs'])
-                        job['updated'] = int(time.time())
-                        job['status'] = "complete"
-                        raw_jobs.value = json.dumps(jobs)
-                        self.client.write("/rawops/jobs", raw_jobs.value)
-                        LOG.info("%s Completed job_%s" %
-                                 (self.__class__.__name__, job['job_id']))
-
+            jobs = self.client.read("/api_job_queue")
+            for job in jobs.children:
+                raw_job = json.loads(job.value.decode('utf-8'))
+                # Pick up the "new" job that is not locked by any other bridge
+                if raw_job['status'] == "new":
+                    try:
+                        raw_job['status'] = "processing"
+                        # Generate a request ID for tracking this job
+                        # further by tendrl-api
+                        req_id = str(uuid.uuid4())
+                        raw_job['request_id'] = "%s/%s" % (self.bridge_id, req_id)
+                        self.client.write(job.key, json.dumps(raw_job))
+                        gevent.sleep(2)
+                        LOG.info("Processing API-JOB %s" % raw_job[
+                            'request_id'])
+                        self.invoke_flow(raw_job['flow'], raw_job)
                         break
-            except Exception as ex:
-                LOG.error(ex)
-            gevent.sleep(1)
+                    except Exception as ex:
+                        LOG.error(ex)
+
 
     def run(self):
         self._acceptor()
 
     def stop(self):
         pass
+
+    def invoke_flow(self, flow_name, api_job):
+        # TODO (rohan) parse sds_operations_gluster.yaml and correlate here
+        flow_module = 'gluster_bridge.flows.%s' % self.convert_flow_name(flow_name)
+        mod = __import__(flow_module, fromlist=[
+            flow_name])
+        klass = getattr(mod, flow_name)
+        klass(api_job)
+        klass.start()
+
+    def convert_flow_name(self, flow_name):
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', flow_name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
 class EtcdThread(gevent.greenlet.Greenlet):
