@@ -1,16 +1,21 @@
-from etcdobj import Server as etcd_server
+import logging
+
 import gevent.event
 import gevent.greenlet
 import gevent.queue
+from tendrl.bridge_common.etcdobj.etcdobj import Server as etcd_server
 
 try:
     import msgpack
 except ImportError:
     msgpack = None
 
-from gluster_bridge.config import CONF
-from gluster_bridge.log import LOG
-from gluster_bridge.persistence.sync_objects import SyncObject
+from tendrl.gluster_bridge.config import TendrlConfig
+from tendrl.gluster_bridge.persistence.sync_objects import SyncObject
+
+
+config = TendrlConfig()
+LOG = logging.getLogger(__name__)
 
 
 class deferred_call(object):
@@ -97,6 +102,6 @@ class Persister(gevent.greenlet.Greenlet):
         self._complete.set()
 
     def get_store(self):
-        etcd_kwargs = {'port': CONF.bridge.etcd_port,
-                       'host': CONF.bridge.etcd_connection}
+        etcd_kwargs = {'port': config.get("bridge_common", "etcd_port"),
+                       'host': config.get("bridge_common", "etcd_connection")}
         return etcd_server(etcd_kwargs=etcd_kwargs)

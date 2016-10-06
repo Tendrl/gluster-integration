@@ -1,12 +1,12 @@
-from etcdobj import EtcdObj
-from etcdobj import fields
+from tendrl.bridge_common.etcdobj.etcdobj import EtcdObj
+from tendrl.bridge_common.etcdobj import fields
 
 
 class Peer(EtcdObj):
     """A table of the peers seen by the pull, lazily updated
 
     """
-    __name__ = 'gluster/peers/%s'
+    __name__ = 'clusters/gluster/%s/peers/%s'
 
     state = fields.StrField("state")
     hostname = fields.StrField("hostname")
@@ -22,7 +22,7 @@ class Volume(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'gluster/volumes/%s'
+    __name__ = 'clusters/gluster/%s/volumes/%s'
 
     vol_id = fields.StrField("vol_id")
     vol_type = fields.StrField("vol_type")
@@ -39,7 +39,7 @@ class Brick(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'gluster/bricks/%s'
+    __name__ = 'clusters/gluster/%s/bricks/%s'
 
     vol_id = fields.StrField("vol_id")
     path = fields.StrField("path")

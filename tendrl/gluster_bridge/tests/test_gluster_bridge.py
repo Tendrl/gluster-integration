@@ -8,7 +8,7 @@ test_gluster_bridge
 Tests for `gluster_bridge` module.
 """
 
-from gluster_bridge.tests import base
+from tendrl.gluster_bridge.tests import base
 
 
 class TestGluster_bridge(base.TestCase):

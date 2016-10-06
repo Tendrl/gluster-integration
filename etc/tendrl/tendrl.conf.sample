@@ -1,0 +1,11 @@
+[bridge_common]
+
+etcd_port = 2379
+etcd_connection = 0.0.0.0
+log_path = /var/log/tendrl/bridge_common.log
+log_level = DEBUG
+
+
+[gluster_bridge]
+log_path = /var/log/tendrl/gluster_bridge.log
+log_level = DEBUG
