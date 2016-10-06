@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = gluster_bridge
+source = tendrl.gluster_bridge
 
 [report]
 ignore_errors = True
