@@ -1,6 +1,7 @@
-import etcd
-import uuid
 import json
+import uuid
+
+import etcd
 
 job_id1 = str(uuid.uuid4())
 
@@ -12,8 +13,8 @@ job = {
     "status": 'new',
     "message": 'Creating cluster',
     "attributes": {
-      "volname": 'Volume1',
-      "brickdetails": ["mntpath"]
+        "volname": 'Volume1',
+        "brickdetails": ["mntpath"]
     },
     "errors": {}
 

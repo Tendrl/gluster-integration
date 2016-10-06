@@ -6,4 +6,3 @@ class Create(object):
         subprocess.call(['gluster', 'volume', 'create',
                          name, ' '.join(bricks), ' force'])
         subprocess.call(['gluster', 'volume', 'start', name])
-

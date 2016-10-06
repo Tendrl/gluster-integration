@@ -1,33 +1,24 @@
 import gc
-import gevent.event
-import gevent.greenlet
 import greenlet
 import json
+import logging
 import signal
 import subprocess
-import sys
 import time
 import traceback
 
+import gevent.event
+import gevent.greenlet
 
-from gluster_bridge import config
-from gluster_bridge import ini2json
-from gluster_bridge import log
-from gluster_bridge.manager.rpc import EtcdThread
-from gluster_bridge.persistence.persister import Persister
-from gluster_bridge.persistence.servers import Brick
-from gluster_bridge.persistence.servers import Peer
-from gluster_bridge.persistence.servers import Volume
-from oslo_log import log as logging
+from tendrl.gluster_bridge.manager.rpc import EtcdThread
+from tendrl.gluster_bridge.persistence.persister import Persister
+from tendrl.gluster_bridge.persistence.servers import Brick
+from tendrl.gluster_bridge.persistence.servers import Peer
+from tendrl.gluster_bridge.persistence.servers import Volume
 
+from tendrl.gluster_bridge import ini2json
 
-LOG = log.LOG
-
-# Manhole module optional for debugging.
-try:
-    import manhole
-except ImportError:
-    manhole = None
+LOG = logging.getLogger(__name__)
 
 
 class TopLevelEvents(gevent.greenlet.Greenlet):
@@ -193,11 +184,6 @@ def dump_stacks():
 
 
 def main():
-    argv = sys.argv
-    argv = [] if argv is None else argv
-    log.setup_logging()
-    config.parse_args(argv)
-    logging.setup(config.CONF, "gluster_bridge")
 
     m = Manager()
     m.start()
