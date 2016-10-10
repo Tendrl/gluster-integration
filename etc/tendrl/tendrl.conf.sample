@@ -1,11 +1,17 @@
 [bridge_common]
 
+# Central store etcd port
 etcd_port = 2379
+
+# Central store etcd host/ip
 etcd_connection = 0.0.0.0
+
+# Path to log file
 log_path = /var/log/tendrl/bridge_common.log
 log_level = DEBUG
 
 
 [gluster_bridge]
+# Path to log file
 log_path = /var/log/tendrl/gluster_bridge.log
 log_level = DEBUG

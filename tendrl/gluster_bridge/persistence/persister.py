@@ -98,6 +98,6 @@ class Persister(gevent.greenlet.Greenlet):
         self._complete.set()
 
     def get_store(self):
-        etcd_kwargs = {'port': config.get("bridge_common", "etcd_port"),
+        etcd_kwargs = {'port': int(config.get("bridge_common", "etcd_port")),
                        'host': config.get("bridge_common", "etcd_connection")}
         return etcd_server(etcd_kwargs=etcd_kwargs)
