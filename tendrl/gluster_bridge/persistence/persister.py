@@ -5,10 +5,6 @@ import gevent.greenlet
 import gevent.queue
 from tendrl.bridge_common.etcdobj.etcdobj import Server as etcd_server
 
-try:
-    import msgpack
-except ImportError:
-    msgpack = None
 
 from tendrl.gluster_bridge.config import TendrlConfig
 from tendrl.gluster_bridge.persistence.sync_objects import SyncObject

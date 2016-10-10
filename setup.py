@@ -22,7 +22,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         'console_scripts': [
-            'tendrl-gluster-bridge = gluster_bridge.manager.manager:main'
+        'tendrl-gluster-bridge = tendrl.gluster_bridge.manager.manager:main'
         ]
     }
 )
