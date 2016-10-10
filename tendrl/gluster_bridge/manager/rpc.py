@@ -17,7 +17,7 @@ LOG = logging.getLogger(__name__)
 class EtcdRPC(object):
 
     def __init__(self):
-        etcd_kwargs = {'port': config.get("bridge_common", "etcd_port"),
+        etcd_kwargs = {'port': int(config.get("bridge_common", "etcd_port")),
                        'host': config.get("bridge_common", "etcd_connection")}
 
         self.client = etcd.Client(**etcd_kwargs)

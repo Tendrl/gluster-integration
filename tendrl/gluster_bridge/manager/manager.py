@@ -10,6 +10,7 @@ import traceback
 import gevent.event
 import gevent.greenlet
 
+from tendrl.gluster_bridge import log
 from tendrl.gluster_bridge.manager.rpc import EtcdThread
 from tendrl.gluster_bridge.persistence.persister import Persister
 from tendrl.gluster_bridge.persistence.servers import Brick
@@ -184,7 +185,7 @@ def dump_stacks():
 
 
 def main():
-
+    log.setup_logging()
     m = Manager()
     m.start()
 
