@@ -25,8 +25,8 @@ Builds
 Code Coverage
 -------------
 
-.. image:: https://coveralls.io/repos/github/Tendrl/gluster_bridge/badge.svg?branch=master
-    :target: https://coveralls.io/github/Tendrl/gluster_bridge?branch=master
+.. image:: https://coveralls.io/repos/github/Tendrl/gluster_bridge/badge.svg
+    :target: https://coveralls.io/github/Tendrl/gluster_bridge
 
 Developer/Install documentation
 -----------------------
