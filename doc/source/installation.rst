@@ -2,7 +2,7 @@
 Environment
 ===========
 
-1. Install Gluster current release (https://www.gluster.org/download/)
+1. Install Gluster current stable release (https://www.gluster.org/download/)
 2. Install Etcd>=2.3.x && <3.x (https://github.com/coreos/etcd/releases/tag/v2.3.7)
 
 
