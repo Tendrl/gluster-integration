@@ -14,12 +14,13 @@ Installation
 1. Install http://github.com/tendrl/bridge_common
 2. Install http://github.com/tendrl/gluster_bridge
 
-    At the command line::
+3. At the command line::
 
+    $ yum install python-devel gcc # Install dependencies
     $ python setup.py install
     $ cp etc/tendrl/tendrl.conf.sample /etc/tendrl/tendrl.conf
 
-4. Edit /etc/tendrl/tendrl.conf as required
-5. mkdir /var/log/tendrl
+4. Edit /etc/tendrl/tendrl.conf and populate correct IP address of etcd server
+5. mkdir -p /var/log/tendrl
 6. Run
     $ tendrl-gluster-bridge
