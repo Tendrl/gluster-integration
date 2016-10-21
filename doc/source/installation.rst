@@ -10,17 +10,40 @@ Environment
 Installation
 ============
 
+Since there is no stable release yet, the only option is to install the project from the source.
 
-1. Install http://github.com/tendrl/bridge_common
-2. Install http://github.com/tendrl/gluster_bridge
+Development version from the source
+-----------------------------------
 
-3. At the command line::
+1. Install http://github.com/tendrl/bridge_common from the source code::
 
-    $ yum install python-devel gcc # Install dependencies
-    $ python setup.py install
+    $ git clone https://github.com/Tendrl/bridge_common.git
+    $ cd bridge_common
+    $ mkvirtualenv ceph_bridge
+    $ pip install .
+
+2. Install gluster_bridge itself::
+    $ git clone https://github.com/shtripat/gluster_bridge.git
+    $ cd gluster_bridge
+    $ workon gluster_bridge
+    $ pip install .
+
+Note that we use virtualenvwrapper_ here to activate ``gluster_bridge`` `python
+virtual enviroment`_. This way, we install *gluster bridge* into the same virtual
+enviroment which we have created during installation of *bridge common*.
+
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/en/latest/
+.. _`python virtual enviroment`: https://virtualenv.pypa.io/en/stable/
+
+3. Create config file::
+
     $ cp etc/tendrl/tendrl.conf.sample /etc/tendrl/tendrl.conf
 
-4. Edit /etc/tendrl/tendrl.conf and populate correct IP address of etcd server
-5. mkdir -p /var/log/tendrl
-6. Run
+4. Edit ``/etc/tendrl/tendrl.conf`` as required
+
+5. Create log dir::
+
+    $ mkdir /var/log/tendrl
+
+6. Run::
     $ tendrl-gluster-bridge
