@@ -1,0 +1,13 @@
+[Unit]
+Description=Tendrl Gluster Daemon to Manage gluster tasks
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/tendrl-gluster-bridge
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
