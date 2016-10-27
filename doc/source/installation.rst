@@ -19,7 +19,7 @@ Development version from the source
 
     $ git clone https://github.com/Tendrl/bridge_common.git
     $ cd bridge_common
-    $ mkvirtualenv ceph_bridge
+    $ mkvirtualenv bridge_common
     $ pip install .
 
 2. Install gluster_bridge itself::
