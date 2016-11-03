@@ -72,7 +72,13 @@ class Persister(gevent.greenlet.Greenlet):
                     return object.__getattribute__(self, item)
 
     def update_sync_object(self, updated, cluster_id, data):
-        self._store.save(SyncObject(updated=updated, cluster_id=cluster_id, data=data))
+        self._store.save(
+            SyncObject(
+                updated=updated,
+                cluster_id=cluster_id,
+                data=data
+            )
+        )
 
     def _update_peer(self, peer):
         self._store.save(peer)
