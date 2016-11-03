@@ -6,15 +6,16 @@ class Peer(EtcdObj):
     """A table of the peers seen by the pull, lazily updated
 
     """
-    __name__ = 'clusters/gluster/%s/peers/%s'
+    __name__ = 'clusters/%s/peers/%s'
 
+    cluster_id = fields.StrField("cluster_id")
     state = fields.StrField("state")
     hostname = fields.StrField("hostname")
     peer_uuid = fields.StrField("peer_uuid")
     updated = fields.StrField("updated")
 
     def render(self):
-        self.__name__ = self.__name__ % self.peer_uuid
+        self.__name__ = self.__name__ % (self.cluster_id, self.peer_uuid)
         return super(Peer, self).render()
 
 
@@ -22,8 +23,9 @@ class Volume(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'clusters/gluster/%s/volumes/%s'
+    __name__ = 'clusters/%s/volumes/%s'
 
+    cluster_id = fields.StrField("cluster_id")
     vol_id = fields.StrField("vol_id")
     vol_type = fields.StrField("vol_type")
     name = fields.StrField("name")
@@ -31,7 +33,7 @@ class Volume(EtcdObj):
     brick_count = fields.StrField("brick_count")
 
     def render(self):
-        self.__name__ = self.__name__ % self.vol_id
+        self.__name__ = self.__name__ % (self.cluster_id, self.vol_id)
         return super(Volume, self).render()
 
 
@@ -39,8 +41,9 @@ class Brick(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'clusters/gluster/%s/bricks/%s'
+    __name__ = 'clusters/%s/volumes/%s/bricks/%s'
 
+    cluster_id = fields.StrField("cluster_id")
     vol_id = fields.StrField("vol_id")
     path = fields.StrField("path")
     hostname = fields.StrField("hostname")
@@ -50,5 +53,9 @@ class Brick(EtcdObj):
     mount_opts = fields.StrField("mount_opts")
 
     def render(self):
-        self.__name__ = self.__name__ % (self.path.replace("/", "_"))
+        self.__name__ = self.__name__ % (
+            self.cluster_id,
+            self.vol_id,
+            self.path.replace("/", "_")
+        )
         return super(Brick, self).render()

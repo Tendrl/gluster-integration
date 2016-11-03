@@ -40,7 +40,16 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
             try:
                 gevent.sleep(3)
                 subprocess.call(
-                    ['gluster', 'daemon', 'get-state', 'odir', '/tmp/'])
+                    [
+                        'gluster',
+                        'get-state',
+                        'glusterd',
+                        'odir',
+                        '/tmp',
+                        'file',
+                        'glusterd-state'
+                    ]
+                )
                 raw_data = ini2json.ini_to_dict('/tmp/glusterd-state')
                 subprocess.call(['rm', '-rf', '/tmp/glusterd-state'])
                 self._manager.on_pull(raw_data)
@@ -89,8 +98,12 @@ class Manager(object):
 
     def on_pull(self, raw_data):
         LOG.info("on_pull")
+        global_info = raw_data['Global']
         self.persister.update_sync_object(
-            updated=str(time.time()), data=json.dumps(raw_data))
+            str(time.time()),
+            global_info['myuuid'],
+            json.dumps(raw_data)
+        )
         if "Peers" in raw_data:
             LOG.info("on_pull, Updating Peers data")
             index = 1
@@ -100,14 +113,15 @@ class Manager(object):
                     self.persister.update_peer(
                         Peer(
                             updated=str(time.time()),
+                            cluster_id=global_info['myuuid'],
                             peer_uuid=peers['peer%s.uuid' % index],
                             hostname=peers[
-                                'peer%s.hostname' % index],
+                                'peer%s.primary_hostname' % index],
                             state=peers['peer%s.state' % index])
                     )
                     LOG.info("on_pull, Updating Peer %s/%s" %
                              (peers['peer%s.uuid' % index],
-                              peers['peer%s.hostname' % index])
+                              peers['peer%s.primary_hostname' % index])
                              )
                     index += 1
                 except KeyError:
@@ -120,6 +134,7 @@ class Manager(object):
                 try:
                     self.persister.update_volume(
                         Volume(
+                            cluster_id=global_info['myuuid'],
                             vol_id=volumes['volume%s.id' % index],
                             vol_type=volumes['volume%s.type' % index],
                             name=volumes['volume%s.name' % index],
@@ -135,6 +150,7 @@ class Manager(object):
                         try:
                             self.persister.update_brick(
                                 Brick(
+                                    cluster_id=global_info['myuuid'],
                                     vol_id=volumes['volume%s.id' % index],
                                     path=volumes[
                                         'volume%s.brick%s.path' % (

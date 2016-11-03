@@ -71,8 +71,8 @@ class Persister(gevent.greenlet.Greenlet):
                 except AttributeError:
                     return object.__getattribute__(self, item)
 
-    def _update_sync_object(self, updated, data):
-        self._store.save(SyncObject(updated=updated, data=data))
+    def update_sync_object(self, updated, cluster_id, data):
+        self._store.save(SyncObject(updated=updated, cluster_id=cluster_id, data=data))
 
     def _update_peer(self, peer):
         self._store.save(peer)
