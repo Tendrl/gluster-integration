@@ -6,17 +6,19 @@ Name: %{pkg_name}
 Version: %{pkg_version}
 Release: %{pkg_release}%{?dist}
 BuildArch: noarch
-Summary: Common Module for All Bridges
+Summary: Module for Gluster Bridge
 Source0: %{pkg_name}-%{pkg_version}.tar.gz
 Group:   Applications/System
-License: GPLv2+
+License: LGPL2.1
 Url: https://github.com/Tendrl/gluster_bridge
 
-#Requires: python-etcd
-Requires: python-dateutil >= 2.2
+Requires: python-etcd
+Requires: python-dateutil >= 2.4
 Requires: python-gevent >= 1.0
-Requires: python-greenlet >= 0.3.2
+Requires: python-greenlet >= 0.4
 Requires: pytz
+Requires: python-taskflow >= 2.6
+Requires: tendrl-bridge-common
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.
@@ -31,7 +33,7 @@ rm -rf %{pkg_name}.egg-info
 %{__python} setup.py build
 
 # generate html docs
-%if 0%{?rhel}==6
+%if 0%{?rhel}==7
 sphinx-1.0-build doc/source html
 %else
 sphinx-build doc/source html
@@ -40,35 +42,27 @@ sphinx-build doc/source html
 rm -rf html/.{doctrees,buildinfo}
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT/usr/lib/systemd/system/tendrl-glusterd.service
+install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT/usr/share/tendrl/commons/tendrl.conf
+install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT/etc/tendrl.conf.sample
 
 %post
-cat <<EOF >> /etc/tendrl/tendrl.conf
+mkdir /var/log/tendrl >/dev/null 2>&1 || :
+%systemd_post tendrl-glusterd.service
 
-[gluster_bridge]
-# Path to log file
-log_path = /var/log/tendrl/gluster_bridge.log
-log_level = DEBUG
-EOF
+%preun
+%systemd_preun tendrl-glusterd.service
 
-/bin/systemctl enable tendrl-glusterd.service >/dev/null 2>&1 || :
-/bin/systemctl restart tendrl-glusterd.service >/dev/null 2>&1 || :
-
-%clean
-rm -rf $RPM_BUILD_ROOT
-
-%if 0%{?do_test}
-%check
-%{__python} setup.py test
-%endif
+%postun
+%systemd_postun_with_restart tendrl-glusterd.service
 
 %files -f INSTALLED_FILES
-%defattr(-,root,root)
-%doc html README.rst LICENSE
+%doc html README.rst
+%license LICENSE
+%{_datarootdir}/tendrl/commons/tendrl.conf
+%{_sysconfdir}/tendrl.conf.sample
 %{_usr}/lib/systemd/system/tendrl-glusterd.service
-
 
 %changelog
 * Mon Oct 24 2016 Timothy Asir Jeyasingh <tjeyasin@redhat.com> - 0.0.1-1
