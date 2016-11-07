@@ -14,6 +14,7 @@ dist:
 	rm -fr $(HOME)/$(BUILDS)
 	mkdir -p $(HOME)/$(BUILDS) $(RPMBUILD)/SOURCES
 	cp -fr $(BASEDIR) $(HOME)/$(BUILDS)/$(TARDIR)
+	rm -rf $(HOME)/$(BUILDS)/$(TARDIR)/*.egg-info
 	cd $(HOME)/$(BUILDS); \
 	tar --exclude-vcs --exclude=.* -zcf tendrl-gluster-bridge-$(VERSION).tar.gz $(TARDIR); \
 	cp tendrl-gluster-bridge-$(VERSION).tar.gz $(RPMBUILD)/SOURCES
@@ -34,6 +35,6 @@ rpm:
 	if [ "$$EC" -eq "0" ]; then \
 		FILE=$$(readlink -f $$(find $(RPMBUILD)/RPMS -name tendrl-gluster-bridge-$(VERSION)*.rpm)); \
 		cp -f $$FILE $(DEPLOY)/latest/; \
-		printf "\nThe bridge common RPMs are located at:\n\n"; \
+		printf "\nThe tendrl-gluster-bridge RPMs are located at:\n\n"; \
 		printf "   $(DEPLOY)/latest\n\n\n\n"; \
 	fi
