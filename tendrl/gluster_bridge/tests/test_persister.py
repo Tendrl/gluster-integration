@@ -47,7 +47,10 @@ class Test_Persister(object):
         """Sending dummy parameters"""
         data = "data"
         updated = "updated"
-        self.Persister._update_sync_object(updated, data)
+        self.Persister.update_sync_object(
+            updated,
+            '145b9021-d47c-4094-957b-7545e8232ab7',
+            data)
         self.Persister._store.save.assert_called()
 
     def test_update_peer(self):

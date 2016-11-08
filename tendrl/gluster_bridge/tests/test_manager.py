@@ -12,13 +12,15 @@ class Test_manager(TestGluster_bridge):
 
     def test_manager_with_peer(self):
         body = """[Global]\nMYUUID=145b9021-d47c-4094-957b-7545e8232ab7 \
-        \nop-version:40000\n[Peers]\npeer1.uuid=1\npeer1.hostname=pytest" \
+        \nop-version:40000\n[Peers]\npeer1.uuid=1\npeer1.hostnames=pytest" \
+        \nPeer1.primary_hostname=host1" \
         \npeer1.state=active"""
         self.Initialize(body)
         self.Manager.time.time = MagicMock(return_value=1477237162.990813)
         self.managerobj._discovery_thread._run()
         self.Manager.Peer.assert_called_with(
-            hostname='pytest"', peer_uuid='1', state='active',
+            cluster_id='145b9021-d47c-4094-957b-7545e8232ab7',
+            hostname='host1"', peer_uuid='1', state='active',
             updated='1477237162.99'
             )
 
@@ -29,7 +31,8 @@ class Test_manager(TestGluster_bridge):
         self.Initialize(body)
         self.managerobj._discovery_thread._run()
         self.Manager.Volume.assert_called_with(
-            brick_count='1', name='brick1', status='active',
+            brick_count='1', cluster_id='145b9021-d47c-4094-957b-7545e8232ab7',
+            name='brick1', status='active',
             vol_id='1', vol_type='abc"'
             )
 
@@ -44,6 +47,7 @@ class Test_manager(TestGluster_bridge):
         self.Initialize(body)
         self.managerobj._discovery_thread._run()
         self.Manager.Brick.assert_called_with(
+            cluster_id='145b9021-d47c-4094-957b-7545e8232ab7',
             filesystem_type='FAT12', hostname='abc', mount_options='abc',
             path='/tmp', port='80', status='active', vol_id='1'
             )
