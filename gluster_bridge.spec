@@ -9,7 +9,6 @@ URL: https://github.com/Tendrl/gluster_bridge
 
 BuildRequires: systemd
 BuildRequires: python2-devel
-BuildRequires: python-sphinx
 BuildRequires: pytest
 
 Requires: python-etcd
@@ -32,9 +31,6 @@ rm -rf %{name}.egg-info
 
 %build
 %{__python} setup.py build
-
-# generate html docs
-sphinx-build doc/source html
 
 # remove the sphinx-build leftovers
 rm -rf html/.{doctrees,buildinfo}
@@ -60,7 +56,7 @@ py.test -v tendrl/gluster_bridge/tests
 
 %files -f INSTALLED_FILES
 %dir %{_var}/log/tendrl
-%doc html README.rst
+%doc README.rst
 %license LICENSE
 %{_datarootdir}/tendrl/commons/tendrl.conf
 %{_sysconfdir}/tendrl.conf.sample
