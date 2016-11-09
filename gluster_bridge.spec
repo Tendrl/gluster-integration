@@ -4,7 +4,7 @@ Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Bridge
 Source0: %{name}-%{version}.tar.gz
-License: LGPLv2
+License: LGPLv2+
 URL: https://github.com/Tendrl/gluster_bridge
 
 BuildRequires: systemd
@@ -12,11 +12,11 @@ BuildRequires: python2-devel
 BuildRequires: pytest
 
 Requires: python-etcd
-Requires: python-dateutil >= 2.4
-Requires: python-gevent >= 1.0
-Requires: python-greenlet >= 0.4
+Requires: python-dateutil
+Requires: python-gevent
+Requires: python-greenlet
 Requires: pytz
-Requires: python-taskflow >= 2.6
+Requires: python-taskflow
 Requires: tendrl-bridge-common
 Requires: systemd
 
@@ -24,7 +24,7 @@ Requires: systemd
 Python module for Tendrl gluster bridge to manage gluster tasks.
 
 %prep
-%setup -n %{name}-%{version}
+%setup
 
 # Remove bundled egg-info
 rm -rf %{name}.egg-info
@@ -37,10 +37,9 @@ rm -rf html/.{doctrees,buildinfo}
 
 %install
 %{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
-install -m 755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl
+install -m 755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster_bridge
 install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-glusterd.service
-install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/commons/tendrl.conf
-install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_sysconfdir}/tendrl.conf.sample
+install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster_bridge/tendrl.conf.sample
 
 %post
 %systemd_post tendrl-glusterd.service
@@ -55,11 +54,10 @@ install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_sysconfdir}/tend
 py.test -v tendrl/gluster_bridge/tests
 
 %files -f INSTALLED_FILES
-%dir %{_var}/log/tendrl
+%dir %{_var}/log/tendrl/gluster_bridge
 %doc README.rst
 %license LICENSE
-%{_datarootdir}/tendrl/commons/tendrl.conf
-%{_sysconfdir}/tendrl.conf.sample
+%{_datarootdir}/tendrl/gluster_bridge/tendrl.conf.sample
 %{_unitdir}/tendrl-glusterd.service
 
 %changelog
