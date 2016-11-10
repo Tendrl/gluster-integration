@@ -1,6 +1,11 @@
+include LICENSE
 include AUTHORS
 include ChangeLog
+include requirements.txt
+include tendrl-glusterd.service
 exclude .gitignore
 exclude .gitreview
-
+graft docs
+graft etc
+graft tendrl
 global-exclude *.pyc

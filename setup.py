@@ -9,7 +9,7 @@ def extract_requirements(filename):
 install_requires = extract_requirements('requirements.txt')
 
 setup(
-    name="tendrl_gluster_bridge",
+    name="tendrl-gluster-bridge",
     version="0.0.1",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                     "tests"]),
