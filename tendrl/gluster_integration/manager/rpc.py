@@ -1,13 +1,18 @@
 import json
 import logging
-import re
 import traceback
 import uuid
 
 import etcd
 import gevent.event
+import yaml
 
+from tendrl.common.definitions.validator import DefinitionsSchemaValidator
+from tendrl.common.definitions.validator import JobValidator
 from tendrl.gluster_integration.config import TendrlConfig
+from tendrl.gluster_integration.flows.flow_execution_exception import \
+    FlowExecutionFailedError
+from tendrl.gluster_integration.manager import utils
 
 
 config = TendrlConfig()
@@ -23,29 +28,60 @@ class EtcdRPC(object):
         self.client = etcd.Client(**etcd_kwargs)
         self.integration_id = str(uuid.uuid4())
         self.Etcdthread = Etcdthread
+        self.node_id = utils.get_tendrl_uuid()
+
+    def _process_job(self, raw_job, job_key):
+        # Pick up the "new" job that is not locked by any other integration
+        if raw_job['status'] == "new" and raw_job["type"] == "sds":
+                raw_job['status'] = "processing"
+                # Generate a request ID for tracking this job
+                # further by tendrl-api
+                req_id = str(uuid.uuid4())
+                raw_job['request_id'] = "%s/flow_%s" % (
+                    self.node_id, req_id)
+                self.client.write(job_key, json.dumps(raw_job))
+                LOG.info("Processing JOB %s" % raw_job[
+                    'request_id'])
+                try:
+                    definitions = self.validate_flow(raw_job)
+                    if definitions:
+                        result = self.invoke_flow(
+                            raw_job['run'], raw_job, definitions
+                        )
+                except FlowExecutionFailedError as e:
+                    # TODO(rohan) print more of this error msg here
+                    LOG.error(e)
+                    raw_job['status'] = "failed"
+                else:
+                    raw_job['status'] = "finished"
+
+                return raw_job, True
+        else:
+            return raw_job, False
 
     def _acceptor(self):
         while not self.Etcdthread._complete.is_set():
-            jobs = self.client.read("/api_job_queue")
+            jobs = self.client.read("/queue")
             for job in jobs.children:
+                executed = False
+                if job.value is None:
+                    LOG.info("JOB /queue is empty!!")
+                    continue
                 raw_job = json.loads(job.value.decode('utf-8'))
-        # Pick up the "new" job that is not locked by any other integration
-                if raw_job['status'] == "new":
-                    try:
-                        raw_job['status'] = "processing"
-                        # Generate a request ID for tracking this job
-                        # further by tendrl-api
-                        req_id = str(uuid.uuid4())
-                        raw_job['request_id'] = "%s/flow_%s" % (
-                            self.integration_id, req_id)
-                        self.client.write(job.key, json.dumps(raw_job))
-                        gevent.sleep(2)
-                        LOG.info("Processing API-JOB %s" % raw_job[
-                            'request_id'])
-                        self.invoke_flow(raw_job['flow'], raw_job)
-                        break
-                    except Exception as ex:
-                        LOG.error(ex)
+                try:
+                    if "node_id" in raw_job:
+                        if raw_job['node_id'] != self.node_id:
+                            continue
+                    raw_job, executed = self._process_job(raw_job, job.key)
+                except FlowExecutionFailedError as e:
+                    LOG.error(
+                        "Failed to execute job: %s. Error: %s" %
+                        (str(job), str(e))
+                    )
+                if executed:
+                    self.client.write(job.key, json.dumps(raw_job))
+                    break
+            gevent.sleep(2)
 
     def run(self):
         self._acceptor()
@@ -53,17 +89,47 @@ class EtcdRPC(object):
     def stop(self):
         pass
 
-    def invoke_flow(self, flow_name, api_job):
-        # TODO(rohan) parse sds_operations_gluster.yaml and correlate here
-        flow_module = 'tendrl.gluster_integration.flows.%s' %\
-                      self.convert_flow_name(flow_name)
-        mod = __import__(flow_module, fromlist=[
-            flow_name])
-        getattr(mod, flow_name)(api_job).start()
+    def validate_flow(self, raw_job):
+        LOG.info("Validating flow %s for %s" % (raw_job['run'],
+                                                raw_job['request_id']))
+        definitions = yaml.load(
+            self.client.read('/clusters/%s/tendrl_definitions_gluster/data' % raw_job['cluster_id']).
+            value.decode("utf-8")
+        )
+        definitions = DefinitionsSchemaValidator(
+            definitions).sanitize_definitions()
+        # resp, msg = JobValidator(definitions).validateApi(raw_job)
+        # if resp:
+        #    msg = "Successfull Validation flow %s for %s" %\
+        #          (raw_job['run'], raw_job['request_id'])
+        #    LOG.info(msg)
 
-    def convert_flow_name(self, flow_name):
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', flow_name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        return definitions
+        # else:
+        #    msg = "Failed Validation flow %s for %s" % (raw_job['run'],
+        #                                               raw_job['request_id'])
+        #    LOG.error(msg)
+        #    return False
+
+    def invoke_flow(self, flow_name, job, definitions):
+        atoms, pre_run, post_run, uuid = self.extract_flow_details(
+            flow_name,
+            definitions
+        )
+        the_flow = None
+        flow_path = flow_name.split('.')
+        flow_module = ".".join([a.encode("ascii", "ignore") for a in
+                                flow_path[:-1]])
+        kls_name = ".".join([a.encode("ascii", "ignore") for a in
+                             flow_path[-1:]])
+        if "tendrl" in flow_path and "flows" in flow_path:
+            exec("from %s import %s as the_flow" % (flow_module, kls_name))
+            return the_flow(flow_name, job, atoms, pre_run, post_run, uuid).run()
+
+    def extract_flow_details(self, flow_name, definitions):
+        namespace = flow_name.split(".flows.")[0]
+        flow = definitions[namespace]['flows'][flow_name.split(".")[-1]]
+        return flow['atoms'], flow['pre_run'], flow['post_run'], flow['uuid']
 
 
 class EtcdThread(gevent.greenlet.Greenlet):

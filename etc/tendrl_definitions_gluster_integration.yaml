@@ -1,4 +1,4 @@
-data="""---
+---
 namespace.tendrl.gluster_integration:
   objects:
     Tendrl_context:
@@ -179,4 +179,4 @@ namespace.tendrl.gluster_integration:
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
       version: 1
 
-tendrl_schema_version: 0.3"""
+tendrl_schema_version: 0.3
