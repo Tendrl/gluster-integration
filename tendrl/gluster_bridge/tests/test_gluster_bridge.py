@@ -1,30 +1,30 @@
 """
-test_gluster_bridge
+test_gluster_integration
 ----------------------------------
 
-Tests for `gluster_bridge` module.
+Tests for `gluster_integration` module.
 """
 from mock import MagicMock
 import os
 import shutil
 import sys
 import tempfile
-sys.modules['tendrl.bridge_common'] = MagicMock()
-sys.modules['tendrl.gluster_bridge.persistence.servers'] = MagicMock()
-sys.modules['tendrl.gluster_bridge.config'] = MagicMock()
-sys.modules['tendrl.gluster_bridge.manager.rpc'] = MagicMock()
-sys.modules['tendrl.gluster_bridge.persistence.persister'] = MagicMock()
+sys.modules['tendrl.common'] = MagicMock()
+sys.modules['tendrl.gluster_integration.persistence.servers'] = MagicMock()
+sys.modules['tendrl.gluster_integration.config'] = MagicMock()
+sys.modules['tendrl.gluster_integration.manager.rpc'] = MagicMock()
+sys.modules['tendrl.gluster_integration.persistence.persister'] = MagicMock()
 sys.modules['logging'] = MagicMock()
-from tendrl.gluster_bridge.manager import manager
-del sys.modules['tendrl.gluster_bridge.manager.rpc']
-del sys.modules['tendrl.gluster_bridge.persistence.persister']
+from tendrl.gluster_integration.manager import manager
+del sys.modules['tendrl.gluster_integration.manager.rpc']
+del sys.modules['tendrl.gluster_integration.persistence.persister']
 del sys.modules['logging']
-del sys.modules['tendrl.gluster_bridge.config']
-del sys.modules['tendrl.bridge_common']
-del sys.modules['tendrl.gluster_bridge.persistence.servers']
+del sys.modules['tendrl.gluster_integration.config']
+del sys.modules['tendrl.common']
+del sys.modules['tendrl.gluster_integration.persistence.servers']
 
 
-class TestGluster_bridge(object):
+class TestGluster_integration(object):
     def setup_method(self, method):
         manager.gevent.sleep = MagicMock()
         manager.Peer = MagicMock()

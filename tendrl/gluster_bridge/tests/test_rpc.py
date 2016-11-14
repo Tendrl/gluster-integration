@@ -1,10 +1,10 @@
 import json
 from mock import MagicMock
 import sys
-sys.modules['tendrl.gluster_bridge.config'] = MagicMock()
+sys.modules['tendrl.gluster_integration.config'] = MagicMock()
 sys.modules['etcd'] = MagicMock()
-from tendrl.gluster_bridge.manager import rpc
-del sys.modules['tendrl.gluster_bridge.config']
+from tendrl.gluster_integration.manager import rpc
+del sys.modules['tendrl.gluster_integration.config']
 del sys.modules['etcd']
 import uuid
 
@@ -24,7 +24,7 @@ class Test_EtcdThread(object):
         def mock_uuid4():
             return 'aa22a6fe-87f0-45cf-8b70-2d0ff4c02af6'
         monkeypatch.setattr(uuid, 'uuid4', mock_uuid4)
-        self.etcdthread._server.bridge_id = \
+        self.etcdthread._server.integration_id = \
             'aa22a6fe-87f0-45cf-8b70-2d0ff4c02af6'
         self.etcdthread._complete = self
         self.etcdthread._run()

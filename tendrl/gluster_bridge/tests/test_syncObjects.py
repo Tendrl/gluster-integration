@@ -1,4 +1,4 @@
-from tendrl.gluster_bridge.persistence.sync_objects import SyncObject
+from tendrl.gluster_integration.persistence.sync_objects import SyncObject
 
 
 class Test_SyncObject(object):

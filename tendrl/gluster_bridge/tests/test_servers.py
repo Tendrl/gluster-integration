@@ -1,4 +1,4 @@
-from tendrl.gluster_bridge.persistence import servers
+from tendrl.gluster_integration.persistence import servers
 
 
 class Test_Peer(object):

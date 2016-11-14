@@ -1,12 +1,12 @@
 from mock import MagicMock
 import pytest
 import sys
-sys.modules['tendrl.gluster_bridge.config'] = MagicMock()
+sys.modules['tendrl.gluster_integration.config'] = MagicMock()
 sys.modules['logging'] = MagicMock()
-from tendrl.gluster_bridge.persistence import persister
-del sys.modules['tendrl.gluster_bridge.config']
+from tendrl.gluster_integration.persistence import persister
+del sys.modules['tendrl.gluster_integration.config']
 del sys.modules['logging']
-from tendrl.gluster_bridge.persistence import servers
+from tendrl.gluster_integration.persistence import servers
 
 
 class Test_deferred_call(object):
