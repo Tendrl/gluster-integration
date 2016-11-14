@@ -29,7 +29,7 @@ class EtcdRPC(object):
             jobs = self.client.read("/api_job_queue")
             for job in jobs.children:
                 raw_job = json.loads(job.value.decode('utf-8'))
-                # Pick up the "new" job that is not locked by any other integration
+        # Pick up the "new" job that is not locked by any other integration
                 if raw_job['status'] == "new":
                     try:
                         raw_job['status'] = "processing"
