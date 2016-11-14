@@ -1,11 +1,11 @@
-Name: tendrl-gluster-bridge
+Name: tendrl-gluster-integration
 Version: 0.0.1
 Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Bridge
 Source0: %{name}-%{version}.tar.gz
 License: LGPLv2+
-URL: https://github.com/Tendrl/gluster_bridge
+URL: https://github.com/Tendrl/gluster_integration
 
 BuildRequires: systemd
 BuildRequires: python2-devel
@@ -20,7 +20,7 @@ Requires: python-dateutil
 Requires: python-gevent
 Requires: python-greenlet
 Requires: pytz
-Requires: tendrl-bridge-common
+Requires: tendrl-common
 Requires: systemd
 
 %description
@@ -40,9 +40,9 @@ rm -rf html/.{doctrees,buildinfo}
 
 %install
 %{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
-install -m 755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster_bridge
+install -m 755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster_integration
 install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-glusterd.service
-install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster_bridge/tendrl.conf.sample
+install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster_integration/tendrl.conf.sample
 
 %post
 %systemd_post tendrl-glusterd.service
@@ -55,13 +55,13 @@ install -Dm 755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/
 
 %check
 # the following test will be enabled once the test issues fixed
-#py.test -v tendrl/gluster_bridge/tests
+#py.test -v tendrl/gluster_integration/tests
 
 %files -f INSTALLED_FILES
-%dir %{_var}/log/tendrl/gluster_bridge
+%dir %{_var}/log/tendrl/gluster_integration
 %doc README.rst
 %license LICENSE
-%{_datarootdir}/tendrl/gluster_bridge/tendrl.conf.sample
+%{_datarootdir}/tendrl/gluster_integration/tendrl.conf.sample
 %{_unitdir}/tendrl-glusterd.service
 
 %changelog

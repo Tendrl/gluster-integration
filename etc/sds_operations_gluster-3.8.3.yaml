@@ -38,7 +38,7 @@ object_details:
         info:
           type: "get"
         create:
-          run: "gluster_bridge.atoms.volume.create"
+          run: "gluster_integration.atoms.volume.create"
           type: "create"
           conditions:
             pre_condition : ["atoms.<atom_name>.<condition_function>1"...]
@@ -153,7 +153,7 @@ object_details:
                 pre_condition : ["atoms.<atom_name>.<condition_function>1"...]
                 #boolean returning pre/post conditions function list
                 post_condition: ["atoms.<atom_name>.<condition_function>1"...]
-      run: "gluster_bridge.flows.create_volume"
+      run: "gluster_integration.flows.create_volume"
       type: Create
 
 

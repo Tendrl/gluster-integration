@@ -4,14 +4,14 @@ Status
 Builds
 ------
 
-.. image:: https://travis-ci.org/Tendrl/gluster_bridge.svg?branch=master
-    :target: https://travis-ci.org/Tendrl/gluster_bridge
+.. image:: https://travis-ci.org/Tendrl/gluster_integration.svg?branch=master
+    :target: https://travis-ci.org/Tendrl/gluster_integration
 
 Code Coverage
 -------------
 
-.. image:: https://coveralls.io/repos/github/Tendrl/gluster_bridge/badge.svg?branch=master
-    :target: https://coveralls.io/github/Tendrl/gluster_bridge?branch=master
+.. image:: https://coveralls.io/repos/github/Tendrl/gluster_integration/badge.svg?branch=master
+    :target: https://coveralls.io/github/Tendrl/gluster_integration?branch=master
 
 
 Testing

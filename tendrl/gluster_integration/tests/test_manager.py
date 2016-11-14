@@ -1,9 +1,10 @@
 from mock import MagicMock
-from tendrl.gluster_bridge import ini2json
-from tendrl.gluster_bridge.tests.test_gluster_bridge import TestGluster_bridge
+from tendrl.gluster_integration import ini2json
+from tendrl.gluster_integration.tests.test_gluster_integration import \
+    TestGluster_integration
 
 
-class Test_manager(TestGluster_bridge):
+class Test_manager(TestGluster_integration):
     def Initialize(self, body):
         self.Manager.subprocess = self
         self.Manager.ini2json = self

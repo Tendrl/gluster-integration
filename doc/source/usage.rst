@@ -2,6 +2,6 @@
 Usage
 ========
 
-To use gluster_bridge in a project::
+To use gluster_integration in a project::
 
-    import gluster_bridge
+    import gluster_integration

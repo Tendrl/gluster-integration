@@ -1,10 +1,11 @@
 from mock import MagicMock
 import pytest
-from tendrl.gluster_bridge import ini2json
-from tendrl.gluster_bridge.tests.test_gluster_bridge import TestGluster_bridge
+from tendrl.gluster_integration import ini2json
+from tendrl.gluster_integration.tests.test_gluster_integration import \
+    TestGluster_integration
 
 
-class Test_StrictConfigParser(TestGluster_bridge):
+class Test_StrictConfigParser(TestGluster_integration):
 
     def test_parse_empty_nodefaults(self):
         filename = self._makeFile('empty', '')

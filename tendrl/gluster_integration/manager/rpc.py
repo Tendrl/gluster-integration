@@ -7,7 +7,7 @@ import uuid
 import etcd
 import gevent.event
 
-from tendrl.gluster_bridge.config import TendrlConfig
+from tendrl.gluster_integration.config import TendrlConfig
 
 
 config = TendrlConfig()
@@ -17,11 +17,11 @@ LOG = logging.getLogger(__name__)
 class EtcdRPC(object):
 
     def __init__(self, Etcdthread):
-        etcd_kwargs = {'port': int(config.get("bridge_common", "etcd_port")),
-                       'host': config.get("bridge_common", "etcd_connection")}
+        etcd_kwargs = {'port': int(config.get("common", "etcd_port")),
+                       'host': config.get("common", "etcd_connection")}
 
         self.client = etcd.Client(**etcd_kwargs)
-        self.bridge_id = str(uuid.uuid4())
+        self.integration_id = str(uuid.uuid4())
         self.Etcdthread = Etcdthread
 
     def _acceptor(self):
@@ -29,7 +29,7 @@ class EtcdRPC(object):
             jobs = self.client.read("/api_job_queue")
             for job in jobs.children:
                 raw_job = json.loads(job.value.decode('utf-8'))
-                # Pick up the "new" job that is not locked by any other bridge
+        # Pick up the "new" job that is not locked by any other integration
                 if raw_job['status'] == "new":
                     try:
                         raw_job['status'] = "processing"
@@ -37,7 +37,7 @@ class EtcdRPC(object):
                         # further by tendrl-api
                         req_id = str(uuid.uuid4())
                         raw_job['request_id'] = "%s/flow_%s" % (
-                            self.bridge_id, req_id)
+                            self.integration_id, req_id)
                         self.client.write(job.key, json.dumps(raw_job))
                         gevent.sleep(2)
                         LOG.info("Processing API-JOB %s" % raw_job[
@@ -55,7 +55,7 @@ class EtcdRPC(object):
 
     def invoke_flow(self, flow_name, api_job):
         # TODO(rohan) parse sds_operations_gluster.yaml and correlate here
-        flow_module = 'tendrl.gluster_bridge.flows.%s' %\
+        flow_module = 'tendrl.gluster_integration.flows.%s' %\
                       self.convert_flow_name(flow_name)
         mod = __import__(flow_module, fromlist=[
             flow_name])

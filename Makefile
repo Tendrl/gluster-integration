@@ -1,4 +1,4 @@
-NAME=tendrl-gluster-bridge
+NAME=tendrl-gluster-integration
 VERSION=0.0.1
 
 all: srpm
