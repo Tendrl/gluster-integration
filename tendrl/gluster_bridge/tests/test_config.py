@@ -1,6 +1,6 @@
 from mock import MagicMock
 import pytest
-from tendrl.gluster_bridge import config
+from tendrl.gluster_integration import config
 
 
 class TestTendrlconfig(object):

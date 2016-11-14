@@ -1,7 +1,7 @@
 import gevent.queue
 from gevent import sleep
 import pytest
-from tendrl.gluster_bridge import gevent_util
+from tendrl.gluster_integration import gevent_util
 
 
 def test_nosleep_mgr():

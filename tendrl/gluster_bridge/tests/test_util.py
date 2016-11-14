@@ -1,5 +1,5 @@
 import datetime
-from tendrl.gluster_bridge import util
+from tendrl.gluster_integration import util
 
 
 def test_now():

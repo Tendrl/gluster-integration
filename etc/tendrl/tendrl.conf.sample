@@ -1,4 +1,4 @@
-[bridge_common]
+[common]
 
 # Central store etcd port
 etcd_port = 2379
@@ -7,11 +7,11 @@ etcd_port = 2379
 etcd_connection = 0.0.0.0
 
 # Path to log file
-log_path = /var/log/tendrl/bridge_common.log
+log_path = /var/log/tendrl/common.log
 log_level = DEBUG
 
 
-[gluster_bridge]
+[gluster_integration]
 # Path to log file
 log_level = DEBUG
 log_cfg_path = /etc/tendrl/logging.yaml

@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = tendrl.gluster_bridge
-omit = tendrl/gluster_bridge/tests/*
+source = tendrl.gluster_integration
+omit = tendrl/gluster_integration/tests/*
 
 [report]
 ignore_errors = True

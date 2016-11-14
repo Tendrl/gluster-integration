@@ -9,7 +9,7 @@ def extract_requirements(filename):
 install_requires = extract_requirements('requirements.txt')
 
 setup(
-    name="tendrl_gluster_bridge",
+    name="tendrl_gluster_integration",
     version="0.1",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                     "tests"]),
@@ -22,8 +22,8 @@ setup(
     install_requires=install_requires,
     entry_points={
         'console_scripts': [
-            'tendrl-gluster-bridge = '
-            'tendrl.gluster_bridge.manager.manager:main'
+            'tendrl-gluster-integration = '
+            'tendrl.gluster_integration.manager.manager:main'
         ]
     }
 )

@@ -1,5 +1,5 @@
 ============================================
- gluster_bridge Release Notes
+ gluster_integration Release Notes
 ============================================
 
 .. toctree::
