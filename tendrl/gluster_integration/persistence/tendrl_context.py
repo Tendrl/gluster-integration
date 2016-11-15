@@ -8,7 +8,6 @@ class TendrlContext(EtcdObj):
     """
     __name__ = '/clusters/%s/tendrl_context'
 
-    node_id = fields.StrField("node_id")
     sds_version = fields.StrField("sds_version")
     sds_name = fields.StrField("sds_name")
     cluster_id = fields.StrField("cluster_id")

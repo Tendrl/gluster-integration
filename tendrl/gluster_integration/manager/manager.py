@@ -206,9 +206,6 @@ class Manager(object):
         self.persister.update_tendrl_context(
             TendrlContext(
                 updated=str(time.time()),
-                sds_version="",
-                node_id=utils.get_node_context(),
-                sds_name="",
                 cluster_id=cluster_id
             )
         )
