@@ -34,7 +34,7 @@ class Create(object):
                 'gluster',
                 'volume',
                 'start',
-                parameters.get('volname'),
+                parameters.get('Volume.volname'),
                 '--mode=script'
             ]
         )
