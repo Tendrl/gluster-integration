@@ -4,6 +4,7 @@ import json
 import logging
 import signal
 import subprocess
+import sys
 import time
 import traceback
 
@@ -11,15 +12,25 @@ import gevent.event
 import gevent.greenlet
 
 from tendrl.common import log
+
 from tendrl.gluster_integration.manager.rpc import EtcdThread
+from tendrl.gluster_integration.manager.tendrl_definitions_gluster import data as \
+    def_data
+from tendrl.gluster_integration.manager import utils
+
 from tendrl.gluster_integration.persistence.persister import Persister
 from tendrl.gluster_integration.persistence.servers import Brick
 from tendrl.gluster_integration.persistence.servers import Peer
 from tendrl.gluster_integration.persistence.servers import Volume
 
+
 from tendrl.gluster_integration import ini2json
 
 from tendrl.gluster_integration.config import TendrlConfig
+from tendrl.gluster_integration.persistence.tendrl_context import TendrlContext
+from tendrl.gluster_integration.persistence.tendrl_definitions import \
+    TendrlDefinitions
+
 config = TendrlConfig()
 
 LOG = logging.getLogger(__name__)
@@ -71,12 +82,13 @@ class Manager(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, cluster_id):
         self._complete = gevent.event.Event()
 
         self._user_request_thread = EtcdThread(self)
         self._discovery_thread = TopLevelEvents(self)
         self.persister = Persister()
+        self.register_to_cluster(cluster_id)
 
     def stop(self):
         LOG.info("%s stopping" % self.__class__.__name__)
@@ -190,6 +202,20 @@ class Manager(object):
                 except KeyError:
                     break
 
+    def register_to_cluster(self, cluster_id):
+        self.persister.update_tendrl_context(
+            TendrlContext(
+                updated=str(time.time()),
+                sds_version="",
+                node_id=utils.get_node_context(),
+                sds_name="",
+                cluster_id=cluster_id
+            )
+        )
+
+        self.persister.update_tendrl_definitions(TendrlDefinitions(
+            updated=str(time.time()), data=def_data))
+
 
 def dump_stacks():
     """This is for use in debugging, especially using manhole
@@ -208,7 +234,14 @@ def main():
         config.get('gluster_integration', 'log_cfg_path'),
         config.get('gluster_integration', 'log_level')
     )
-    m = Manager()
+
+    if sys.argv:
+        if len(sys.argv) > 1:
+            if "cluster-id" in sys.argv[1]:
+                cluster_id = sys.argv[2]
+                utils.set_tendrl_context(cluster_id)
+
+    m = Manager(utils.get_tendrl_context())
     m.start()
 
     complete = gevent.event.Event()
