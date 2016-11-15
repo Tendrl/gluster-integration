@@ -8,7 +8,6 @@ import gevent.event
 import yaml
 
 from tendrl.common.definitions.validator import DefinitionsSchemaValidator
-from tendrl.common.definitions.validator import JobValidator
 from tendrl.gluster_integration.config import TendrlConfig
 from tendrl.gluster_integration.flows.flow_execution_exception import \
     FlowExecutionFailedError
@@ -46,9 +45,7 @@ class EtcdRPC(object):
                 try:
                     definitions = self.validate_flow(raw_job)
                     if definitions:
-                        result = self.invoke_flow(
-                            raw_job['run'], raw_job, definitions
-                        )
+                        self.invoke_flow(raw_job['run'], raw_job, definitions)
                 except FlowExecutionFailedError as e:
                     # TODO(rohan) print more of this error msg here
                     LOG.error(e)
@@ -91,7 +88,8 @@ class EtcdRPC(object):
         LOG.info("Validating flow %s for %s" % (raw_job['run'],
                                                 raw_job['request_id']))
         definitions = yaml.load(
-            self.client.read('/clusters/%s/definitions/data' % raw_job['cluster_id']).
+            self.client.read('/clusters/%s/definitions/data' % raw_job[
+                'cluster_id']).
             value.decode("utf-8")
         )
         definitions = DefinitionsSchemaValidator(
@@ -122,7 +120,8 @@ class EtcdRPC(object):
                              flow_path[-1:]])
         if "tendrl" in flow_path and "flows" in flow_path:
             exec("from %s import %s as the_flow" % (flow_module, kls_name))
-            return the_flow(flow_name, job, atoms, pre_run, post_run, uuid).run()
+            return the_flow(flow_name, job, atoms, pre_run, post_run,
+                            uuid).run()
 
     def extract_flow_details(self, flow_name, definitions):
         namespace = flow_name.split(".flows.")[0]
