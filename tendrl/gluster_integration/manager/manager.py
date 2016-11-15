@@ -23,7 +23,6 @@ from tendrl.gluster_integration.persistence.servers import Brick
 from tendrl.gluster_integration.persistence.servers import Peer
 from tendrl.gluster_integration.persistence.servers import Volume
 
-
 from tendrl.gluster_integration import ini2json
 
 from tendrl.gluster_integration.config import TendrlConfig
@@ -38,11 +37,12 @@ LOG = logging.getLogger(__name__)
 
 class TopLevelEvents(gevent.greenlet.Greenlet):
 
-    def __init__(self, manager):
+    def __init__(self, manager, cluster_id):
         super(TopLevelEvents, self).__init__()
 
         self._manager = manager
         self._complete = gevent.event.Event()
+        self.cluster_id = cluster_id
 
     def stop(self):
         self._complete.set()
@@ -66,7 +66,7 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
                 )
                 raw_data = ini2json.ini_to_dict('/tmp/glusterd-state')
                 subprocess.call(['rm', '-rf', '/tmp/glusterd-state'])
-                self._manager.on_pull(raw_data)
+                self._manager.on_pull(raw_data, self.cluster_id)
             except Exception as ex:
                 LOG.error(ex)
 
@@ -86,7 +86,7 @@ class Manager(object):
         self._complete = gevent.event.Event()
 
         self._user_request_thread = EtcdThread(self)
-        self._discovery_thread = TopLevelEvents(self)
+        self._discovery_thread = TopLevelEvents(self, cluster_id)
         self.persister = Persister()
         self.register_to_cluster(cluster_id)
 
@@ -111,12 +111,11 @@ class Manager(object):
         self._discovery_thread.join()
         self.persister.join()
 
-    def on_pull(self, raw_data):
+    def on_pull(self, raw_data, cluster_id):
         LOG.info("on_pull")
-        global_info = raw_data['Global']
         self.persister.update_sync_object(
             str(time.time()),
-            global_info['myuuid'],
+            cluster_id,
             json.dumps(raw_data)
         )
         if "Peers" in raw_data:
@@ -128,7 +127,7 @@ class Manager(object):
                     self.persister.update_peer(
                         Peer(
                             updated=str(time.time()),
-                            cluster_id=global_info['myuuid'],
+                            cluster_id=cluster_id,
                             peer_uuid=peers['peer%s.uuid' % index],
                             hostname=peers[
                                 'peer%s.primary_hostname' % index],
@@ -149,7 +148,7 @@ class Manager(object):
                 try:
                     self.persister.update_volume(
                         Volume(
-                            cluster_id=global_info['myuuid'],
+                            cluster_id=cluster_id,
                             vol_id=volumes['volume%s.id' % index],
                             vol_type=volumes['volume%s.type' % index],
                             name=volumes['volume%s.name' % index],
@@ -165,7 +164,7 @@ class Manager(object):
                         try:
                             self.persister.update_brick(
                                 Brick(
-                                    cluster_id=global_info['myuuid'],
+                                    cluster_id=cluster_id,
                                     vol_id=volumes['volume%s.id' % index],
                                     path=volumes[
                                         'volume%s.brick%s.path' % (
@@ -210,8 +209,13 @@ class Manager(object):
             )
         )
 
-        self.persister.update_tendrl_definitions(TendrlDefinitions(
-            updated=str(time.time()), data=def_data))
+        self.persister.update_tendrl_definitions(
+            TendrlDefinitions(
+                updated=str(time.time()),
+                data=def_data,
+                cluster_id=cluster_id
+            )
+        )
 
 
 def dump_stacks():
