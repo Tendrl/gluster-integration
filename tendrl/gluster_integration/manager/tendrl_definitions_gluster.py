@@ -1,132 +1,29 @@
 # flake8: noqa
 data="""---
 namespace.tendrl.gluster_integration:
-  objects:
-    Tendrl_context:
-      enabled: True
-      attrs:
-        cluster_id:
-          type: String
-          help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
-        sds_name:
-          type: String
-          help: "gluster"
-        sds_version:
-          type: String
-          help: "3.8.3"
-    Volume:
-      enabled: True
-      attrs:
-        volname:
-          type: String
-          help: "Name of gluster volume"
-        stripe_count:
-          type: Integer
-          help: "Stripe count of volume"
-        replica_count:
-          type: Integer
-          help: "Replica count of volume"
-        arbiter_count:
-          type: Integer
-          help: "Arbiter count of volume"
-        disperse_count:
-          type: Integer
-          help: "Disperse count of volume"
-        disperse_data_count:
-          type: Integer
-          help: "Disperse data count of volume"
-        redundancy_count:
-          type: Integer
-          help: "Redundancy count of volume"
-        transport:
-          type: String
-          help: "Transport type for volume"
-        brickdetails:
-          type: brick[]
-          help: "List of bricks for volume"
-        force:
-          type: Boolean
-          help: "If force execute the action"
-      value: /clusters/$cluster.id/volumes/$volume.id
-      atoms:
-        create:
-          enabled: true
-          inputs:
-            mandatory:
-              - Volume.volname
-              - Volume.brickdetails
-            optional:
-              - Volume.stripe_count
-              - Volume.replica_count
-              - Volume.arbiter_count
-              - Volume.disperse_count
-              - Volume.disperse_data_count
-              - Volume.redundancy_count
-              - Volume.transport
-              - Volume.brickdetails
-              - Volume.force
-          name: "create_volume"
-          uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
-          run: tendrl.gluster_integration.objects.volume.atoms.create.Create
-          type: Create
-        delete:
-          enabled: true
-          inputs:
-            mandatory:
-              - Volume.volname
-          name: "delete_volume"
-          uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
-          run: tendrl.gluster_integration.objects.volume.atoms.delete.Delete
-          type: Delete
-        start:
-          enabled: true
-          inputs:
-            mandatory:
-              - Volume.volname
-          name: "start_volume"
-          uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
-          run: tendrl.gluster_integration.objects.volume.atoms.start.Start
-          type: Start
-        stop:
-          enabled: true
-          inputs:
-            mandatory:
-              - Volume.volname
-          name: "stop_volume"
-          uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
-          run: tendrl.gluster_integration.objects.volume.atoms.stop.Stop
-          type: Stop
-    brick:
-      attrs:
-        brickdetails:
-          type: String
-          help: Details of the brick
-        volname:
-          type: String
-          help: Gluster volume name
   flows:
     CreateVolume:
       atoms:
         - tendrl.gluster_integration.objects.volume.atoms.create
       description: "Create Volume with bricks"
-      enabled: True
+      enabled: true
       inputs:
         mandatory:
           - Volume.volname
-          - Volume.brickdetails
+          - Volume.bricks
         optional:
-          - stripe_count
-          - replica_count
-          - arbiter_count
-          - disperse_count
-          - disperse_data_count
-          - redundancy_count
-          - transport
-          - force
-      pre_run:
-        - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists
+          - Volume.stripe_count
+          - Volume.replica_count
+          - Volume.arbiter_count
+          - Volume.disperse_count
+          - Volume.disperse_data_count
+          - Volume.redundancy_count
+          - Volume.transport
+          - Volume.force
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_exists
+      pre_run:
+        - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists
       run: tendrl.gluster_integration.flows.create_volume.CreateVolume
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
@@ -135,14 +32,14 @@ namespace.tendrl.gluster_integration:
       atoms:
         - tendrl.gluster_integration.objects.volume.atoms.delete
       description: "Delete Volume"
-      enabled: True
+      enabled: true
       inputs:
         mandatory:
           - Volume.volname
-      pre_run:
-        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists
+      pre_run:
+        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       run: tendrl.gluster_integration.flows.delete_volume.DeleteVolume
       type: Delete
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
@@ -151,14 +48,14 @@ namespace.tendrl.gluster_integration:
       atoms:
         - tendrl.gluster_integration.objects.volume.atoms.start
       description: "Start Volume"
-      enabled: True
+      enabled: true
       inputs:
         mandatory:
           - Volume.volname
-      pre_run:
-        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_started
+      pre_run:
+        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       run: tendrl.gluster_integration.flows.start_volume.StartVolume
       type: Start
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
@@ -167,17 +64,111 @@ namespace.tendrl.gluster_integration:
       atoms:
         - tendrl.gluster_integration.objects.volume.atoms.stop
       description: "Stop Volume"
-      enabled: True
+      enabled: true
       inputs:
         mandatory:
           - Volume.volname
-      pre_run:
-        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_stopped
+      pre_run:
+        - tendrl.gluster_integration.objects.volume.atoms.volume_exists
       run: tendrl.gluster_integration.flows.stop_volume.StopVolume
       type: Stop
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
       version: 1
-
-tendrl_schema_version: 0.3"""
+  objects:
+    Tendrl_context:
+      attrs:
+        cluster_id:
+          help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
+          type: String
+        sds_name:
+          help: gluster
+          type: String
+        sds_version:
+          help: "3.8.3"
+          type: String
+      enabled: true
+    Volume:
+      atoms:
+        create:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.bricks
+            optional:
+              - Volume.stripe_count
+              - Volume.replica_count
+              - Volume.arbiter_count
+              - Volume.disperse_count
+              - Volume.disperse_data_count
+              - Volume.redundancy_count
+              - Volume.transport
+              - Volume.force
+          name: create_volume
+          run: tendrl.gluster_integration.objects.volume.atoms.create.Create
+          type: Create
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
+        delete:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+          name: delete_volume
+          run: tendrl.gluster_integration.objects.volume.atoms.delete.Delete
+          type: Delete
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
+        start:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+          name: start_volume
+          run: tendrl.gluster_integration.objects.volume.atoms.start.Start
+          type: Start
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
+        stop:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+          name: stop_volume
+          run: tendrl.gluster_integration.objects.volume.atoms.stop.Stop
+          type: Stop
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
+      attrs:
+        arbiter_count:
+          help: "Arbiter count of volume"
+          type: Integer
+        bricks:
+          help: "List of brick mnt_paths for volume"
+          type: List
+        disperse_count:
+          help: "Disperse count of volume"
+          type: Integer
+        disperse_data_count:
+          help: "Disperse data count of volume"
+          type: Integer
+        force:
+          help: "If force execute the action"
+          type: Boolean
+        redundancy_count:
+          help: "Redundancy count of volume"
+          type: Integer
+        replica_count:
+          help: "Replica count of volume"
+          type: Integer
+        stripe_count:
+          help: "Stripe count of volume"
+          type: Integer
+        transport:
+          help: "Transport type for volume"
+          type: String
+        volname:
+          help: "Name of gluster volume"
+          type: String
+      enabled: true
+      value: /clusters/$cluster.id/volumes/$volume.id
+tendrl_schema_version: 0.3
+"""

@@ -8,7 +8,7 @@ class Delete(object):
                 'gluster',
                 'volume',
                 'stop',
-                parameters.get('volname'),
+                parameters.get('Volume.volname'),
                 '--mode=script'
             ]
         )
@@ -17,7 +17,7 @@ class Delete(object):
                 'gluster',
                 'volume',
                 'delete',
-                parameters.get('volname'),
+                parameters.get('Volume.volname'),
                 '--mode=script'
             ]
         )
