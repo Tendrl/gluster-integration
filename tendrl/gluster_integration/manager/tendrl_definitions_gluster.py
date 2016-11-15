@@ -1,3 +1,4 @@
+# flake8: noqa
 data="""---
 namespace.tendrl.gluster_integration:
   objects:
