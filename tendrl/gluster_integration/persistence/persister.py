@@ -93,6 +93,12 @@ class Persister(gevent.greenlet.Greenlet):
         for event in events:
             self._store.save(event)
 
+    def update_tendrl_context(self, context):
+        self._store.save(context)
+
+    def update_tendrl_definitions(self, definition):
+        self._store.save(definition)
+
     def _run(self):
         LOG.info("Persister listening")
 

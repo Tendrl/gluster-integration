@@ -4,6 +4,7 @@ import json
 import logging
 import signal
 import subprocess
+import sys
 import time
 import traceback
 
@@ -11,7 +12,12 @@ import gevent.event
 import gevent.greenlet
 
 from tendrl.common import log
+
 from tendrl.gluster_integration.manager.rpc import EtcdThread
+from tendrl.gluster_integration.manager.tendrl_definitions_gluster import data as \
+    def_data
+from tendrl.gluster_integration.manager import utils
+
 from tendrl.gluster_integration.persistence.persister import Persister
 from tendrl.gluster_integration.persistence.servers import Brick
 from tendrl.gluster_integration.persistence.servers import Peer
@@ -20,6 +26,10 @@ from tendrl.gluster_integration.persistence.servers import Volume
 from tendrl.gluster_integration import ini2json
 
 from tendrl.gluster_integration.config import TendrlConfig
+from tendrl.gluster_integration.persistence.tendrl_context import TendrlContext
+from tendrl.gluster_integration.persistence.tendrl_definitions import \
+    TendrlDefinitions
+
 config = TendrlConfig()
 
 LOG = logging.getLogger(__name__)
@@ -27,11 +37,12 @@ LOG = logging.getLogger(__name__)
 
 class TopLevelEvents(gevent.greenlet.Greenlet):
 
-    def __init__(self, manager):
+    def __init__(self, manager, cluster_id):
         super(TopLevelEvents, self).__init__()
 
         self._manager = manager
         self._complete = gevent.event.Event()
+        self.cluster_id = cluster_id
 
     def stop(self):
         self._complete.set()
@@ -55,7 +66,7 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
                 )
                 raw_data = ini2json.ini_to_dict('/tmp/glusterd-state')
                 subprocess.call(['rm', '-rf', '/tmp/glusterd-state'])
-                self._manager.on_pull(raw_data)
+                self._manager.on_pull(raw_data, self.cluster_id)
             except Exception as ex:
                 LOG.error(ex)
 
@@ -71,12 +82,13 @@ class Manager(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, cluster_id):
         self._complete = gevent.event.Event()
 
         self._user_request_thread = EtcdThread(self)
-        self._discovery_thread = TopLevelEvents(self)
+        self._discovery_thread = TopLevelEvents(self, cluster_id)
         self.persister = Persister()
+        self.register_to_cluster(cluster_id)
 
     def stop(self):
         LOG.info("%s stopping" % self.__class__.__name__)
@@ -99,12 +111,11 @@ class Manager(object):
         self._discovery_thread.join()
         self.persister.join()
 
-    def on_pull(self, raw_data):
+    def on_pull(self, raw_data, cluster_id):
         LOG.info("on_pull")
-        global_info = raw_data['Global']
         self.persister.update_sync_object(
             str(time.time()),
-            global_info['myuuid'],
+            cluster_id,
             json.dumps(raw_data)
         )
         if "Peers" in raw_data:
@@ -116,7 +127,7 @@ class Manager(object):
                     self.persister.update_peer(
                         Peer(
                             updated=str(time.time()),
-                            cluster_id=global_info['myuuid'],
+                            cluster_id=cluster_id,
                             peer_uuid=peers['peer%s.uuid' % index],
                             hostname=peers[
                                 'peer%s.primary_hostname' % index],
@@ -137,7 +148,7 @@ class Manager(object):
                 try:
                     self.persister.update_volume(
                         Volume(
-                            cluster_id=global_info['myuuid'],
+                            cluster_id=cluster_id,
                             vol_id=volumes['volume%s.id' % index],
                             vol_type=volumes['volume%s.type' % index],
                             name=volumes['volume%s.name' % index],
@@ -153,7 +164,7 @@ class Manager(object):
                         try:
                             self.persister.update_brick(
                                 Brick(
-                                    cluster_id=global_info['myuuid'],
+                                    cluster_id=cluster_id,
                                     vol_id=volumes['volume%s.id' % index],
                                     path=volumes[
                                         'volume%s.brick%s.path' % (
@@ -190,6 +201,23 @@ class Manager(object):
                 except KeyError:
                     break
 
+    def register_to_cluster(self, cluster_id):
+        self.persister.update_tendrl_context(
+            TendrlContext(
+                updated=str(time.time()),
+                cluster_id=cluster_id,
+                sds_name="gluster"
+            )
+        )
+
+        self.persister.update_tendrl_definitions(
+            TendrlDefinitions(
+                updated=str(time.time()),
+                data=def_data,
+                cluster_id=cluster_id
+            )
+        )
+
 
 def dump_stacks():
     """This is for use in debugging, especially using manhole
@@ -208,7 +236,14 @@ def main():
         config.get('gluster_integration', 'log_cfg_path'),
         config.get('gluster_integration', 'log_level')
     )
-    m = Manager()
+
+    if sys.argv:
+        if len(sys.argv) > 1:
+            if "cluster-id" in sys.argv[1]:
+                cluster_id = sys.argv[2]
+                utils.set_tendrl_context(cluster_id)
+
+    m = Manager(utils.get_tendrl_context())
     m.start()
 
     complete = gevent.event.Event()
