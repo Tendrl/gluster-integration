@@ -9,8 +9,8 @@ def extract_requirements(filename):
 install_requires = extract_requirements('requirements.txt')
 
 setup(
-    name="tendrl_gluster_integration",
-    version="0.1",
+    name="tendrl-gluster-integration",
+    version="0.0.1",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                     "tests"]),
     namespace_packages=['tendrl'],
