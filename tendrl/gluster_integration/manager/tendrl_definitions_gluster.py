@@ -36,6 +36,7 @@ namespace.tendrl.gluster_integration:
       inputs:
         mandatory:
           - Volume.volname
+          - Volume.vol_id
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists
       pre_run:
@@ -89,6 +90,7 @@ namespace.tendrl.gluster_integration:
           help: "3.8.3"
           type: String
       enabled: true
+      value: "clusters/$Tendrl_context.cluster_id/Tendrl_context/"
     Volume:
       atoms:
         create:
@@ -168,7 +170,13 @@ namespace.tendrl.gluster_integration:
         volname:
           help: "Name of gluster volume"
           type: String
+        vol_id:
+          help: "ID of the gluster volume"
+          type: String
+        deleted:
+            help: "Flag is volume is deleted"
+            type: Boolean
       enabled: true
-      value: /clusters/$cluster.id/volumes/$volume.id
+      value: /clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
 tendrl_schema_version: 0.3
 """

@@ -27,6 +27,7 @@ class Flow(object):
 
         self.etcd_client = etcd.Client(**etcd_kwargs)
         self.integration_id = manager_utils.get_tendrl_context()
+        self.parameters.update({'etcd_client': self.etcd_client})
 
     def run(self):
         post_atom = None

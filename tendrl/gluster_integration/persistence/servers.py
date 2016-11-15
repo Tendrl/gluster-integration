@@ -23,7 +23,7 @@ class Volume(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'clusters/%s/volumes/%s'
+    __name__ = 'clusters/%s/Volumes/%s'
 
     cluster_id = fields.StrField("cluster_id")
     vol_id = fields.StrField("vol_id")
@@ -31,6 +31,7 @@ class Volume(EtcdObj):
     name = fields.StrField("name")
     status = fields.StrField("status")
     brick_count = fields.StrField("brick_count")
+    deleted = fields.StrField("deleted")
 
     def render(self):
         self.__name__ = self.__name__ % (self.cluster_id, self.vol_id)
@@ -41,7 +42,7 @@ class Brick(EtcdObj):
     """A table of the volumes seen by the pull.
 
     """
-    __name__ = 'clusters/%s/volumes/%s/bricks/%s'
+    __name__ = 'clusters/%s/Volumes/%s/Bricks/%s'
 
     cluster_id = fields.StrField("cluster_id")
     vol_id = fields.StrField("vol_id")
