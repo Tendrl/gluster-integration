@@ -28,17 +28,18 @@ class EtcdRPC(object):
         self.client = etcd.Client(**etcd_kwargs)
         self.integration_id = str(uuid.uuid4())
         self.Etcdthread = Etcdthread
-        self.node_id = utils.get_tendrl_uuid()
+        self.integration_id = utils.get_node_context()
 
     def _process_job(self, raw_job, job_key):
         # Pick up the "new" job that is not locked by any other integration
-        if raw_job['status'] == "new" and raw_job["type"] == "sds":
+        if raw_job['status'] == "new" and raw_job["type"] == "sds" and \
+                raw_job['cluster_id'] == self.integration_id:
                 raw_job['status'] = "processing"
                 # Generate a request ID for tracking this job
                 # further by tendrl-api
                 req_id = str(uuid.uuid4())
                 raw_job['request_id'] = "%s/flow_%s" % (
-                    self.node_id, req_id)
+                    self.integration_id, req_id)
                 self.client.write(job_key, json.dumps(raw_job))
                 LOG.info("Processing JOB %s" % raw_job[
                     'request_id'])
@@ -69,9 +70,6 @@ class EtcdRPC(object):
                     continue
                 raw_job = json.loads(job.value.decode('utf-8'))
                 try:
-                    if "node_id" in raw_job:
-                        if raw_job['node_id'] != self.node_id:
-                            continue
                     raw_job, executed = self._process_job(raw_job, job.key)
                 except FlowExecutionFailedError as e:
                     LOG.error(
@@ -93,7 +91,7 @@ class EtcdRPC(object):
         LOG.info("Validating flow %s for %s" % (raw_job['run'],
                                                 raw_job['request_id']))
         definitions = yaml.load(
-            self.client.read('/clusters/%s/tendrl_definitions_gluster/data' % raw_job['cluster_id']).
+            self.client.read('/clusters/%s/definitions/data' % raw_job['cluster_id']).
             value.decode("utf-8")
         )
         definitions = DefinitionsSchemaValidator(
