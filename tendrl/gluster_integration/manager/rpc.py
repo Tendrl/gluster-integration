@@ -25,7 +25,7 @@ class EtcdRPC(object):
                        'host': config.get("common", "etcd_connection")}
 
         self.client = etcd.Client(**etcd_kwargs)
-        self.integration_id = str(uuid.uuid4())
+        self.integration_id = utils.get_tendrl_context()
         self.Etcdthread = Etcdthread
         self.integration_id = utils.get_node_context()
 
