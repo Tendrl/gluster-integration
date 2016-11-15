@@ -27,7 +27,6 @@ class EtcdRPC(object):
         self.client = etcd.Client(**etcd_kwargs)
         self.integration_id = utils.get_tendrl_context()
         self.Etcdthread = Etcdthread
-        self.integration_id = utils.get_node_context()
 
     def _process_job(self, raw_job, job_key):
         # Pick up the "new" job that is not locked by any other integration

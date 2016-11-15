@@ -11,7 +11,7 @@ job = {
     "status": 'new',
     "parameters": {
         "Volume.volname": 'Volume1',
-        "Volume.brickdetails": ["mntpath"]
+        "Volume.bricks": ["mntpath1", "mntpath2"]
     },
     type: "sds"
 }
