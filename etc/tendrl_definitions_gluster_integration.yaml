@@ -35,6 +35,7 @@ namespace.tendrl.gluster_integration:
       inputs:
         mandatory:
           - Volume.volname
+          - Volume.vol_id
       post_run:
         - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists
       pre_run:
@@ -88,6 +89,7 @@ namespace.tendrl.gluster_integration:
           help: "3.8.3"
           type: String
       enabled: true
+      value: clusters/$Tendrl_context.cluster_id/Tendrl_context/
     Volume:
       atoms:
         create:
@@ -143,6 +145,9 @@ namespace.tendrl.gluster_integration:
         bricks:
           help: "List of brick mnt_paths for volume"
           type: List
+        deleted:
+          help: "Flag is volume is deleted"
+          type: Boolean
         disperse_count:
           help: "Disperse count of volume"
           type: Integer
@@ -164,9 +169,12 @@ namespace.tendrl.gluster_integration:
         transport:
           help: "Transport type for volume"
           type: String
+        vol_id:
+          help: "ID of the gluster volume"
+          type: String
         volname:
           help: "Name of gluster volume"
           type: String
       enabled: true
-      value: /clusters/$cluster.id/volumes/$volume.id
+      value: /clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
 tendrl_schema_version: 0.3

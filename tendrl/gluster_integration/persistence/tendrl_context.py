@@ -6,7 +6,7 @@ class TendrlContext(EtcdObj):
     """A table of the tendrl context, lazily updated
 
     """
-    __name__ = '/clusters/%s/tendrl_context'
+    __name__ = 'clusters/%s/Tendrl_context'
 
     sds_version = fields.StrField("sds_version")
     sds_name = fields.StrField("sds_name")
