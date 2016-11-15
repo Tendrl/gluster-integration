@@ -78,6 +78,22 @@ namespace.tendrl.gluster_integration:
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
       version: 1
   objects:
+    Peers:
+      enabled: true
+      objects:
+        hostname:
+          help: "Gluster Peer hostname"
+          type: String
+        peer_uuid:
+          help: "Gluster Peer uuid"
+          type: String
+        state:
+          help: "Gluster Peer state"
+          type: String
+        update:
+          help: "Last Peer update time"
+          type: String
+      value: clusters/$Tendrl_context.cluster_id/Peers/$Peer.peer_uuid
     Tendrl_context:
       attrs:
         cluster_id:
@@ -90,7 +106,7 @@ namespace.tendrl.gluster_integration:
           help: "3.8.3"
           type: String
       enabled: true
-      value: "clusters/$Tendrl_context.cluster_id/Tendrl_context/"
+      value: clusters/$Tendrl_context.cluster_id/Tendrl_context/
     Volume:
       atoms:
         create:
@@ -117,6 +133,7 @@ namespace.tendrl.gluster_integration:
           inputs:
             mandatory:
               - Volume.volname
+              - Volume.vol_id
           name: delete_volume
           run: tendrl.gluster_integration.objects.volume.atoms.delete.Delete
           type: Delete
@@ -146,6 +163,9 @@ namespace.tendrl.gluster_integration:
         bricks:
           help: "List of brick mnt_paths for volume"
           type: List
+        deleted:
+          help: "Flag is volume is deleted"
+          type: Boolean
         disperse_count:
           help: "Disperse count of volume"
           type: Integer
@@ -167,16 +187,13 @@ namespace.tendrl.gluster_integration:
         transport:
           help: "Transport type for volume"
           type: String
-        volname:
-          help: "Name of gluster volume"
-          type: String
         vol_id:
           help: "ID of the gluster volume"
           type: String
-        deleted:
-            help: "Flag is volume is deleted"
-            type: Boolean
+        volname:
+          help: "Name of gluster volume"
+          type: String
       enabled: true
-      value: /clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
+      value: clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
 tendrl_schema_version: 0.3
 """

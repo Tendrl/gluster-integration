@@ -6,7 +6,7 @@ class Peer(EtcdObj):
     """A table of the peers seen by the pull, lazily updated
 
     """
-    __name__ = 'clusters/%s/peers/%s'
+    __name__ = 'clusters/%s/Peers/%s'
 
     cluster_id = fields.StrField("cluster_id")
     state = fields.StrField("state")
