@@ -206,7 +206,8 @@ class Manager(object):
             TendrlContext(
                 updated=str(time.time()),
                 cluster_id=cluster_id,
-                sds_name="gluster"
+                sds_name="gluster",
+                sds_version=utils.get_sds_version()
             )
         )
 

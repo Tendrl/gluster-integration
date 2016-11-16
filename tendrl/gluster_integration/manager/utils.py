@@ -1,6 +1,7 @@
 import logging
 import os
 import os.path
+import subprocess
 
 LOG = logging.getLogger(__name__)
 TENDRL_CONTEXT = "/etc/tendrl/gluster_integration/tendrl_context"
@@ -29,3 +30,8 @@ def get_node_context():
             node_id = f.read()
             LOG.info("Node_context.node_id==%s found!" % node_id)
             return node_id
+
+
+def get_sds_version():
+    res = subprocess.check_output(['gluster', '--version'])
+    return res.split()[1]
