@@ -7,7 +7,7 @@ ExecStart=/usr/bin/tendrl-gluster-integration
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
-PrivateTmp=true
+PrivateTmp=false
 
 [Install]
 WantedBy=multi-user.target
