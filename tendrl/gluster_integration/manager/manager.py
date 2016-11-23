@@ -59,13 +59,13 @@ class TopLevelEvents(gevent.greenlet.Greenlet):
                         'get-state',
                         'glusterd',
                         'odir',
-                        '/tmp',
+                        '/var/run',
                         'file',
                         'glusterd-state'
                     ]
                 )
-                raw_data = ini2json.ini_to_dict('/tmp/glusterd-state')
-                subprocess.call(['rm', '-rf', '/tmp/glusterd-state'])
+                raw_data = ini2json.ini_to_dict('/var/run/glusterd-state')
+                subprocess.call(['rm', '-rf', '/var/run/glusterd-state'])
                 self._manager.on_pull(raw_data, self.cluster_id)
             except Exception as ex:
                 LOG.error(ex)
