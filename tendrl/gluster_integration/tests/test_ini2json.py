@@ -2,7 +2,7 @@ from mock import MagicMock
 import pytest
 
 from tendrl.gluster_integration import ini2json
-from tendrl.gluster_integration.tests.fixme.test_gluster_integration import \
+from tendrl.gluster_integration.tests.test_gluster_integration import \
     TestGluster_integration
 
 
