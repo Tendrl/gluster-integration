@@ -1,8 +1,15 @@
-sudo: false
+---
+before_install:
+  - "export TRAVIS_COMMIT_MSG=\\\"$(git log --format=%B --no-merges -n 1)\\"
+  - "pip install requests"
+git:
+  depth: 4
+install: "pip install tox-travis"
 language: python
 python:
-    - "2.7"
-install: pip install tox-travis
+  - "2.7"
 script:
-    - cd $TRAVIS_BUILD_DIR
-    - bash run_travis.sh
+  - "tox -e pep8"
+  - "python check_commit_msg.py"
+  - "tox -e cover"
+sudo: true
