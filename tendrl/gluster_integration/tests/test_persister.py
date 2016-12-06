@@ -1,9 +1,13 @@
 from mock import MagicMock
 import pytest
 import sys
+sys.modules[
+    'tendrl.gluster_integration.persistence.sync_objects'] = MagicMock()
 sys.modules['tendrl.gluster_integration.config'] = MagicMock()
 sys.modules['logging'] = MagicMock()
 from tendrl.gluster_integration.persistence import persister
+del sys.modules[
+    'tendrl.gluster_integration.persistence.sync_objects']
 del sys.modules['tendrl.gluster_integration.config']
 del sys.modules['logging']
 from tendrl.gluster_integration.persistence import servers
