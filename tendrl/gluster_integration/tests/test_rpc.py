@@ -96,6 +96,15 @@ class TestEtcdThread(object):
         self.etcdthread._run()
         assert self.raw_job['status'] == 'failed'
 
+    def test_etcdthread_error(self, monkeypatch):
+        def Mock_read(param):
+            if param == '/queue':
+                raise rpc.etcd.EtcdKeyNotFound
+        monkeypatch.setattr(
+            self.etcdthread._server.client, "read", Mock_read)
+        self.etcdthread._run()
+        assert True
+
     def test_stop(self):
         self.etcdthread._complete.set = MagicMock()
         self.etcdthread.stop()
