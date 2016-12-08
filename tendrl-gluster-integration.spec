@@ -43,7 +43,7 @@ rm -rf html/.{doctrees,buildinfo}
 install -m  0755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster_integration
 install -m  0755  --directory $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster_integration
 install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-glusterd.service
-install -Dm 0755 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster_integration/tendrl.conf.sample
+install -Dm 0644 etc/tendrl/tendrl.conf.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster_integration/tendrl.conf.sample
 install -Dm 0644 etc/logging.yaml.timedrotation.sample $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster_integration_logging.yaml
 
 %post
