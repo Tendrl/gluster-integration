@@ -25,8 +25,8 @@ for line in commit_msg.split("\n"):
             print(ex)
 
 if tendrl_bug_id is None:
-    raise Exception("Please add 'tendrl-bug-id:<tendrl_repo>/issue_id' to "
-                    "your commit msg")
+    raise Exception("Please add 'tendrl-bug-id:Tendrl/<tendrl_repo>#issue_id'"
+                    " to your commit msg")
 
 if tendrl_bug_id:
     issue = "%s/%s" % (github_base_url, tendrl_bug_id.replace("#", "/issues/"))
