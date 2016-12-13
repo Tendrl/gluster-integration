@@ -237,7 +237,7 @@ class GlusterIntegrationManager(Manager):
                 except KeyError:
                     break
             # poplate the volume options
-            reg_ex = re.compile("^volume[0-9].options+")
+            reg_ex = re.compile("^volume[0-9]+.options+")
             options = {}
             for key in volumes.keys():
                 if reg_ex.match(key):
