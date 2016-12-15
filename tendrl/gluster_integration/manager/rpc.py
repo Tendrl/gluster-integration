@@ -159,6 +159,9 @@ class EtcdThread(gevent.greenlet.Greenlet):
             try:
                 LOG.info("%s run..." % self.__class__.__name__)
                 self._server.run()
+            except etcd.EtcdKeyNotFound as ex:
+                LOG.debug("Given key is not present in etcd . %s", ex)
+                self._complete.wait(self.EXCEPTION_BACKOFF)
             except Exception:
                 LOG.error(traceback.format_exc())
                 self._complete.wait(self.EXCEPTION_BACKOFF)
