@@ -7,7 +7,7 @@ import sys
 import time
 
 from tendrl.common.config import TendrlConfig
-from tendrl.common import log
+from tendrl.common.log import setup_logging
 from tendrl.common.manager.manager import Manager
 from tendrl.common.manager.manager import SyncStateThread
 
@@ -190,7 +190,7 @@ class GlusterIntegrationManager(Manager):
 
 
 def main():
-    log.setup_logging(
+    setup_logging(
         config.get('gluster_integration', 'log_cfg_path'),
         config.get('gluster_integration', 'log_level')
     )
