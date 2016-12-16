@@ -1,75 +1,13 @@
-import logging
+from tendrl.common.persistence.etcd_persister import EtcdPersister
+from tendrl.common.persistence.file_persister import FilePersister
 
-import gevent.event
-import gevent.greenlet
-import gevent.queue
-from tendrl.common.etcdobj.etcdobj import Server as etcd_server
-
-
-from tendrl.gluster_integration.config import TendrlConfig
 from tendrl.gluster_integration.persistence.sync_objects import SyncObject
 
 
-config = TendrlConfig()
-LOG = logging.getLogger(__name__)
-
-
-class deferred_call(object):
-
-    def __init__(self, fn, args, kwargs):
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-
-    def call_it(self):
-        self.fn(*self.args, **self.kwargs)
-
-
-class Persister(gevent.greenlet.Greenlet):
-    """Asynchronously persist a queue of updates.  This is for use by classes
-
-    that maintain the primary copy of state in memory, but also lazily update
-
-    the DB so that they can recover from it on restart.
-
-    """
-
-    def __init__(self):
-        super(Persister, self).__init__()
-
-        self._queue = gevent.queue.Queue()
-        self._complete = gevent.event.Event()
-
+class GlusterIntegrationEtcdPersister(EtcdPersister):
+    def __init__(self, config):
+        super(GlusterIntegrationEtcdPersister, self).__init__(config)
         self._store = self.get_store()
-
-    def __getattribute__(self, item):
-        """Wrap functions with LOGging
-
-        """
-        if item.startswith('_'):
-            return object.__getattribute__(self, item)
-        else:
-            try:
-                return object.__getattribute__(self, item)
-            except AttributeError:
-                try:
-                    attr = object.__getattribute__(self, "_%s" % item)
-                    if callable(attr):
-                        def defer(*args, **kwargs):
-                            dc = deferred_call(attr, args, kwargs)
-                            try:
-                                dc.call_it()
-                            except Exception as ex:
-                                LOG.exception(
-                                    "Persister exception persisting "
-                                    "data: %s" % (dc.fn,)
-                                )
-                                LOG.exception(ex)
-                        return defer
-                    else:
-                        return object.__getattribute__(self, item)
-                except AttributeError:
-                    return object.__getattribute__(self, item)
 
     def update_sync_object(self, updated, cluster_id, data):
         self._store.save(
@@ -80,16 +18,16 @@ class Persister(gevent.greenlet.Greenlet):
             )
         )
 
-    def _update_peer(self, peer):
+    def update_peer(self, peer):
         self._store.save(peer)
 
-    def _update_volume(self, vol):
+    def update_volume(self, vol):
         self._store.save(vol)
 
-    def _update_brick(self, brick):
+    def update_brick(self, brick):
         self._store.save(brick)
 
-    def _save_events(self, events):
+    def save_events(self, events):
         for event in events:
             self._store.save(event)
 
@@ -99,17 +37,72 @@ class Persister(gevent.greenlet.Greenlet):
     def update_tendrl_definitions(self, definition):
         self._store.save(definition)
 
-    def _run(self):
-        LOG.info("Persister listening")
 
-        while not self._complete.is_set():
-            gevent.sleep(0.1)
-            pass
+class GlusterIntegrationFilePersister(FilePersister):
+    def __init__(self, config):
+        super(GlusterIntegrationFilePersister, self).__init__(config)
+        self._doc_location = "%s/gluster_integration" % \
+            config.get("gluster_integration", "doc_persist_location")
 
-    def stop(self):
-        self._complete.set()
+    def update_sync_object(self, updated, cluster_id, data):
+        obj = SyncObject(
+            updated=updated,
+            cluster_id=cluster_id,
+            data=data
+        )
 
-    def get_store(self):
-        etcd_kwargs = {'port': int(config.get("common", "etcd_port")),
-                       'host': config.get("common", "etcd_connection")}
-        return etcd_server(etcd_kwargs=etcd_kwargs)
+        f = open(
+            "%s/%s" % (self._doc_location, cluster_id),
+            "w"
+        )
+        f.write(obj.json())
+        f.close()
+
+    def update_peer(self, peer):
+        f = open(
+            "%s/%s" % (self._doc_location, peer.__name__),
+            "w"
+        )
+        f.write(peer.json())
+        f.close()
+
+    def update_volume(self, vol):
+        f = open(
+            "%s/%s" % (self._doc_location, vol.__name__),
+            "w"
+        )
+        f.write(vol.json())
+        f.close()
+
+    def update_brick(self, brick):
+        f = open(
+            "%s/%s" % (self._doc_location, brick.__name__),
+            "w"
+        )
+        f.write(brick.json())
+        f.close()
+
+    def save_events(self, events):
+        for event in events:
+            f = open(
+                "%s/%s" % (self._doc_location, event.__name__),
+                "w"
+            )
+            f.write(event.json())
+            f.close()
+
+    def update_tendrl_context(self, context):
+        f = open(
+            "%s/%s" % (self._doc_location, context.__name__),
+            "w"
+        )
+        f.write(context.json())
+        f.close()
+
+    def update_tendrl_definitions(self, definition):
+        f = open(
+            "%s/%s" % (self._doc_location, definition.__name__),
+            "w"
+        )
+        f.write(definition)
+        f.close()

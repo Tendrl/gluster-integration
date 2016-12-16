@@ -1,6 +1,6 @@
-from tendrl.gluster_integration.flows.flow import Flow
+from tendrl.common.flows.base_flow import BaseFlow
 
 
-class DeleteVolume(Flow):
+class DeleteVolume(BaseFlow):
     def run(self):
         super(DeleteVolume, self).run()
