@@ -28,55 +28,6 @@ namespace.tendrl.gluster_integration:
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
-    DeleteVolume:
-      atoms:
-        - tendrl.gluster_integration.objects.Volume.atoms.delete
-      help: "Delete Volume"
-      enabled: true
-      inputs:
-        mandatory:
-          - Volume.volname
-          - Volume.vol_id
-      post_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_not_exists
-      pre_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-      run: tendrl.gluster_integration.flows.delete_volume.DeleteVolume
-      type: Delete
-      uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
-      version: 1
-    StartVolume:
-      atoms:
-        - tendrl.gluster_integration.objects.Volume.atoms.start
-      help: "Start Volume"
-      enabled: true
-      inputs:
-        mandatory:
-          - Volume.volname
-      post_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_started
-      pre_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-      run: tendrl.gluster_integration.flows.start_volume.StartVolume
-      type: Start
-      uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
-      version: 1
-    StopVolume:
-      atoms:
-        - tendrl.gluster_integration.objects.Volume.atoms.stop
-      help: "Stop Volume"
-      enabled: true
-      inputs:
-        mandatory:
-          - Volume.volname
-      post_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_stopped
-      pre_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-      run: tendrl.gluster_integration.flows.stop_volume.StopVolume
-      type: Stop
-      uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
-      version: 1
   objects:
     Peers:
       enabled: true
@@ -192,7 +143,56 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.Volume.atoms.volume_stopped.VolumeStopped
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9656c
-      attrs:
+      flows:
+        DeleteVolume:
+          atoms:
+            - tendrl.gluster_integration.objects.Volume.atoms.delete
+          help: "Delete Volume"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+          post_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_not_exists
+          pre_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
+          run: tendrl.gluster_integration.objects.Volume.flows.delete_volume.DeleteVolume
+          type: Delete
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
+          version: 1
+        StartVolume:
+          atoms:
+            - tendrl.gluster_integration.objects.Volume.atoms.start
+          help: "Start Volume"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+          post_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_started
+          pre_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
+          run: tendrl.gluster_integration.objects.Volume.flows.start_volume.StartVolume
+          type: Start
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
+          version: 1
+        StopVolume:
+          atoms:
+            - tendrl.gluster_integration.objects.Volume.atoms.stop
+          help: "Stop Volume"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+          post_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_stopped
+          pre_run:
+            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
+          run: tendrl.gluster_integration.objects.Volume.flows.stop_volume.StopVolume
+          type: Stop
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
+          version: 1
       attrs:
         arbiter_count:
           help: "Arbiter count of volume"
