@@ -4,7 +4,6 @@ import logging
 import re
 import signal
 import subprocess
-import sys
 import time
 
 from tendrl.commons.config import TendrlConfig
@@ -284,13 +283,12 @@ def main():
         config.get('gluster-integration', 'log_level')
     )
 
-    if sys.argv:
-        if len(sys.argv) > 1:
-            if "cluster-id" in sys.argv[1]:
-                cluster_id = sys.argv[2]
-                utils.set_tendrl_context(cluster_id)
+    cluster_id = utils.get_tendrl_context()
+    if not cluster_id:
+        LOG.error("Could not find cluster_id")
+        exit(1)
 
-    m = GlusterIntegrationManager(utils.get_tendrl_context())
+    m = GlusterIntegrationManager(cluster_id)
     m.start()
 
     complete = gevent.event.Event()

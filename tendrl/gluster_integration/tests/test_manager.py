@@ -1,5 +1,4 @@
 from mock import MagicMock
-
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.tests.test_gluster_integration import \
     TestGluster_integration
@@ -105,7 +104,7 @@ class Test_manager(TestGluster_integration):
         self.managerobj._discovery_thread._run()
         assert not self.Manager.Brick.called
 
-    def test_main(self):
+    def test_main(self, monkeypatch):
         self.Manager.gevent = MagicMock()
         self.Manager.main()
         self.Manager.gevent.signal.assert_called()
