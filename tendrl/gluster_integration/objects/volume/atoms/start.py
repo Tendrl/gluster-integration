@@ -1,14 +1,16 @@
 import subprocess
 
+from tendrl.common.atoms.base_atom import BaseAtom
 
-class Start(object):
+
+class Start(BaseAtom):
     def run(self, parameters):
         subprocess.call(
             [
                 'gluster',
                 'volume',
                 'start',
-                parameters.get('volname'),
+                parameters.get('Volume.volname'),
                 '--mode=script'
             ]
         )

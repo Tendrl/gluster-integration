@@ -1,6 +1,6 @@
-from tendrl.gluster_integration.flows.flow import Flow
+from tendrl.common.flows.base_flow import BaseFlow
 
 
-class StartVolume(Flow):
+class StartVolume(BaseFlow):
     def run(self):
         super(StartVolume, self).run()

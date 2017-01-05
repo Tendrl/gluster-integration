@@ -74,30 +74,6 @@ class Test_manager(TestGluster_integration):
         self.managerobj._discovery_thread._run()
         assert not self.Manager.Brick.called
 
-    def test_stop(self):
-        self.managerobj.stop()
-        self.managerobj._user_request_thread.stop.assert_called()
-
-    def test_recover(self):
-        self.managerobj._recover()
-        self.Manager.LOG.debug.assert_called()
-
-    def test_start(self):
-        self.managerobj.start()
-        self.managerobj._user_request_thread.start.assert_called()
-        self.managerobj.persister.start.assert_called()
-
-    def test_join(self):
-        self.Manager.gevent = MagicMock()
-        self.managerobj._discovery_thread = MagicMock()
-        self.managerobj.join()
-        self.managerobj._user_request_thread.join.assert_called()
-        self.managerobj.persister.join.assert_called()
-
-    def test_dump_stacks(self):
-        self.Manager.dump_stacks()
-        self.Manager.LOG.errorassert_called()
-
     def test_main(self):
         self.Manager.gevent = MagicMock()
         self.Manager.main()
