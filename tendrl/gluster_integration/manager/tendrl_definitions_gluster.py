@@ -230,6 +230,57 @@ namespace.tendrl.gluster_integration:
         volname:
           help: "Name of gluster volume"
           type: String
+        vol_type:
+          help: "Type of the volume"
+          type: String
+        rebal_data:
+          help: "Rebalance data"
+          type: String
+        rebal_skipped:
+          help: "Skipped files while rebalance"
+          type: String
+        subvol_count:
+          help: "Count of subvolumes"
+          type: Integer
+        brick_count:
+          help: "Count of bricks"
+          type: Integer
+        cluster_id:
+          help: "UUID of the cluster"
+          type: String
+        snapd_inited:
+          help: "If snapd is initialized"
+          type: String
+        status:
+          help: "Status of the volume"
+          type: String
+        rebal_id:
+          help: "UUID of the rabalance task"
+          typoe: String
+        rebal_lookedup:
+          help: "Looked up files for rebalance"
+          type: Integer
+        snap_count:
+          help: "Count of the snapshots"
+          type: Integer
+        rebal_files:
+          help: "No of files rebalanced"
+          type: Integer
+        snapd_status:
+          help: "Status of snapd"
+          type: String
+        options:
+          help: "options list for volume"
+          type: json
+        quorum_status:
+          help: "Quorum status"
+          type: String
+        rebal_status:
+          help: "Status of rebalance task"
+          type: String
+        rebal_failures:
+          help: "Failed no of files for rebalance"
+          type: Integer
       enabled: true
       value: clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
 tendrl_schema_version: 0.3

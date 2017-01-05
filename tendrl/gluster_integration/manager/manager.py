@@ -1,6 +1,7 @@
 import gevent.event
 import json
 import logging
+import re
 import signal
 import subprocess
 import sys
@@ -20,6 +21,8 @@ from tendrl.gluster_integration.persistence.persister \
 from tendrl.gluster_integration.persistence.servers import Brick
 from tendrl.gluster_integration.persistence.servers import Peer
 from tendrl.gluster_integration.persistence.servers import Volume
+from tendrl.gluster_integration.persistence.servers import VolumeOptions
+
 from tendrl.gluster_integration.persistence.tendrl_context import TendrlContext
 from tendrl.gluster_integration.persistence.tendrl_definitions import \
     TendrlDefinitions
@@ -118,15 +121,79 @@ class GlusterIntegrationManager(Manager):
                     self.persister_thread.update_volume(
                         Volume(
                             cluster_id=cluster_id,
-                            vol_id=volumes['volume%s.id' % index],
-                            vol_type=volumes['volume%s.type' % index],
-                            name=volumes['volume%s.name' % index],
-                            status=volumes['volume%s.status' % index],
-                            brick_count=volumes['volume%s.brickcount' % index])
+                            vol_id=volumes[
+                                'volume%s.id' % index
+                            ],
+                            vol_type=volumes[
+                                'volume%s.type' % index
+                            ],
+                            name=volumes[
+                                'volume%s.name' % index
+                            ],
+                            transport_type=volumes[
+                                'volume%s.transport_type' % index
+                            ],
+                            status=volumes[
+                                'volume%s.status' % index
+                            ],
+                            brick_count=volumes[
+                                'volume%s.brickcount' % index
+                            ],
+                            snap_count=volumes[
+                                'volume%s.snap_count' % index
+                            ],
+                            stripe_count=volumes[
+                                'volume%s.stripe_count' % index
+                            ],
+                            replica_count=volumes[
+                                'volume%s.replica_count' % index
+                            ],
+                            subvol_count=volumes[
+                                'volume%s.subvol_count' % index
+                            ],
+                            arbiter_count=volumes[
+                                'volume%s.arbiter_count' % index
+                            ],
+                            disperse_count=volumes[
+                                'volume%s.disperse_count' % index
+                            ],
+                            redundancy_count=volumes[
+                                'volume%s.redundancy_count' % index
+                            ],
+                            quorum_status=volumes[
+                                'volume%s.quorum_status' % index
+                            ],
+                            snapd_status=volumes[
+                                'volume%s.snapd_svc.online_status' % index
+                            ],
+                            snapd_inited=volumes[
+                                'volume%s.snapd_svc.inited' % index
+                            ],
+                            rebal_id=volumes[
+                                'volume%s.rebalance.id' % index
+                            ],
+                            rebal_status=volumes[
+                                'volume%s.rebalance.status' % index
+                            ],
+                            rebal_failures=volumes[
+                                'volume%s.rebalance.failures' % index
+                            ],
+                            rebal_skipped=volumes[
+                                'volume%s.rebalance.skipped' % index
+                            ],
+                            rebal_lookedup=volumes[
+                                'volume%s.rebalance.lookedup' % index
+                            ],
+                            rebal_files=volumes[
+                                'volume%s.rebalance.files' % index
+                            ],
+                            rebal_data=volumes[
+                                'volume%s.rebalance.data' % index
+                            ],
+                        )
                     )
                     LOG.info("on_pull, Updating Volume %s" %
                              volumes['volume%s.id' % index])
-
                     b_index = 1
                     # populate brick data for this volume
                     while True:
@@ -169,6 +236,27 @@ class GlusterIntegrationManager(Manager):
                     index += 1
                 except KeyError:
                     break
+            # poplate the volume options
+            reg_ex = re.compile("^volume[0-9]+.options+")
+            options = {}
+            for key in volumes.keys():
+                if reg_ex.match(key):
+                    options[key] = volumes[key]
+            for key in options.keys():
+                volname = key.split('.')[0]
+                vol_id = volumes['%s.id' % volname]
+                dict = {}
+                for k, v in options.items():
+                    if k.startswith('%s.options' % volname):
+                        dict['.'.join(k.split(".")[2:])] = v
+                        options.pop(k, None)
+                self.persister.update_volume_options(
+                    VolumeOptions(
+                        cluster_id=cluster_id,
+                        vol_id=vol_id,
+                        Options=dict
+                    )
+                )
 
     def register_to_cluster(self, cluster_id):
         self.persister_thread.update_tendrl_context(
