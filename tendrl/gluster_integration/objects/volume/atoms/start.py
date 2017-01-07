@@ -1,6 +1,6 @@
 import subprocess
 
-from tendrl.common.atoms.base_atom import BaseAtom
+from tendrl.commons.atoms.base_atom import BaseAtom
 
 
 class Start(BaseAtom):

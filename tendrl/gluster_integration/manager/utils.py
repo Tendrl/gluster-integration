@@ -4,7 +4,7 @@ import os.path
 import subprocess
 
 LOG = logging.getLogger(__name__)
-TENDRL_CONTEXT = "/etc/tendrl/gluster_integration/tendrl_context"
+TENDRL_CONTEXT = "/etc/tendrl/gluster-integration/tendrl_context"
 
 
 def get_tendrl_context():
