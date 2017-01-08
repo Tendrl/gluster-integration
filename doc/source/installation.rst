@@ -31,7 +31,7 @@ and could be utilized for logging differently. For example there are config file
 bundeled for syslog and journald logging as well. These could be used similarly as above.
 
 3. Install gluster-integration itself::
-    $ git clone https://github.com/shtripat/gluster-integration.git
+    $ git clone https://github.com/Tendrl/gluster-integration.git
     $ cd gluster-integration
     $ workon gluster-integration
     $ pip install .
