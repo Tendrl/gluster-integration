@@ -7,10 +7,10 @@ import subprocess
 import sys
 import time
 
-from tendrl.common.config import TendrlConfig
-from tendrl.common.log import setup_logging
-from tendrl.common.manager.manager import Manager
-from tendrl.common.manager.manager import SyncStateThread
+from tendrl.commons.config import TendrlConfig
+from tendrl.commons.log import setup_logging
+from tendrl.commons.manager.manager import Manager
+from tendrl.commons.manager.manager import SyncStateThread
 
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.manager.tendrl_definitions_gluster \
@@ -27,7 +27,7 @@ from tendrl.gluster_integration.persistence.tendrl_context import TendrlContext
 from tendrl.gluster_integration.persistence.tendrl_definitions import \
     TendrlDefinitions
 
-config = TendrlConfig("gluster_integration", "/etc/tendrl/tendrl.conf")
+config = TendrlConfig("gluster-integration", "/etc/tendrl/tendrl.conf")
 
 LOG = logging.getLogger(__name__)
 
@@ -76,6 +76,7 @@ class GlusterIntegrationManager(Manager):
         ).__init__(
             "sds",
             cluster_id,
+            None,
             config,
             GlusterIntegrationSyncStateThread(self, cluster_id),
             GlusterIntegrationEtcdPersister(config),
@@ -279,8 +280,8 @@ class GlusterIntegrationManager(Manager):
 
 def main():
     setup_logging(
-        config.get('gluster_integration', 'log_cfg_path'),
-        config.get('gluster_integration', 'log_level')
+        config.get('gluster-integration', 'log_cfg_path'),
+        config.get('gluster-integration', 'log_level')
     )
 
     if sys.argv:

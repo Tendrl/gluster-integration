@@ -16,8 +16,8 @@ sys.modules['tendrl.gluster_integration.persistence.persister'] = MagicMock()
 sys.modules[
     'tendrl.gluster_integration.persistence.tendrl_context'] = MagicMock()
 sys.modules['logging'] = MagicMock()
-sys.modules['tendrl.common.log'] = MagicMock()
-sys.modules['tendrl.common.config'] = MagicMock()
+sys.modules['tendrl.commons.log'] = MagicMock()
+sys.modules['tendrl.commons.config'] = MagicMock()
 
 from tendrl.gluster_integration.manager import manager
 
@@ -26,8 +26,8 @@ del sys.modules['tendrl.gluster_integration.persistence.tendrl_context']
 del sys.modules['tendrl.gluster_integration.persistence.persister']
 del sys.modules['tendrl.gluster_integration.persistence.servers']
 del sys.modules['tendrl.gluster_integration.persistence.tendrl_definitions']
-del sys.modules['tendrl.common.log']
-del sys.modules['tendrl.common.config']
+del sys.modules['tendrl.commons.log']
+del sys.modules['tendrl.commons.config']
 
 
 class TestGluster_integration(object):

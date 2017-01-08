@@ -1,4 +1,4 @@
-from tendrl.common.flows.base_flow import BaseFlow
+from tendrl.commons.flows.base_flow import BaseFlow
 
 
 class DeleteVolume(BaseFlow):
