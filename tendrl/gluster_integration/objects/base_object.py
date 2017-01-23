@@ -1,10 +1,12 @@
-from tendrl.commons import atoms
-from tendrl.commons import objects
+import abc
+import six
 
 
-class GlusterIntegrationBaseObject(objects.BaseObject):
+@six.add_metaclass(abc.ABCMeta)
+class BaseObject(object):
     def __init__(
             self,
+            name=None,
             attrs=None,
             enabled=None,
             obj_list=None,
@@ -12,19 +14,51 @@ class GlusterIntegrationBaseObject(objects.BaseObject):
             atoms=None,
             flows=None
     ):
-        super(GlusterIntegrationBaseObject, self).__init__(
+        self.name = name
+
+        self.attrs = attrs
+        self.enabled = enabled
+
+        # path to LIST of all instance of the object
+        self.obj_list = obj_list
+
+        # path to GET an instance of the object
+        self.obj_value = obj_value
+
+        self.atoms = atoms
+
+        # List of flows under this object
+        self.flows = flows
+
+    def __new__(cls, *args, **kwargs):
+
+        super_new = super(BaseObject, cls).__new__
+        if super_new is object.__new__:
+            instance = super_new(cls)
+        else:
+            instance = super_new(cls, *args, **kwargs)
+
+        return instance
+
+
+@six.add_metaclass(abc.ABCMeta)
+class GlusterIntegrationObject(BaseObject):
+    def __init__(
+            self,
+            name=None,
             attrs=None,
             enabled=None,
             obj_list=None,
             obj_value=None,
             atoms=None,
             flows=None
-        )
-
-        obj_def = tendrl_ns.definitions.get_obj_definition(
+    ):
+        obj_def = tendrl_ns.definitions.get_obj(
             tendrl_ns.to_str,
             self.__class__.__name__
         )
+        self.name = name or obj_def.name
+
         # list of attr tuple of (attr_name, type)
         # eg: {'status': {'type': 'Boolean'}, 'fqdn': {'type': 'String'},
         # 'cmd_str': {'type': 'String'}}
@@ -51,8 +85,12 @@ class GlusterIntegrationBaseObject(objects.BaseObject):
         # List of flows under this object
         self.flows = flows or obj_def.flows
 
+    def __new__(cls, *args, **kwargs):
 
-class GlusterIntegrationBaseAtom(atoms.BaseAtom):
-    obj = GlusterIntegrationBaseObject
-    def __init__(self, *args, **kwargs):
-        super(GlusterIntegrationBaseAtom, self).__init__(*args, **kwargs)
+        super_new = super(GlusterIntegrationObject, cls).__new__
+        if super_new is object.__new__:
+            instance = super_new(cls)
+        else:
+            instance = super_new(cls, *args, **kwargs)
+
+        return instance

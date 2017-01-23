@@ -2,6 +2,7 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
+namespaces
 python-etcd
 python-dateutil
 gevent>=1.0
