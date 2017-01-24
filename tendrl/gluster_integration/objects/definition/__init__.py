@@ -17,7 +17,7 @@ class Definition(objects.BaseObject):
     def __init__(self, *args, **kwargs):
         super(Definition, self).__init__(*args, **kwargs)
 
-        self.value = '_tendrl/definitions/gluster'
+        self.value = '_tendrl/definitions'
         self.gluster = gluster.data
         self._parsed_defs = yaml.safe_load(self.gluster)
         self._etcd_cls = _DefinitionEtcd
@@ -76,5 +76,8 @@ class Definition(objects.BaseObject):
 class _DefinitionEtcd(etcdobj.EtcdObj):
     """A table of the Definitions, lazily updated
     """
-    __name__ = '_tendrl/definitions/gluster'
+    __name__ = '_tendrl/definitions'
     _tendrl_cls = Definition
+
+    def render(self):
+        return super(_DefinitionEtcd, self).render()

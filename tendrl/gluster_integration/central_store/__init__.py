@@ -11,6 +11,9 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
     def save_config(self, config):
         tendrl_ns.etcd_orm.save(config)
 
+    def save_definition(self, definition):
+        tendrl_ns.etcd_orm.save(definition)
+
     def save_peer(self, peer):
         tendrl_ns.etcd_orm.save(peer)
 
