@@ -8,7 +8,7 @@ class Config(objects.GlusterIntegrationBaseObject):
     def __init__(self, config=None, *args, **kwargs):
         super(Config, self).__init__(*args, **kwargs)
 
-        self.value = '_tendrl/config/gluster-integration'
+        self.value = '_tendrl/config/gluster_integration'
         self.data = config or cmn_config.load_config(
             'gluster-integration',
             "/etc/tendrl/gluster-integration/gluster-integration.conf.yaml"
@@ -19,8 +19,5 @@ class Config(objects.GlusterIntegrationBaseObject):
 class _ConfigEtcd(EtcdObj):
     """Config etcd object, lazily updated
     """
-    __name__ = '_tendrl/config/gluster-integration'
+    __name__ = '_tendrl/config/gluster_integration'
     _tendrl_cls = Config
-
-    def render(self):
-        return super(_ConfigEtcd, self).render()
