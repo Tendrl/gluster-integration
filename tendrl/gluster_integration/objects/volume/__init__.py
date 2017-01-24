@@ -1,7 +1,6 @@
 import logging
 
 from tendrl.commons.etcdobj import EtcdObj
-from tendrl.gluster_integration.central_store import etcd_utils
 from tendrl.gluster_integration import objects
 
 LOG = logging.getLogger(__name__)
