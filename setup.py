@@ -23,7 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'tendrl-gluster-integration = '
-            'tendrl.gluster_integration.manager.manager:main'
+            'tendrl.gluster_integration.manager:main'
         ]
     }
 )
