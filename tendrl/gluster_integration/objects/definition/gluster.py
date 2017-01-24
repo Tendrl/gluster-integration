@@ -44,8 +44,8 @@ namespace.tendrl.gluster_integration:
         update:
           help: "Last Peer update time"
           type: String
-      value: clusters/$TendrlContext.cluster_id/Peers/$Peer.peer_uuid
-      list: clusters/$TendrlContext.cluster_id/Peers
+      value: clusters/$TendrlContext.integration_id/Peers/$Peer.peer_uuid
+      list: clusters/$TendrlContext.integration_id/Peers
       help: Gluster cluster peers
     Config:
       attrs:
@@ -68,18 +68,12 @@ namespace.tendrl.gluster_integration:
       help: gluster integration component configuration
     TendrlContext:
       attrs:
-        cluster_id:
+        integration_id:
           help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
           type: String
-        sds_name:
-          help: gluster
-          type: String
-        sds_version:
-          help: "3.8.3"
-          type: String
       enabled: true
-      value: clusters/$TendrlContext.cluster_id/TendrlContext/
-      list: TendrlContext.cluster_id/TendrlContext/
+      value: clusters/$TendrlContext.integration_id/TendrlContext/
+      list: clusters/TendrlContext.integration_id/TendrlContext/
       help: gluster integration tendrl context
     SyncObject:
       attrs:
@@ -90,8 +84,8 @@ namespace.tendrl.gluster_integration:
           help: raw data
           type: String
       enabled: true
-      value: clusters/$TendrlContext.cluster_id/raw_map/
-      list: TendrlContext.cluster_id/TendrlContext/raw_map/
+      value: clusters/$TendrlContext.integration_id/raw_map/
+      list: clusters/TendrlContext.integration_id/TendrlContext/raw_map/
       help: gluster cluster details
     VolumeOptions:
       attrs:
@@ -105,8 +99,8 @@ namespace.tendrl.gluster_integration:
           help: options
           type: dict
       enabled: true
-      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/options
-      list: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/options
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       help: gluster volume options
     Brick:
       attrs:
@@ -132,12 +126,12 @@ namespace.tendrl.gluster_integration:
           help: Mount options
           type: String
       enabled: true
-      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
-      list: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/Bricks
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks
       help: gluster volume bricks
     Volume:
       atoms:
-        create:
+        Create:
           enabled: true
           inputs:
             mandatory:
@@ -156,7 +150,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.create.Create
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
-        delete:
+        Delete:
           enabled: true
           inputs:
             mandatory:
@@ -166,7 +160,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.delete.Delete
           type: Delete
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
-        start:
+        Start:
           enabled: true
           inputs:
             mandatory:
@@ -175,7 +169,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.start.Start
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
-        stop:
+        Stop:
           enabled: true
           inputs:
             mandatory:
@@ -184,7 +178,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.stop.Stop
           type: Stop
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
-        volume_exists:
+        VolumeExists:
           enabled: true
           inputs:
             mandatory:
@@ -193,7 +187,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9653c
-        volume_not_exists:
+        VolumeNotExists:
           enabled: true
           inputs:
             mandatory:
@@ -202,7 +196,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.volume_not_exists.VolumeNotExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9654c
-        volume_started:
+        VolumeStarted:
           enabled: true
           inputs:
             mandatory:
@@ -211,7 +205,7 @@ namespace.tendrl.gluster_integration:
           run: tendrl.gluster_integration.objects.volume.atoms.volume_started.VolumeStarted
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9655c
-        volume_stopped:
+        VolumeStopped:
           enabled: true
           inputs:
             mandatory:
@@ -359,8 +353,8 @@ namespace.tendrl.gluster_integration:
           help: "Failed no of files for rebalance"
           type: Integer
       enabled: true
-      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/
-      list: clusters/$TendrlContext.cluster_id/Volumes
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
+      list: clusters/$TendrlContext.integration_id/Volumes
       help: gluster volume
 tendrl_schema_version: 0.3
 """
