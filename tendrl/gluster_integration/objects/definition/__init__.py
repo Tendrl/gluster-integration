@@ -78,6 +78,3 @@ class _DefinitionEtcd(etcdobj.EtcdObj):
     """
     __name__ = '_tendrl/definitions'
     _tendrl_cls = Definition
-
-    def render(self):
-        return super(_DefinitionEtcd, self).render()
