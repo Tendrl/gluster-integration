@@ -4,7 +4,7 @@ namespace.tendrl.gluster_integration:
   flows:
     CreateVolume:
       atoms:
-        - tendrl.gluster_integration.objects.Volume.atoms.create
+        - tendrl.gluster_integration.objects.volume.atoms.create.Create
       help: "Create Volume with bricks"
       enabled: true
       inputs:
@@ -21,15 +21,15 @@ namespace.tendrl.gluster_integration:
           - Volume.transport
           - Volume.force
       post_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
+        - tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
       pre_run:
-        - tendrl.gluster_integration.objects.Volume.atoms.volume_not_exists
+        - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists.VolumeNotExists
       run: tendrl.gluster_integration.flows.create_volume.CreateVolume
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
   objects:
-    Peers:
+    Peer:
       enabled: true
       objects:
         hostname:
@@ -44,8 +44,29 @@ namespace.tendrl.gluster_integration:
         update:
           help: "Last Peer update time"
           type: String
-      value: clusters/$Tendrl_context.cluster_id/Peers/$Peer.peer_uuid
-    Tendrl_context:
+      value: clusters/$TendrlContext.cluster_id/Peers/$Peer.peer_uuid
+      list: clusters/$TendrlContext.cluster_id/Peers
+      help: Gluster cluster peers
+    Config:
+      attrs:
+        data:
+          help: Configuration data of Gluster Integration for this Tendrl deployment
+          type: String
+        etcd_connection:
+          help: Host/IP of the etcd central store for this Tendrl deployment
+          type: String
+        etcd_port:
+          help: Port of the etcd central store for this Tendrl deployment
+          type: String
+        file_path:
+          default: /etc/tendrl/gluster-integration/gluster-integration.conf.yaml
+          help: Path to the Gluster integration tendrl configuration
+          type: String
+      enabled: true
+      value: _tendrl/config/gluster-integration
+      list: _tendrl/config/gluster-integration
+      help: gluster integration component configuration
+    TendrlContext:
       attrs:
         cluster_id:
           help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
@@ -57,7 +78,63 @@ namespace.tendrl.gluster_integration:
           help: "3.8.3"
           type: String
       enabled: true
-      value: clusters/$Tendrl_context.cluster_id/Tendrl_context/
+      value: clusters/$TendrlContext.cluster_id/TendrlContext/
+      list: TendrlContext.cluster_id/TendrlContext/
+      help: gluster integration tendrl context
+    SyncObject:
+      attrs:
+        cluster_id:
+          help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
+          type: String
+        data:
+          help: raw data
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.cluster_id/raw_map/
+      list: TendrlContext.cluster_id/TendrlContext/raw_map/
+      help: gluster cluster details
+    VolumeOptions:
+      attrs:
+        cluster_id:
+          help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
+          type: String
+        vol_id:
+          help: Volume id
+          type: String
+        options:
+          help: options
+          type: dict
+      enabled: true
+      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/options
+      list: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/options
+      help: gluster volume options
+    Brick:
+      attrs:
+        vol_id:
+          help: Volume id
+          type: String
+        path:
+          help: Path of the brick
+          type: String
+        hostname:
+          help: Name of the host
+          type: String
+        port:
+          help: Brick port
+          type: int
+        status:
+          help: Status of the brick
+          type: String
+        filesystem_type:
+          help: File system type
+          type: String
+        mount_opts:
+          help: Mount options
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
+      list: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/Bricks
+      help: gluster volume bricks
     Volume:
       atoms:
         create:
@@ -76,7 +153,7 @@ namespace.tendrl.gluster_integration:
               - Volume.transport
               - Volume.force
           name: create_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.create.Create
+          run: tendrl.gluster_integration.objects.volume.atoms.create.Create
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
         delete:
@@ -86,7 +163,7 @@ namespace.tendrl.gluster_integration:
               - Volume.volname
               - Volume.vol_id
           name: delete_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.delete.Delete
+          run: tendrl.gluster_integration.objects.volume.atoms.delete.Delete
           type: Delete
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
         start:
@@ -95,7 +172,7 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.volname
           name: start_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.start.Start
+          run: tendrl.gluster_integration.objects.volume.atoms.start.Start
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
         stop:
@@ -104,7 +181,7 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.volname
           name: stop_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.stop.Stop
+          run: tendrl.gluster_integration.objects.volume.atoms.stop.Stop
           type: Stop
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
         volume_exists:
@@ -113,7 +190,7 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.vol_id
           name: volume_exists
-          run: tendrl.gluster_integration.objects.Volume.atoms.volume_exists.VolumeExists
+          run: tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9653c
         volume_not_exists:
@@ -122,7 +199,7 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.vol_id
           name: volume_not_exists
-          run: tendrl.gluster_integration.objects.Volume.atoms.volume_not_exists.VolumeNotExists
+          run: tendrl.gluster_integration.objects.volume.atoms.volume_not_exists.VolumeNotExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9654c
         volume_started:
@@ -131,7 +208,7 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.vol_id
           name: volume_started
-          run: tendrl.gluster_integration.objects.Volume.atoms.volume_started.VolumeStarted
+          run: tendrl.gluster_integration.objects.volume.atoms.volume_started.VolumeStarted
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9655c
         volume_stopped:
@@ -140,13 +217,13 @@ namespace.tendrl.gluster_integration:
             mandatory:
               - Volume.vol_id
           name: volume_stopped
-          run: tendrl.gluster_integration.objects.Volume.atoms.volume_stopped.VolumeStopped
+          run: tendrl.gluster_integration.objects.volume.atoms.volume_stopped.VolumeStopped
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9656c
       flows:
         DeleteVolume:
           atoms:
-            - tendrl.gluster_integration.objects.Volume.atoms.delete
+            - tendrl.gluster_integration.objects.volume.atoms.delete.Delete
           help: "Delete Volume"
           enabled: true
           inputs:
@@ -154,42 +231,42 @@ namespace.tendrl.gluster_integration:
               - Volume.volname
               - Volume.vol_id
           post_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_not_exists
+            - tendrl.gluster_integration.objects.volume.atoms.volume_not_exists.VolumeNotExists
           pre_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-          run: tendrl.gluster_integration.objects.Volume.flows.delete_volume.DeleteVolume
+            - tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
+          run: tendrl.gluster_integration.objects.volume.flows.delete_volume.DeleteVolume
           type: Delete
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
           version: 1
         StartVolume:
           atoms:
-            - tendrl.gluster_integration.objects.Volume.atoms.start
+            - tendrl.gluster_integration.objects.volume.atoms.start.Start
           help: "Start Volume"
           enabled: true
           inputs:
             mandatory:
               - Volume.volname
           post_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_started
+            - tendrl.gluster_integration.objects.volume.atoms.volume_started.VolumeStarted
           pre_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-          run: tendrl.gluster_integration.objects.Volume.flows.start_volume.StartVolume
+            - tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
+          run: tendrl.gluster_integration.objects.volume.flows.start_volume.StartVolume
           type: Start
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
           version: 1
         StopVolume:
           atoms:
-            - tendrl.gluster_integration.objects.Volume.atoms.stop
+            - tendrl.gluster_integration.objects.volume.atoms.stop.Stop
           help: "Stop Volume"
           enabled: true
           inputs:
             mandatory:
               - Volume.volname
           post_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_stopped
+            - tendrl.gluster_integration.objects.volume.atoms.volume_stopped.VolumeStopped
           pre_run:
-            - tendrl.gluster_integration.objects.Volume.atoms.volume_exists
-          run: tendrl.gluster_integration.objects.Volume.flows.stop_volume.StopVolume
+            - tendrl.gluster_integration.objects.volume.atoms.volume_exists.VolumeExists
+          run: tendrl.gluster_integration.objects.volume.flows.stop_volume.StopVolume
           type: Stop
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
           version: 1
@@ -282,6 +359,8 @@ namespace.tendrl.gluster_integration:
           help: "Failed no of files for rebalance"
           type: Integer
       enabled: true
-      value: clusters/$Tendrl_context.cluster_id/Volumes/$Volume.vol_id/
+      value: clusters/$TendrlContext.cluster_id/Volumes/$Volume.vol_id/
+      list: clusters/$TendrlContext.cluster_id/Volumes
+      help: gluster volume
 tendrl_schema_version: 0.3
 """
