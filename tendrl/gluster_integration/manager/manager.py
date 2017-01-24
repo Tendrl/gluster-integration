@@ -27,6 +27,8 @@ def main():
     tendrl_ns.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
 
     tendrl_ns.tendrl_context.save()
+    tendrl_ns.definitions.save()
+    tendrl_ns.config.save()
 
     m = manager.GlusterIntegrationManager()
     m.start()
