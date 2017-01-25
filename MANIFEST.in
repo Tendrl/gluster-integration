@@ -3,6 +3,7 @@ include AUTHORS
 include ChangeLog
 include requirements.txt
 include tendrl-glusterd.service
+include version.py
 exclude .gitignore
 exclude .gitreview
 graft docs

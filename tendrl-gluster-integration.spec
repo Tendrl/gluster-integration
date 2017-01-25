@@ -20,7 +20,7 @@ Requires: python-dateutil
 Requires: python-gevent
 Requires: python-greenlet
 Requires: pytz
-Requires: tendrl-common
+Requires: tendrl-commons
 Requires: systemd
 
 %description
@@ -45,7 +45,7 @@ install -m  0755  --directory $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integ
 install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-glusterd.service
 install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
 install -Dm 0644 etc/tendrl/gluster-integration/logging.yaml.timedrotation.sample $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration_logging.yaml
-install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/node-agent/
+install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
 %systemd_post tendrl-glusterd.service
@@ -64,9 +64,10 @@ py.test -v tendrl/gluster_integration/tests || :
 %dir %{_sysconfdir}/tendrl/gluster-integration
 %doc README.rst
 %license LICENSE
-%{_datarootdir}/tendrl/gluster-integration/gluster-integration.yaml
+%config %{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
 %{_unitdir}/tendrl-glusterd.service
-%{_sysconfdir}/tendrl/gluster-integration_logging.yaml
+%config %{_sysconfdir}/tendrl/gluster-integration_logging.yaml
+%{_datadir}/tendrl/gluster-integration
 
 
 %changelog
