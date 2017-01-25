@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import subprocess
 
 from tendrl.commons.etcdobj import EtcdObj
 from tendrl.gluster_integration import objects
@@ -15,6 +17,7 @@ class TendrlContext(objects.GlusterIntegrationBaseObject):
 
         # integration_id is the Tendrl generated cluster UUID
         self.integration_id = integration_id or self._get_local_integration_id()
+        self.sds_name, self.sds_version = self._get_sds_details()
         self._etcd_cls = _TendrlContextEtcd
 
     def create_local_integration_id(self):
@@ -41,6 +44,23 @@ class TendrlContext(objects.GlusterIntegrationBaseObject):
         except AttributeError:
             return None
 
+    def _get_sds_details(self):
+        # get the gluster version details
+        cmd = subprocess.Popen(
+            "gluster --version",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        out, err = cmd.communicate()
+        if err and 'command not found' in err:
+            LOG.info("gluster not installed on host")
+            return None
+        lines = out.split('\n')
+        version = lines[0].split()[1]
+        name = lines[0].split()[0]
+
+        return name, version
 
 class _TendrlContextEtcd(EtcdObj):
     """A table of the node context, lazily updated
