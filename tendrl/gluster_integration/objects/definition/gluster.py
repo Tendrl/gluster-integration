@@ -29,6 +29,29 @@ namespace.tendrl.gluster_integration:
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
   objects:
+    NodeContext:
+      attrs:
+        machine_id:
+          help: "Unique /etc/machine-id"
+          type: String
+        fqdn:
+          help: "FQDN of the Tendrl managed node"
+          type: String
+        node_id:
+          help: "Tendrl ID for the managed node"
+          type: String
+        tags:
+          help: "The tags associated with this node"
+          type: String
+        status:
+          help: "Node status"
+          type: String
+
+      enabled: true
+      list: clusters/$TendrlContext.integration_id/NodeContext
+      value: clusters/$TendrlContext.integration_id/NodeContext
+      help: Node Context
+
     Peer:
       enabled: true
       objects:

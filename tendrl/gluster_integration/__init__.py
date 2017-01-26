@@ -7,12 +7,11 @@ else:
     monkey.patch_all()
 
 from tendrl.commons import CommonNS
-from tendrl.commons import etcdobj
-from tendrl.commons import log
 
 from tendrl.gluster_integration.objects.brick import Brick
 from tendrl.gluster_integration.objects.config import Config
 from tendrl.gluster_integration.objects.definition import Definition
+from tendrl.gluster_integration.objects.node_context import NodeContext
 from tendrl.gluster_integration.objects.peer import Peer
 from tendrl.gluster_integration.objects.sync_object import SyncObject
 from tendrl.gluster_integration.objects.tendrl_context import TendrlContext
@@ -47,28 +46,6 @@ class GlusterIntegrationNS(CommonNS):
         self.to_str = "tendrl.gluster_integration"
         self.type = 'sds'
         super(GlusterIntegrationNS, self).__init__()
-
-    def setup_initial_objects(self):
-        # Definitions
-        tendrl_ns.definitions = tendrl_ns.gluster_integration.\
-            objects.Definition()
-
-        # Config
-        tendrl_ns.config = tendrl_ns.gluster_integration.objects.Config()
-
-        # etcd_orm
-        etcd_kwargs = {
-            'port': tendrl_ns.config.data['etcd_port'],
-            'host': tendrl_ns.config.data["etcd_connection"]
-        }
-        tendrl_ns.etcd_orm = etcdobj.Server(etcd_kwargs=etcd_kwargs)
-
-        tendrl_ns.tendrl_context = tendrl_ns.gluster_integration.\
-            objects.TendrlContext()
-
-        log.setup_logging(
-            tendrl_ns.config.data['log_cfg_path'],
-        )
 
 import __builtin__
 __builtin__.tendrl_ns = GlusterIntegrationNS()

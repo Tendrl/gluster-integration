@@ -22,12 +22,10 @@ class GlusterIntegrationManager(common_manager.Manager):
 
 
 def main():
-    tendrl_ns.register_subclasses_to_ns()
-    tendrl_ns.setup_initial_objects()
-
     tendrl_ns.central_store_thread = central_store.GlusterIntegrationEtcdCentralStore()
     tendrl_ns.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
 
+    tendrl_ns.node_context.save()
     tendrl_ns.tendrl_context.save()
     tendrl_ns.definitions.save()
     tendrl_ns.config.save()
