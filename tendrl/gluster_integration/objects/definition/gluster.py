@@ -48,10 +48,8 @@ namespace.tendrl.gluster_integration:
           type: String
 
       enabled: true
-      list: clusters/$TendrlContext.integration_id/nodes/$NodeContext
-      .node_id/NodeContext
-      value: clusters/$TendrlContext.integration_id/nodes/$NodeContext
-      .node_id/NodeContext
+      list: clusters/$TendrlContext.integration_id/nodes/$NodeContext.node_id/NodeContext
+      value: clusters/$TendrlContext.integration_id/nodes/$NodeContext.node_id/NodeContext
       help: Node Context
 
     Peer:
