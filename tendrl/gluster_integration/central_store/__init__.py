@@ -35,3 +35,6 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
 
     def save_tendrlcontext(self, tendrl_context):
         tendrl_ns.etcd_orm.save(tendrl_context)
+
+    def save_nodecontext(self, node_context):
+        tendrl_ns.etcd_orm.save(node_context)
