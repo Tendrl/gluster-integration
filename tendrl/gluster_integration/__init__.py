@@ -47,5 +47,4 @@ class GlusterIntegrationNS(CommonNS):
         self.type = 'sds'
         super(GlusterIntegrationNS, self).__init__()
 
-import __builtin__
-__builtin__.tendrl_ns = GlusterIntegrationNS()
+GlusterIntegrationNS()
