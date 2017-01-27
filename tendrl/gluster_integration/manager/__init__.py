@@ -1,6 +1,7 @@
 import logging
 
 import gevent.event
+import signal
 
 from tendrl.commons import manager as common_manager
 from tendrl.gluster_integration import sds_sync
@@ -39,8 +40,8 @@ def main():
         LOG.info("Signal handler: stopping")
         complete.set()
 
-    gevent.signal(gevent.signal.SIGTERM, shutdown)
-    gevent.signal(gevent.signal.SIGINT, shutdown)
+    gevent.signal(signal.SIGTERM, shutdown)
+    gevent.signal(signal.SIGINT, shutdown)
 
     while not complete.is_set():
         complete.wait(timeout=1)
