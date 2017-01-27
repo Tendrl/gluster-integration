@@ -31,6 +31,7 @@ from tendrl.gluster_integration.objects.volume.atoms.volume_started \
 from tendrl.gluster_integration.objects.volume.atoms.volume_stopped \
     import VolumeStopped
 
+from tendrl.gluster_integration.flows.create_volume import CreateVolume
 from tendrl.gluster_integration.objects.volume.flows.delete_volume \
     import DeleteVolume
 from tendrl.gluster_integration.objects.volume.flows.start_volume \
