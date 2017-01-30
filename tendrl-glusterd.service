@@ -3,6 +3,7 @@ Description=Tendrl Gluster Daemon to Manage gluster tasks
 
 [Service]
 Type=simple
+Environment="HOME=/var/lib/tendrl"
 ExecStart=/usr/bin/tendrl-gluster-integration
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
