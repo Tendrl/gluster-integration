@@ -10,7 +10,7 @@ class Delete(objects.GlusterIntegrationBaseAtom):
         super(Delete, self).__init__(*args, **kwargs)
 
     def run(self):
-        cluster_id = self.parameters['Tendrl_context.cluster_id']
+        cluster_id = self.parameters['TendrlContext.cluster_id']
         vol_id = self.parameters['Volume.vol_id']
         subprocess.call(
             [
