@@ -1,5 +1,3 @@
-import logging
-
 from tendrl.commons.etcdobj import EtcdObj
 from tendrl.commons import objects
 
