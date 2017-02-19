@@ -70,9 +70,9 @@ def main():
     def shutdown():
         Event(
             Message(
-                Message.priorities.INFO,
-                Message.publishers.GLUSTER_INTEGRATION,
-                {"message": "Signal handler: stopping"}
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={"message": "Signal handler: stopping"}
             )
         )
         complete.set()
