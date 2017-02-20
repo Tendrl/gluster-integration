@@ -1,5 +1,7 @@
 import subprocess
 
+from tendrl.commons.event import Event
+from tendrl.commons.message import Message
 from tendrl.gluster_integration import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
@@ -40,7 +42,34 @@ class Create(objects.GlusterIntegrationBaseAtom):
         cmd.extend(self.parameters.get('Volume.bricks'))
         cmd.append('force')
         cmd.append('--mode=script')
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Creating the volume %s" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
+
         subprocess.call(cmd)
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Created the volume %s" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
         subprocess.call(
             [
                 'gluster',
@@ -50,5 +79,18 @@ class Create(objects.GlusterIntegrationBaseAtom):
                 '--mode=script'
             ]
         )
-        return True
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Started the volume %s" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
 
+        return True

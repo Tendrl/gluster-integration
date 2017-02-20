@@ -1,3 +1,5 @@
+from tendrl.commons.event import Event
+from tendrl.commons.message import Message
 from tendrl.gluster_integration import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
@@ -8,5 +10,18 @@ class VolumeStarted(objects.GlusterIntegrationBaseAtom):
         super(VolumeStarted, self).__init__(*args, **kwargs)
 
     def run(self):
-        return True
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Checking if volume %s started" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
 
+        return True

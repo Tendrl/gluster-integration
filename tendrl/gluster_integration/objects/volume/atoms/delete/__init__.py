@@ -1,5 +1,7 @@
 import subprocess
 
+from tendrl.commons.event import Event
+from tendrl.commons.message import Message
 from tendrl.gluster_integration import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
@@ -10,8 +12,21 @@ class Delete(objects.GlusterIntegrationBaseAtom):
         super(Delete, self).__init__(*args, **kwargs)
 
     def run(self):
-        cluster_id = self.parameters['TendrlContext.integration_id']
         vol_id = self.parameters['Volume.vol_id']
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Stopping the volume %s before delete" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
+
         subprocess.call(
             [
                 'gluster',
@@ -21,6 +36,20 @@ class Delete(objects.GlusterIntegrationBaseAtom):
                 '--mode=script'
             ]
         )
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Deleting the volume %s" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
+
         subprocess.call(
             [
                 'gluster',
@@ -30,11 +59,25 @@ class Delete(objects.GlusterIntegrationBaseAtom):
                 '--mode=script'
             ]
         )
-        volume = tendrl_ns.gluster_integration.objects.Volume(
-            cluster_id=cluster_id,
-            vol_id=vol_id,
-            deleted="True"
+        tendrl_ns.etcd_orm.client.delete(
+            "clusters/%s/Volumes/%s" % (
+                tendrl_ns.tendrl_context.integration_id,
+                self.parameters['Volume.vol_id']
+            ),
+            recursive=True
         )
-        volume.save(tendrl_ns.etcd_orm)
-        return True
+        Event(
+            Message(
+                priority="info",
+                publisher=tendrl_ns.publisher_id,
+                payload={
+                    "message": "Deleted the volume %s" %
+                    self.parameters['Volume.volname']
+                },
+                request_id=self.parameters["request_id"],
+                flow_id=self.parameters["flow_id"],
+                cluster_id=tendrl_ns.tendrl_context.integration_id,
+            )
+        )
 
+        return True
