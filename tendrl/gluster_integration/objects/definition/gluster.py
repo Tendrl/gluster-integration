@@ -94,6 +94,15 @@ namespace.tendrl.gluster_integration:
         integration_id:
           help: "Tendrl managed/generated cluster id for the sds being managed by Tendrl"
           type: String
+        integration_name:
+          help: "Tendrl managed/generated cluster name for the sds being managed by Tendrl"
+          type: String
+        sds_name:
+          help: "Name of the SDS to which this cluster belongs"
+          type: String
+        sds_version:
+          help: "Version of the SDS to which this cluster belongs"
+          type: String
       enabled: true
       value: clusters/$TendrlContext.integration_id/TendrlContext/
       list: clusters/TendrlContext.integration_id/TendrlContext/
