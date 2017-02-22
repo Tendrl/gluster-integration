@@ -18,6 +18,7 @@ class TendrlContext(objects.GlusterIntegrationBaseObject):
         # integration_id is the Tendrl generated cluster UUID
         self.integration_id = integration_id or self._get_local_integration_id()
         self.sds_name, self.sds_version = self._get_sds_details()
+        self.integration_name = self.sds_name + "_" + self.integration_id
         self._etcd_cls = _TendrlContextEtcd
 
     def create_local_integration_id(self):
