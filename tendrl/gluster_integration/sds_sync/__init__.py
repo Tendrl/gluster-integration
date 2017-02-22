@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 
 import etcd
@@ -8,6 +9,8 @@ import subprocess
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
+from gstatus.libgluster.cluster import Cluster
+from gstatus.libutils import utils as status_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -24,6 +27,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             try:
                 gevent.sleep(3)
+
+                # Sync the cluster status details
+                args = ["gstatus", "-o", "json"]
+                p = subprocess.Popen(
+                    args,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=open(os.devnull, "r")
+                )
+                stdout, stderr = p.communicate()
+                if stderr == "":
+                    out_dict = json.loads(stdout[stdout.index('{'): -1])
+                    tendrl_ns.gluster_integration.objects.GlobalDetails(
+                        status=out_dict['status']
+                    ).save()
+
                 subprocess.call(
                     [
                         'gluster',

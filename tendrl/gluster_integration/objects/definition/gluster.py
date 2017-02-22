@@ -29,6 +29,15 @@ namespace.tendrl.gluster_integration:
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
   objects:
+    GlobalDetails:
+      attrs:
+        status:
+          help: status of the cluster
+          type: String
+      enabled: true
+      list: clusters/$TendrlContext.integration_id/GlobalDetails
+      value: clusters/$TendrlContext.integration_id/GlobalDetails
+      help: Clustr global details
     NodeContext:
       attrs:
         machine_id:
