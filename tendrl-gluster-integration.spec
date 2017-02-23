@@ -22,6 +22,7 @@ Requires: python-greenlet
 Requires: pytz
 Requires: tendrl-commons
 Requires: systemd
+Requires: gstatus
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.
