@@ -8,6 +8,9 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
     def save_syncobject(self, sync_object):
         tendrl_ns.etcd_orm.save(sync_object)
 
+    def save_globaldetails(self, details):
+        tendrl_ns.etcd_orm.save(details)
+
     def save_config(self, config):
         tendrl_ns.etcd_orm.save(config)
 

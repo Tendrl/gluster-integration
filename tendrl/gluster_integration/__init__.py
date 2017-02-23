@@ -12,6 +12,7 @@ from tendrl.gluster_integration.objects.brick import Brick
 from tendrl.gluster_integration.objects.config import Config
 from tendrl.gluster_integration.objects.definition import Definition
 from tendrl.gluster_integration.objects.node_context import NodeContext
+from tendrl.gluster_integration.objects.global_details import GlobalDetails
 from tendrl.gluster_integration.objects.peer import Peer
 from tendrl.gluster_integration.objects.sync_object import SyncObject
 from tendrl.gluster_integration.objects.tendrl_context import TendrlContext
