@@ -38,6 +38,19 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 stdout, stderr = p.communicate()
                 if stderr == "":
+                    # The format of the output from gstatus is as below
+
+                    # "2017-02-23 18:13:01.944183 {"brick_count": 2,
+                    # bricks_active": 2, "glfs_version": "3.9.0",
+                    # node_count": 2, "nodes_active": 2, "over_commit": "No",
+                    # product_name": "Community", "raw_capacity": 52181536768,
+                    # sh_active": 0, "sh_enabled": 0, "snapshot_count": 0,
+                    # status": "healthy", "usable_capacity": 52181536768,
+                    # used_capacity": 2117836800, "volume_count": 1,
+                    # volume_summary": [{"snapshot_count": 0, "state": "up",
+                    # usable_capacity": 52181536768, "used_capacity": 2117836800,
+                    # volume_name": "vol1"}]}\n"
+
                     out_dict = json.loads(stdout[stdout.index('{'): -1])
                     tendrl_ns.gluster_integration.objects.GlobalDetails(
                         status=out_dict['status']
