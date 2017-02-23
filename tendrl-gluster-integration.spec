@@ -42,19 +42,19 @@ rm -rf html/.{doctrees,buildinfo}
 %{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 install -m  0755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster-integration
 install -m  0755  --directory $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration
-install -Dm 0644 tendrl-glusterd.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-glusterd.service
+install -Dm 0644 tendrl-gluster-integration.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-gluster-integration.service
 install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
 install -Dm 0644 etc/tendrl/gluster-integration/logging.yaml.timedrotation.sample $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration/gluster-integration_logging.yaml
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
-%systemd_post tendrl-glusterd.service
+%systemd_post tendrl-gluster-integration.service
 
 %preun
-%systemd_preun tendrl-glusterd.service
+%systemd_preun tendrl-gluster-integration.service
 
 %postun
-%systemd_postun_with_restart tendrl-glusterd.service
+%systemd_postun_with_restart tendrl-gluster-integration.service
 
 %check
 py.test -v tendrl/gluster_integration/tests || :
@@ -65,7 +65,7 @@ py.test -v tendrl/gluster_integration/tests || :
 %doc README.rst
 %license LICENSE
 %config %{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
-%{_unitdir}/tendrl-glusterd.service
+%{_unitdir}/tendrl-gluster-integration.service
 %config %{_sysconfdir}/tendrl/gluster-integration/gluster-integration_logging.yaml
 %{_datadir}/tendrl/gluster-integration
 
