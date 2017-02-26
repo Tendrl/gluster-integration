@@ -33,6 +33,9 @@ class Volume(objects.GlusterIntegrationBaseObject):
         rebal_lookedup=None,
         rebal_files=None,
         rebal_data=None,
+        usable_capacity=None,
+        used_capacity=None,
+        pcnt_used=None,
         *args,
         **kwargs
     ):
@@ -62,6 +65,9 @@ class Volume(objects.GlusterIntegrationBaseObject):
         self.rebal_lookedup = rebal_lookedup
         self.rebal_files = rebal_files
         self.rebal_data = rebal_data
+        self.usable_capacity = usable_capacity
+        self.used_capacity = used_capacity
+        self.pcnt_used = pcnt_used
         self._etcd_cls = _Volume
 
 

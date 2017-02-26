@@ -41,3 +41,6 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
 
     def save_nodecontext(self, node_context):
         tendrl_ns.etcd_orm.save(node_context)
+
+    def save_utilization(self, utilization):
+        tendrl_ns.etcd_orm.save(utilization)

@@ -38,6 +38,21 @@ namespace.tendrl.gluster_integration:
       list: clusters/$TendrlContext.integration_id/GlobalDetails
       value: clusters/$TendrlContext.integration_id/GlobalDetails
       help: Clustr global details
+    Utilization:
+      attrs:
+        raw_capacity:
+          help: Raw capacity of cluster
+          type: int
+        usable_capacity:
+          help: Usable capacity
+          type: int
+        used_capacity:
+          help: Used capacity
+          type: int
+      enabled: true
+      list: clusters/$TendrlContext.integration_id/Utilization
+      value: clusters/$TendrlContext.integration_id/Utilization
+      help: Cluster utilization
     NodeContext:
       attrs:
         machine_id:

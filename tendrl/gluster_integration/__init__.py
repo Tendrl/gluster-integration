@@ -16,6 +16,7 @@ from tendrl.gluster_integration.objects.global_details import GlobalDetails
 from tendrl.gluster_integration.objects.peer import Peer
 from tendrl.gluster_integration.objects.sync_object import SyncObject
 from tendrl.gluster_integration.objects.tendrl_context import TendrlContext
+from tendrl.gluster_integration.objects.utilization import Utilization
 from tendrl.gluster_integration.objects.volume import Volume
 from tendrl.gluster_integration.objects.volume_options import VolumeOptions
 
