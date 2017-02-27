@@ -49,6 +49,9 @@ namespace.tendrl.gluster_integration:
         used_capacity:
           help: Used capacity
           type: int
+        pcnt_used:
+          help: Percent usage
+          type: int
       enabled: true
       list: clusters/$TendrlContext.integration_id/Utilization
       value: clusters/$TendrlContext.integration_id/Utilization

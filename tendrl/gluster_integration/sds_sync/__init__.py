@@ -199,7 +199,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     stdin=open(os.devnull, "r")
                 )
                 stdout, stderr = p.communicate()
-                if stderr == "":
+                if stderr == "" and p.returncode == 0:
                     # The format of the output from gstatus is as below
 
                     # "2017-02-23 18:13:01.944183 {"brick_count": 2,
@@ -220,7 +220,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     tendrl_ns.gluster_integration.objects.Utilization(
                         raw_capacity=out_dict['raw_capacity'],
                         usable_capacity=out_dict['usable_capacity'],
-                        used_capacity=out_dict['used_capacity']
+                        used_capacity=out_dict['used_capacity'],
+                        pcnt_used=(out_dict['used_capacity'] * 100 / out_dict['usable_capacity'])
                     ).save()
                     for item in out_dict['volume_summary']:
                         tendrl_ns.gluster_integration.objects.Volume(
