@@ -1,15 +1,17 @@
 NAME=gstatus
 VERSION=0.64
+RELEASE=3
 
 clean:
-	rm -fr gstatus*
+	rm -fr gstatus* *.log
 
 dist:
-	git clone https://github.com/gluster/gstatus > /dev/null || : \
-	&& cd gstatus \
-	&& python setup.py sdist \
-	  && mv dist/$(NAME)-$(VERSION).tar.gz ../. \
-	&& cp gstatus.spec ../.
+	wget https://github.com/gluster/gstatus/archive/v$(VERSION)-$(RELEASE).tar.gz
+	tar -zxvf v$(VERSION)-$(RELEASE).tar.gz
+	mv $(NAME)-$(VERSION)-$(RELEASE) $(NAME)
+	cp $(NAME)/$(NAME).spec .
+	tar -pczf $(NAME)-$(VERSION).tar.gz $(NAME)
+	rm -fr v$(VERSION)* $(NAME)
 
 srpm:
 	fedpkg --dist epel7 srpm
