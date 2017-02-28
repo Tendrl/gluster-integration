@@ -1,3 +1,5 @@
+import etcd
+
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.gluster_integration import objects
@@ -23,5 +25,24 @@ class VolumeNotExists(objects.GlusterIntegrationBaseAtom):
                 cluster_id=tendrl_ns.tendrl_context.integration_id,
             )
         )
+        try:
+            fetched_volume = Volume(
+                vol_id=self.parameters['Volume.vol_id']
+            ).load()
+        except etcd.EtcdKeyNotFound:
+            Event(
+                Message(
+                    priority="info",
+                    publisher=tendrl_ns.publisher_id,
+                    payload={
+                        "message": "Volume %s doesnt exist" %
+                        self.parameters['Volume.volname']
+                    },
+                    request_id=self.parameters["request_id"],
+                    flow_id=self.parameters["flow_id"],
+                    cluster_id=tendrl_ns.tendrl_context.integration_id,
+                )
+            )
+            return True
 
-        return True
+        return False

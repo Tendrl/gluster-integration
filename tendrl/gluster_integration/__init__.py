@@ -24,6 +24,8 @@ from tendrl.gluster_integration.objects.volume.atoms.create import Create
 from tendrl.gluster_integration.objects.volume.atoms.delete import Delete
 from tendrl.gluster_integration.objects.volume.atoms.start import Start
 from tendrl.gluster_integration.objects.volume.atoms.stop import Stop
+from tendrl.gluster_integration.objects.volume.atoms.named_volume_not_exists \
+    import NamedVolumeNotExists
 from tendrl.gluster_integration.objects.volume.atoms.volume_exists \
     import VolumeExists
 from tendrl.gluster_integration.objects.volume.atoms.volume_not_exists \

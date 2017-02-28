@@ -45,7 +45,7 @@ class Definition(objects.BaseObject):
 
         return ns.Namespace(attrs=raw_obj['attrs'],
                             enabled=raw_obj['enabled'],
-                            obj_list=raw_obj['list'],
+                            obj_list=raw_obj.get('list', ""),
                             obj_value=raw_obj['value'],
                             atoms=raw_obj.get('atoms', {}),
                             flows=raw_obj.get('flows', {}),
@@ -64,8 +64,8 @@ class Definition(objects.BaseObject):
                             help=raw_flow['help'],
                             enabled=raw_flow['enabled'],
                             inputs=raw_flow['inputs'],
-                            pre_run=raw_flow['pre_run'],
-                            post_run=raw_flow['post_run'],
+                            pre_run=raw_flow.get('pre_run'),
+                            post_run=raw_flow.get('post_run'),
                             type=raw_flow['type'],
                             uuid=raw_flow['uuid']
                             )
