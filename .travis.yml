@@ -1,15 +1,35 @@
 ---
+# This is configuration file of Travis CI service, see:
+# https://docs.travis-ci.com/user/customizing-the-build
+
+# Install packages not present in default Travis CI Ubuntu instances
+# see: https://docs.travis-ci.com/user/installing-dependencies/
 before_install:
   - "export TRAVIS_COMMIT_MSG=\\\"$(git log --format=%B --no-merges -n 1)\\"
-  - "pip install requests"
+  - sudo apt-get install -y build-essential
+
+# Redefine limit deph of git clone operation (Travis CI uses 50 by default)
 git:
   depth: 4
-install: "pip install tox-travis"
+
+# Installation of dependencies, the rest is handled by tox.
+install:
+  - pip install tox-travis
+
 language: python
 python:
   - "2.7"
+
+# All CI checks are executed via tox, one tox run for each env (see below).
 script:
-  - "tox -e pep8"
-  - "python check_commit_msg.py"
-  - "tox -e cover"
-sudo: true
+  - tox
+
+# List of tox enviroments to run. This way, result for each env will be
+# reported separately.
+# See: http://borntyping.co.uk/2013/09/02/tox-and-travis/
+env:
+  - TOXENV=pep8
+  - TOXENV=check_commit_msg
+  - TOXENV=py27-cover-master
+  - TOXENV=py27-cover-develop
+  - TOXENV=docs
