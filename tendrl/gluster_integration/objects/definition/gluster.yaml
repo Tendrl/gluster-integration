@@ -300,6 +300,56 @@ namespace.gluster:
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9656c
           help: check if volume is stopped
+        RebalanceNotRunning:
+          enabled: true
+          help: check if rebalance not running
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+          name: rebalancenotrunning
+          run: gluster.objects.Volume.atoms.RebalanceNotRunning
+          type: Check
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96588
+        StartRebalance:
+          enabled: true
+          help: start rebalance
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+            optional:
+              - Volume.fix_layout
+              - Volume.force
+          name: start_rebalance
+          run: gluster.objects.Volume.atoms.StartRebalance
+          type: Start
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96599
+        RebalanceRunning:
+          enabled: true
+          help: check if rebalance is running
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+          name: rebalancerunning
+          run: gluster.objects.Volume.atoms.RebalanceRunning
+          type: Check
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96579
+        StopRebalance:
+          enabled: true
+          help: stop rebalance
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+            optional:
+              - Volume.fix_layout
+              - Volume.force
+          name: stop_rebalance
+          run: gluster.objects.Volume.atoms.StopRebalance
+          type: Start
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96567
       flows:
         DeleteVolume:
           tags:
@@ -342,7 +392,7 @@ namespace.gluster:
           version: 1
         StopVolume:
           tags:
-            - "provisioner/$TendrlContext.integration_id"       
+            - "provisioner/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.Stop
           help: "Stop Volume"
@@ -357,6 +407,46 @@ namespace.gluster:
           run: gluster.objects.Volume.flows.StopVolume
           type: Stop
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
+          version: 1
+        StartVolumeRebalance:
+          atoms:
+            - gluster.objects.Volume.atoms.StartRebalance
+          help: "Start Volume Rebalance"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+            optional:
+              - Volume.fix_layout
+              - Volume.force
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.VolumeStarted
+            - gluster.objects.Volume.atoms.RebalanceNotRunning
+          run: gluster.objects.Volume.flows.StartVolumeRebalance
+          type: Start
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275b7d
+          version: 1
+        StopVolumeRebalance:
+          atoms:
+            - gluster.objects.Volume.atoms.StopRebalance
+          help: "Stop Volume Rebalance"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+            optional:
+              - Volume.fix_layout
+              - Volume.force
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.VolumeStarted
+            - gluster.objects.Volume.atoms.RebalanceRunning
+          run: gluster.objects.Volume.flows.StopVolumeRebalance
+          type: Start
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275b2d
           version: 1
       attrs:
         arbiter_count:
