@@ -43,6 +43,7 @@ class VolumeStarted(objects.BaseAtom):
                     cluster_id=NS.tendrl_context.integration_id,
                 )
             )
+            return False
 
         if fetched_volume.status == "Started":
             Event(
