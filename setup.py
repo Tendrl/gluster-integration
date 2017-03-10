@@ -107,6 +107,7 @@ setup(
         "namespaces",
         "python-etcd",
         "tendrl-commons",
+        "ruamel.yaml"
         ],
     entry_points={
         'console_scripts': [
