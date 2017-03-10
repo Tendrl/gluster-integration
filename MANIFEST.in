@@ -1,7 +1,6 @@
 include LICENSE
 include AUTHORS
 include ChangeLog
-include requirements.txt
 include tendrl-gluster-integration.service
 include version.py
 exclude .gitignore
