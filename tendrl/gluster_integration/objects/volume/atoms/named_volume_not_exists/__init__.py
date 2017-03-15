@@ -1,3 +1,5 @@
+import etcd
+
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
@@ -23,9 +25,14 @@ class NamedVolumeNotExists(objects.BaseAtom):
                 cluster_id=NS.tendrl_context.integration_id,
             )
         )
-        volumes = NS.etcd_orm.client.read(
-            "clusters/%s/Volumes" % NS.tendrl_context.integration_id
-        )
+        try:
+            volumes = NS.etcd_orm.client.read(
+                "clusters/%s/Volumes" % NS.tendrl_context.integration_id
+            )
+        except etcd.EtcdKeyNotFound:
+            # No volumes present yet for cluster, return true
+            return True
+
         for volume in volumes._children:
             fetched_volume = Volume(
                 vol_id=volume['key'].split('/')[-1]
