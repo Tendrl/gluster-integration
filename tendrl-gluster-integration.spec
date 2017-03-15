@@ -11,15 +11,7 @@ BuildRequires: systemd
 BuildRequires: python2-devel
 BuildRequires: pytest
 BuildRequires: python-mock
-BuildRequires: python-dateutil
-BuildRequires: python-gevent
-BuildRequires: python-greenlet
 
-Requires: python-etcd
-Requires: python-dateutil
-Requires: python-gevent
-Requires: python-greenlet
-Requires: pytz
 Requires: tendrl-commons
 Requires: systemd
 Requires: gstatus
