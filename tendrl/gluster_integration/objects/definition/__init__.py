@@ -2,8 +2,6 @@ from ruamel import yaml
 import importlib
 import os
 
-import namespaces as ns
-
 
 from tendrl.commons import objects
 from tendrl.commons import etcdobj
