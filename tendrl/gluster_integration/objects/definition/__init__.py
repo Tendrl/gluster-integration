@@ -18,7 +18,7 @@ class Definition(objects.BaseObject):
     def __init__(self, *args, **kwargs):
         super(Definition, self).__init__(*args, **kwargs)
 
-        self.value = 'clusters/%s/definitions'
+        self.value = 'clusters/%s/_NS/definitions'
         self.data = gluster.data
         self._parsed_defs = yaml.safe_load(self.data)
         self._etcd_cls = _DefinitionEtcd
@@ -33,7 +33,7 @@ class Definition(objects.BaseObject):
 class _DefinitionEtcd(etcdobj.EtcdObj):
     """A table of the Definitions, lazily updated
     """
-    __name__ = 'clusters/%s/definitions'
+    __name__ = 'clusters/%s/_NS/definitions'
     _tendrl_cls = Definition
 
     def render(self):
