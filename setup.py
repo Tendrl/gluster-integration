@@ -101,12 +101,12 @@ setup(
     license="LGPL-2.1+",
     zip_safe=False,
     install_requires=[
-        "PyYAML",
         "gevent>=1.0",
         "gstatus",
-        "namespaces",
+        "maps",
         "python-etcd",
         "tendrl-commons",
+        "ruamel.yaml"
         ],
     entry_points={
         'console_scripts': [
