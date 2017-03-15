@@ -7,7 +7,7 @@ Style Commandments
 
 Developer Workflow
 ------------------
-Refer: https://guides.github.com/introduction/flow/
+Refer: http://nvie.com/posts/a-successful-git-branching-model/
 
 
 Creating Unit Tests

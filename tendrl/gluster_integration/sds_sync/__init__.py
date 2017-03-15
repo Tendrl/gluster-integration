@@ -40,22 +40,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 raw_data = ini2json.ini_to_dict('/var/run/glusterd-state')
                 subprocess.call(['rm', '-rf', '/var/run/glusterd-state'])
-                tendrl_ns.sync_object = tendrl_ns.gluster_integration.objects.\
+                NS.sync_object = NS.gluster_integration.objects.\
                     SyncObject(data=json.dumps(raw_data))
-                tendrl_ns.sync_object.save()
+                NS.sync_object.save()
 
                 if "Peers" in raw_data:
                     index = 1
                     peers = raw_data["Peers"]
                     while True:
                         try:
-                            tendrl_ns.peer = tendrl_ns.gluster_integration.\
+                            NS.peer = NS.gluster_integration.\
                                 objects.Peer(
                                     peer_uuid=peers['peer%s.uuid' % index],
                                     hostname=peers['peer%s.primary_hostname' % index],
                                     state=peers['peer%s.state' % index]
                                 )
-                            tendrl_ns.peer.save()
+                            NS.peer.save()
                             index += 1
                         except KeyError:
                             break
@@ -64,7 +64,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     volumes = raw_data['Volumes']
                     while True:
                         try:
-                            tendrl_ns.volume = tendrl_ns.gluster_integration.objects.Volume(
+                            NS.volume = NS.gluster_integration.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
                                 ],
@@ -135,11 +135,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            tendrl_ns.volume.save()
+                            NS.volume.save()
                             b_index = 1
                             while True:
                                 try:
-                                    tendrl_ns.brick = tendrl_ns.gluster_integration\
+                                    NS.brick = NS.gluster_integration\
                                         .objects.Brick(
                                             vol_id=volumes['volume%s.id' % index],
                                             path=volumes[
@@ -161,7 +161,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 'volume%s.brick%s.mount_options' % (
                                                     index, b_index))
                                         )
-                                    tendrl_ns.brick.save()
+                                    NS.brick.save()
                                     b_index += 1
                                 except KeyError:
                                     break
@@ -183,12 +183,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
-                        tendrl_ns.vol_options = tendrl_ns.gluster_integration.objects.\
+                        NS.vol_options = NS.gluster_integration.objects.\
                             VolumeOptions(
                                 vol_id=vol_id,
                                 options=dict1
                             )
-                        tendrl_ns.vol_options.save()
+                        NS.vol_options.save()
 
                 # Sync the cluster status details
                 args = ["gstatus", "-o", "json"]
@@ -214,22 +214,52 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # volume_name": "vol1"}]}\n"
 
                     out_dict = json.loads(stdout[stdout.index('{'): -1])
-                    tendrl_ns.gluster_integration.objects.GlobalDetails(
+                    NS.gluster_integration.objects.GlobalDetails(
                         status=out_dict['status']
                     ).save()
-                    tendrl_ns.gluster_integration.objects.Utilization(
+                    NS.gluster_integration.objects.Utilization(
                         raw_capacity=out_dict['raw_capacity'],
                         usable_capacity=out_dict['usable_capacity'],
                         used_capacity=out_dict['used_capacity'],
                         pcnt_used=(out_dict['used_capacity'] * 100 / out_dict['usable_capacity'])
                     ).save()
                     for item in out_dict['volume_summary']:
-                        tendrl_ns.gluster_integration.objects.Volume(
-                            name=item['volume_name'],
-                            usable_capacity=item['usable_capacity'],
-                            used_capacity=item['used_capacity'],
-                            pcnt_used=(item['used_capacity'] * 100 / item['usable_capacity'])
-                        ).save()
+                        volumes = NS.etcd_orm.client.read(
+                            "clusters/%s/Volumes" % NS.tendrl_context.integration_id
+                        )
+                        for child in volumes._children:
+                            volume = NS.gluster_integration.objects.Volume(
+                                vol_id=child['key'].split('/')[-1]
+                            ).load()
+                            if volume.name == item['volume_name']:
+                                NS.gluster_integration.objects.Volume(
+                                    vol_id=child['key'].split('/')[-1],
+                                    usable_capacity=str(item['usable_capacity']),
+                                    used_capacity=str(item['used_capacity']),
+                                    pcnt_used=str(item['used_capacity'] * 100 / item['usable_capacity']),
+                                    vol_type=volume.vol_type,
+                                    name=volume.name,
+                                    transport_type=volume.transport_type,
+                                    status=volume.status,
+                                    brick_count=volume.brick_count,
+                                    snap_count=volume.snap_count,
+                                    stripe_count=volume.stripe_count,
+                                    replica_count=volume.replica_count,
+                                    subvol_count=volume.subvol_count,
+                                    arbiter_count=volume.arbiter_count,
+                                    disperse_count=volume.disperse_count,
+                                    redundancy_count=volume.redundancy_count,
+                                    quorum_status=volume.quorum_status,
+                                    snapd_status=volume.snapd_status,
+                                    snapd_inited=volume.snapd_inited,
+                                    rebal_id=volume.rebal_id,
+                                    rebal_status=volume.rebal_status,
+                                    rebal_failures=volume.rebal_failures,
+                                    rebal_skipped=volume.rebal_skipped,
+                                    rebal_lookedup=volume.rebal_lookedup,
+                                    rebal_files=volume.rebal_files,
+                                    rebal_data=volume.rebal_data
+                                ).save()
 
             except Exception as ex:
                 LOG.error(ex)
