@@ -101,12 +101,8 @@ setup(
     license="LGPL-2.1+",
     zip_safe=False,
     install_requires=[
-        "gevent>=1.0",
         "gstatus",
-        "maps",
-        "python-etcd",
         "tendrl-commons",
-        "ruamel.yaml"
         ],
     entry_points={
         'console_scripts': [
