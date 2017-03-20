@@ -1,5 +1,3 @@
-# flake8: noqa
-data="""---
 namespace.tendrl.gluster_integration:
   flows:
     CreateVolume:
@@ -432,4 +430,3 @@ namespace.tendrl.gluster_integration:
       list: clusters/$TendrlContext.integration_id/Volumes
       help: gluster volume
 tendrl_schema_version: 0.3
-"""
