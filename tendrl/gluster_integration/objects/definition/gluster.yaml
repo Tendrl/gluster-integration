@@ -1,4 +1,4 @@
-namespace.tendrl.gluster_integration:
+namespace.gluster:
   flows:
     CreateVolume:
       atoms:
