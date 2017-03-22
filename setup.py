@@ -110,6 +110,6 @@ setup(
             'tendrl.gluster_integration.manager:main'
         ]
     },
-    include_package_data=True
+    include_package_data=True,
     cmdclass={'bumpversion': BumpVersionCommand, 'release': ReleaseCommand},
 )
