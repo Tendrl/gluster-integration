@@ -77,7 +77,7 @@ namespace.gluster:
 
     Peer:
       enabled: true
-      objects:
+      attrs:
         hostname:
           help: "Gluster Peer hostname"
           type: String
