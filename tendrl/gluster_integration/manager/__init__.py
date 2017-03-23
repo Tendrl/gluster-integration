@@ -46,7 +46,6 @@ def main():
         NS.tendrl_context.cluster_name = \
             "gluster-%s" % \
             NS.tendrl.objects.DetectedCluster().load().detected_cluster_id
-        NS.tendrl_context.save()
     except etcd.EtcdKeyNotFound:
         LOG.error(
             "Node %s is not part of any sds cluster" %
