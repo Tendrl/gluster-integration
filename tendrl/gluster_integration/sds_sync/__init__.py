@@ -40,7 +40,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 raw_data = ini2json.ini_to_dict('/var/run/glusterd-state')
                 subprocess.call(['rm', '-rf', '/var/run/glusterd-state'])
-                NS.sync_object = NS.gluster_integration.objects.\
+                NS.sync_object = NS.gluster.objects.\
                     SyncObject(data=json.dumps(raw_data))
                 NS.sync_object.save()
 
@@ -49,7 +49,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     peers = raw_data["Peers"]
                     while True:
                         try:
-                            NS.peer = NS.gluster_integration.\
+                            NS.peer = NS.gluster.\
                                 objects.Peer(
                                     peer_uuid=peers['peer%s.uuid' % index],
                                     hostname=peers['peer%s.primary_hostname' % index],
@@ -64,7 +64,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     volumes = raw_data['Volumes']
                     while True:
                         try:
-                            NS.volume = NS.gluster_integration.objects.Volume(
+                            NS.volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
                                 ],
@@ -139,7 +139,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             b_index = 1
                             while True:
                                 try:
-                                    NS.brick = NS.gluster_integration\
+                                    NS.brick = NS.gluster\
                                         .objects.Brick(
                                             vol_id=volumes['volume%s.id' % index],
                                             path=volumes[
@@ -183,7 +183,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
-                        NS.vol_options = NS.gluster_integration.objects.\
+                        NS.vol_options = NS.gluster.objects.\
                             VolumeOptions(
                                 vol_id=vol_id,
                                 options=dict1
@@ -214,10 +214,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # volume_name": "vol1"}]}\n"
 
                     out_dict = json.loads(stdout[stdout.index('{'): -1])
-                    NS.gluster_integration.objects.GlobalDetails(
+                    NS.gluster.objects.GlobalDetails(
                         status=out_dict['status']
                     ).save()
-                    NS.gluster_integration.objects.Utilization(
+                    NS.gluster.objects.Utilization(
                         raw_capacity=out_dict['raw_capacity'],
                         usable_capacity=out_dict['usable_capacity'],
                         used_capacity=out_dict['used_capacity'],
@@ -228,11 +228,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             "clusters/%s/Volumes" % NS.tendrl_context.integration_id
                         )
                         for child in volumes._children:
-                            volume = NS.gluster_integration.objects.Volume(
+                            volume = NS.gluster.objects.Volume(
                                 vol_id=child['key'].split('/')[-1]
                             ).load()
                             if volume.name == item['volume_name']:
-                                NS.gluster_integration.objects.Volume(
+                                NS.gluster.objects.Volume(
                                     vol_id=child['key'].split('/')[-1],
                                     usable_capacity=str(item['usable_capacity']),
                                     used_capacity=str(item['used_capacity']),

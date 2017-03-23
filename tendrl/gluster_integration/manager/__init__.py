@@ -1,3 +1,4 @@
+import etcd
 import logging
 
 import gevent.event
@@ -34,9 +35,27 @@ def main():
     NS.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
 
     NS.node_context.save()
+    try:
+        NS.tendrl_context = NS.tendrl_context.load()
+        LOG.info(
+            "Integration %s is part of sds cluster" %
+            NS.tendrl_context.integration_id
+        )
+    except etcd.EtcdKeyNotFound:
+        LOG.error(
+            "Node %s is not part of any sds cluster" %
+            NS.node_context.node_id
+        )
+        raise Exception(
+            "Integration cannot be started,"
+            " please Import or Create sds cluster"
+            " in Tendrl and include Node %s" %
+            NS.node_context.node_id
+        )
+    
     NS.tendrl_context.save()
-    NS.gluster_integration.definitions.save()
-    NS.gluster_integration.config.save()
+    NS.gluster.definitions.save()
+    NS.gluster.config.save()
     NS.publisher_id = "gluster_integration"
 
     m = GlusterIntegrationManager()
