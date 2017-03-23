@@ -41,6 +41,12 @@ def main():
             "Integration %s is part of sds cluster" %
             NS.tendrl_context.integration_id
         )
+        NS.tendrl_context.cluster_id = \
+            NS.tendrl.objects.DetectedCluster().load().detected_cluster_id
+        NS.tendrl_context.cluster_name = \
+            "gluster-%s" % \
+            NS.tendrl.objects.DetectedCluster().load().detected_cluster_id
+        NS.tendrl_context.save()
     except etcd.EtcdKeyNotFound:
         LOG.error(
             "Node %s is not part of any sds cluster" %
