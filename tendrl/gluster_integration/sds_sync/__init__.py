@@ -1,19 +1,13 @@
-import json
-import logging
-import os
-import re
-
-import etcd
 import gevent
+import json
+import re
 import subprocess
 
 from tendrl.commons.event import Event
-from tendrl.commons.message import Message
+from tendrl.commons.message import ExceptionMessage, Message
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
-from gstatus.libgluster.cluster import Cluster
-from gstatus.libutils import utils as status_utils
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -26,7 +20,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         Event(
             Message(
                 priority="info",
-                publisher=tendrl_ns.publisher_id,
+                publisher=NS.publisher_id,
                 payload={"message": "%s running" % self.__class__.__name__}
             )
         )
@@ -270,17 +264,19 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
             except Exception as ex:
                 Event(
-                    Message(
+                    ExceptionMessage(
                         priority="error",
-                        publisher=tendrl_ns.publisher_id,
-                        payload={"message": ex}
+                        publisher=NS.publisher_id,
+                        payload={"message": "error",
+                                 "exception": ex
+                                 }
                     )
                 )
 
         Event(
             Message(
                 priority="info",
-                publisher=tendrl_ns.publisher_id,
+                publisher=NS.publisher_id,
                 payload={"message": "%s complete" % self.__class__.__name__}
             )
         )

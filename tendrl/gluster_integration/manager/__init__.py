@@ -1,5 +1,4 @@
 import etcd
-import logging
 import gevent.event
 import signal
 
@@ -29,6 +28,7 @@ def main():
     TendrlNS()
 
     NS.type = "sds"
+    NS.publisher_id = "gluster_integration"
 
     NS.central_store_thread = central_store.GlusterIntegrationEtcdCentralStore()
     NS.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
@@ -36,9 +36,14 @@ def main():
     NS.node_context.save()
     try:
         NS.tendrl_context = NS.tendrl_context.load()
-        LOG.info(
-            "Integration %s is part of sds cluster" %
-            NS.tendrl_context.integration_id
+        Event(
+            Message(
+                priority="info",
+                publisher=NS.publisher_id,
+                payload={"message": "Integration %s is part of sds cluster"
+                                    % NS.tendrl_context.integration_id
+                         }
+            )
         )
         _detected_cluster = NS.tendrl.objects.DetectedCluster().load()
         NS.tendrl_context.cluster_id = _detected_cluster.detected_cluster_id
@@ -46,9 +51,14 @@ def main():
         NS.tendrl_context.sds_name = _detected_cluster.sds_pkg_name
         NS.tendrl_context.sds_version = _detected_cluster.sds_pkg_version
     except etcd.EtcdKeyNotFound:
-        LOG.error(
-            "Node %s is not part of any sds cluster" %
-            NS.node_context.node_id
+        Event(
+            Message(
+                priority="error",
+                publisher=NS.publisher_id,
+                payload={"message": "Node %s is not part of any sds cluster" %
+                                    NS.node_context.node_id
+                         }
+            )
         )
         raise Exception(
             "Integration cannot be started,"
@@ -60,7 +70,6 @@ def main():
     NS.tendrl_context.save()
     NS.gluster.definitions.save()
     NS.gluster.config.save()
-    NS.publisher_id = "gluster_integration"
 
     m = GlusterIntegrationManager()
     m.start()
@@ -71,7 +80,7 @@ def main():
         Event(
             Message(
                 priority="info",
-                publisher=tendrl_ns.publisher_id,
+                publisher=NS.publisher_id,
                 payload={"message": "Signal handler: stopping"}
             )
         )
