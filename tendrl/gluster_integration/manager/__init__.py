@@ -52,7 +52,8 @@ def main():
             " in Tendrl and include Node %s" %
             NS.node_context.node_id
         )
-
+    
+    NS.tendrl_context.save()
     NS.gluster.definitions.save()
     NS.gluster.config.save()
     NS.publisher_id = "gluster_integration"
