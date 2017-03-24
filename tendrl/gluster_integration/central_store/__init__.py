@@ -29,18 +29,5 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
     def save_volumeoptions(self, vol_options):
         NS.etcd_orm.save(vol_options)
 
-    def save_events(self, events):
-        for event in events:
-            NS.etcd_orm.save(event)
-
-    def save_tendrl_definitions(self, definition):
-        NS.etcd_orm.save(definition)
-
-    def save_tendrlcontext(self, tendrl_context):
-        NS.etcd_orm.save(tendrl_context)
-
-    def save_nodecontext(self, node_context):
-        NS.etcd_orm.save(node_context)
-
     def save_utilization(self, utilization):
         NS.etcd_orm.save(utilization)
