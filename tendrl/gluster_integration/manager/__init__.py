@@ -9,6 +9,8 @@ from tendrl.commons.message import Message
 from tendrl.commons import manager as common_manager
 from tendrl.gluster_integration import sds_sync
 from tendrl.gluster_integration import central_store
+from tendrl.gluster_integration.gdeploy_wrapper.manager import \
+    ProvisioningManager
 
 
 class GlusterIntegrationManager(common_manager.Manager):
@@ -70,6 +72,9 @@ def main():
     NS.tendrl_context.save()
     NS.gluster.definitions.save()
     NS.gluster.config.save()
+
+    pm = ProvisioningManager("GdeployPlugin")
+    NS.gdeploy_plugin = pm.get_plugin()
 
     m = GlusterIntegrationManager()
     m.start()
