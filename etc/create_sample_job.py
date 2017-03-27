@@ -9,7 +9,7 @@ job_id = str(uuid.uuid4())
 
 payload = {
     "integration_id": integration_id,
-    "run": "tendrl.gluster.flows.CreateVolume",
+    "run": "gluster.flows.CreateVolume",
     "parameters": {
         "Volume.volname": 'Volume2',
         "Volume.bricks": [
