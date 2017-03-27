@@ -1,3 +1,5 @@
+import pkg_resources
+
 from ruamel import yaml
 import importlib
 import os
@@ -5,7 +7,6 @@ import os
 
 from tendrl.commons import objects
 from tendrl.commons import etcdobj
-from tendrl.gluster_integration.objects.definition import gluster
 
 
 # Definitions need there own special init and have to be present in the NS
@@ -17,7 +18,7 @@ class Definition(objects.BaseObject):
         super(Definition, self).__init__(*args, **kwargs)
 
         self.value = 'clusters/%s/_NS/definitions'
-        self.data = gluster.data
+        self.data = pkg_resources.resource_string(__name__, "gluster.yaml")
         self._parsed_defs = yaml.safe_load(self.data)
         self._etcd_cls = _DefinitionEtcd
 
