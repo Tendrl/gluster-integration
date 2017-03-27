@@ -2,7 +2,7 @@ namespace.gluster:
   flows:
     CreateVolume:
       atoms:
-        - tendrl.gluster.objects.Volume.atoms.Create
+        - gluster.objects.Volume.atoms.Create
       help: "Create Volume with bricks"
       enabled: true
       inputs:
@@ -17,8 +17,8 @@ namespace.gluster:
           - Volume.force
           - Volume.tuned_profile
       pre_run:
-        - tendrl.gluster.objects.Volume.atoms.NamedVolumeNotExists
-      run: tendrl.gluster_integration.flows.CreateVolume
+        - gluster.objects.Volume.atoms.NamedVolumeNotExists
+      run: gluster.flows.CreateVolume
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
@@ -198,7 +198,7 @@ namespace.gluster:
               - Volume.force
               - Volume.tuned_profile
           name: create_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.Create
+          run: gluster.objects.Volume.atoms.Create
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
           help: Create gluster volume
@@ -211,7 +211,7 @@ namespace.gluster:
             optional:
               - Volume.format_bricks
           name: delete_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.Delete
+          run: gluster.objects.Volume.atoms.Delete
           type: Delete
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
           help: Delete gluster volume
@@ -221,7 +221,7 @@ namespace.gluster:
             mandatory:
               - Volume.volname
           name: start_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.Start
+          run: gluster.objects.Volume.atoms.Start
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
           help: Start gluster volume
@@ -231,7 +231,7 @@ namespace.gluster:
             mandatory:
               - Volume.volname
           name: stop_volume
-          run: tendrl.gluster_integration.objects.Volume.atoms.Stop
+          run: gluster.objects.Volume.atoms.Stop
           type: Stop
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
           help: Stop gluster volume
@@ -241,7 +241,7 @@ namespace.gluster:
             mandatory:
               - Volume.volname
           name: named volume not exists
-          run: tendrl.gluster_integration.objects.Volume.atoms.NamedVolumeNotExists
+          run: gluster.objects.Volume.atoms.NamedVolumeNotExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9653d
           help: check if named volume exists
@@ -251,7 +251,7 @@ namespace.gluster:
             mandatory:
               - Volume.vol_id
           name: volume_exists
-          run: tendrl.gluster_integration.objects.Volume.atoms.VolumeExists
+          run: gluster.objects.Volume.atoms.VolumeExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9653c
           help: check if volume exists
@@ -261,7 +261,7 @@ namespace.gluster:
             mandatory:
               - Volume.vol_id
           name: volume_not_exists
-          run: tendrl.gluster_integration.objects.Volume.atoms.VolumeNotExists
+          run: gluster.objects.Volume.atoms.VolumeNotExists
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9654c
           help: check if volume not exists
@@ -271,7 +271,7 @@ namespace.gluster:
             mandatory:
               - Volume.vol_id
           name: volume_started
-          run: tendrl.gluster_integration.objects.Volume.atoms.VolumeStarted
+          run: gluster.objects.Volume.atoms.VolumeStarted
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9655c
           help: check if volume is started
@@ -281,14 +281,14 @@ namespace.gluster:
             mandatory:
               - Volume.vol_id
           name: volume_stopped
-          run: tendrl.gluster_integration.objects.Volume.atoms.VolumeStopped
+          run: gluster.objects.Volume.atoms.VolumeStopped
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9656c
           help: check if volume is stopped
       flows:
         DeleteVolume:
           atoms:
-            - tendrl.gluster.objects.Volume.atoms.Delete
+            - gluster.objects.Volume.atoms.Delete
           help: "Delete Volume"
           enabled: true
           inputs:
@@ -298,16 +298,16 @@ namespace.gluster:
             optional:
               - Volume.format_bricks
           post_run:
-            - tendrl.gluster.objects.Volume.atoms.VolumeNotExists
+            - gluster.objects.Volume.atoms.VolumeNotExists
           pre_run:
-            - tendrl.gluster.objects.Volume.atoms.VolumeExists
-          run: tendrl.gluster_integration.objects.Volume.flows.DeleteVolume
+            - gluster.objects.Volume.atoms.VolumeExists
+          run: gluster.objects.Volume.flows.DeleteVolume
           type: Delete
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
           version: 1
         StartVolume:
           atoms:
-            - tendrl.gluster.objects.Volume.atoms.Start
+            - gluster.objects.Volume.atoms.Start
           help: "Start Volume"
           enabled: true
           inputs:
@@ -315,15 +315,15 @@ namespace.gluster:
               - Volume.volname
               - Volume.vol_id
           pre_run:
-            - tendrl.gluster.objects.Volume.atoms.VolumeExists
-            - tendrl.gluster.objects.Volume.atoms.VolumeStopped
-          run: tendrl.gluster_integration.objects.Volume.flows.StartVolume
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.VolumeStopped
+          run: gluster.objects.Volume.flows.StartVolume
           type: Start
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
           version: 1
         StopVolume:
           atoms:
-            - tendrl.gluster.objects.Volume.atoms.Stop
+            - gluster.objects.Volume.atoms.Stop
           help: "Stop Volume"
           enabled: true
           inputs:
@@ -331,9 +331,9 @@ namespace.gluster:
               - Volume.volname
               - Volume.vol_id
           pre_run:
-            - tendrl.gluster.objects.Volume.atoms.VolumeExists
-            - tendrl.gluster.objects.Volume.atoms.VolumeStarted
-          run: tendrl.gluster_integration.objects.Volume.flows.StopVolume
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.VolumeStarted
+          run: gluster.objects.Volume.flows.StopVolume
           type: Stop
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
           version: 1
