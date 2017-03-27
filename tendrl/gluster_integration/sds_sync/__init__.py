@@ -1,18 +1,13 @@
-import json
-import logging
-import os
-import re
-
-import etcd
 import gevent
+import json
+import re
 import subprocess
+
+from tendrl.commons.event import Event
+from tendrl.commons.message import ExceptionMessage, Message
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
-from gstatus.libgluster.cluster import Cluster
-from gstatus.libutils import utils as status_utils
-
-LOG = logging.getLogger(__name__)
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -22,7 +17,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = gevent.event.Event()
 
     def _run(self):
-        LOG.info("%s running" % self.__class__.__name__)
+        Event(
+            Message(
+                priority="info",
+                publisher=NS.publisher_id,
+                payload={"message": "%s running" % self.__class__.__name__}
+            )
+        )
 
         while not self._complete.is_set():
             try:
@@ -262,7 +263,21 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ).save()
 
             except Exception as ex:
-                LOG.error(ex)
+                Event(
+                    ExceptionMessage(
+                        priority="error",
+                        publisher=NS.publisher_id,
+                        payload={"message": "error",
+                                 "exception": ex
+                                 }
+                    )
+                )
 
-        LOG.info("%s complete" % self.__class__.__name__)
+        Event(
+            Message(
+                priority="info",
+                publisher=NS.publisher_id,
+                payload={"message": "%s complete" % self.__class__.__name__}
+            )
+        )
 
