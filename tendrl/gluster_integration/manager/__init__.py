@@ -1,16 +1,16 @@
 import etcd
-import logging
-
 import gevent.event
 import signal
 
 from tendrl import gluster_integration
 from tendrl.commons import TendrlNS
+from tendrl.commons.event import Event
+from tendrl.commons.message import Message
 from tendrl.commons import manager as common_manager
 from tendrl.gluster_integration import sds_sync
 from tendrl.gluster_integration import central_store
-
-LOG = logging.getLogger(__name__)
+from tendrl.gluster_integration.gdeploy_wrapper.manager import \
+    ProvisioningManager
 
 
 class GlusterIntegrationManager(common_manager.Manager):
@@ -30,6 +30,7 @@ def main():
     TendrlNS()
 
     NS.type = "sds"
+    NS.publisher_id = "gluster_integration"
 
     NS.central_store_thread = central_store.GlusterIntegrationEtcdCentralStore()
     NS.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
@@ -37,9 +38,14 @@ def main():
     NS.node_context.save()
     try:
         NS.tendrl_context = NS.tendrl_context.load()
-        LOG.info(
-            "Integration %s is part of sds cluster" %
-            NS.tendrl_context.integration_id
+        Event(
+            Message(
+                priority="info",
+                publisher=NS.publisher_id,
+                payload={"message": "Integration %s is part of sds cluster"
+                                    % NS.tendrl_context.integration_id
+                         }
+            )
         )
         _detected_cluster = NS.tendrl.objects.DetectedCluster().load()
         NS.tendrl_context.cluster_id = _detected_cluster.detected_cluster_id
@@ -47,9 +53,14 @@ def main():
         NS.tendrl_context.sds_name = _detected_cluster.sds_pkg_name
         NS.tendrl_context.sds_version = _detected_cluster.sds_pkg_version
     except etcd.EtcdKeyNotFound:
-        LOG.error(
-            "Node %s is not part of any sds cluster" %
-            NS.node_context.node_id
+        Event(
+            Message(
+                priority="error",
+                publisher=NS.publisher_id,
+                payload={"message": "Node %s is not part of any sds cluster" %
+                                    NS.node_context.node_id
+                         }
+            )
         )
         raise Exception(
             "Integration cannot be started,"
@@ -61,7 +72,9 @@ def main():
     NS.tendrl_context.save()
     NS.gluster.definitions.save()
     NS.gluster.config.save()
-    NS.publisher_id = "gluster_integration"
+
+    pm = ProvisioningManager("GdeployPlugin")
+    NS.gdeploy_plugin = pm.get_plugin()
 
     m = GlusterIntegrationManager()
     m.start()
@@ -69,7 +82,13 @@ def main():
     complete = gevent.event.Event()
 
     def shutdown():
-        LOG.info("Signal handler: stopping")
+        Event(
+            Message(
+                priority="info",
+                publisher=NS.publisher_id,
+                payload={"message": "Signal handler: stopping"}
+            )
+        )
         complete.set()
 
     gevent.signal(signal.SIGTERM, shutdown)

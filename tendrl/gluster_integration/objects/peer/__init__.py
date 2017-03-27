@@ -1,10 +1,5 @@
-import logging
-
 from tendrl.commons.etcdobj import EtcdObj
 from tendrl.commons import objects
-
-LOG = logging.getLogger(__name__)
-
 
 class Peer(objects.BaseObject):
     def __init__(
