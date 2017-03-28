@@ -47,11 +47,6 @@ def main():
                          }
             )
         )
-        _detected_cluster = NS.tendrl.objects.DetectedCluster().load()
-        NS.tendrl_context.cluster_id = _detected_cluster.detected_cluster_id
-        NS.tendrl_context.cluster_name = "gluster-%s" % _detected_cluster.detected_cluster_id
-        NS.tendrl_context.sds_name = _detected_cluster.sds_pkg_name
-        NS.tendrl_context.sds_version = _detected_cluster.sds_pkg_version
     except etcd.EtcdKeyNotFound:
         Event(
             Message(
