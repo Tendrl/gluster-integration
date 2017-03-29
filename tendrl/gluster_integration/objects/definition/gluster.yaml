@@ -84,8 +84,8 @@ namespace.gluster:
           help: Path to the Gluster integration tendrl configuration
           type: String
       enabled: true
-      value: _tendrl/config/gluster-integration
-      list: _tendrl/config/gluster-integration
+      value: _NS/gluster/config/data
+      list: _NS/gluster/config/
       help: gluster integration component configuration
     SyncObject:
       attrs:
