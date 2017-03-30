@@ -5,6 +5,14 @@ from tendrl.commons.message import Message
 
 try:
     import python_gdeploy.actions
+    from python_gdeploy.actions import create_gluster_volume
+    from python_gdeploy.actions import delete_volume
+    from python_gdeploy.actions import start_volume
+    from python_gdeploy.actions import stop_volume
+    from python_gdeploy.actions import rebalance_volume
+    from python_gdeploy.actions import expand_gluster_volume
+    from python_gdeploy.actions import shrink_gluster_volume
+    from python_gdeploy.actions import gluster_brick_provision
 except ImportError:
     Event(
         Message(
@@ -16,15 +24,6 @@ except ImportError:
             cluster_id=NS.tendrl_context.integration_id,
         )
     )
-
-from python_gdeploy.actions import create_gluster_volume
-from python_gdeploy.actions import delete_volume
-from python_gdeploy.actions import start_volume
-from python_gdeploy.actions import stop_volume
-from python_gdeploy.actions import rebalance_volume
-from python_gdeploy.actions import expand_gluster_volume
-from python_gdeploy.actions import shrink_gluster_volume
-from python_gdeploy.actions import gluster_brick_provision
 
 
 class GdeployPlugin(ProvisionerBasePlugin):
