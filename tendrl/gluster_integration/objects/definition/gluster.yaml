@@ -68,25 +68,6 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Peers/$Peer.peer_uuid
       list: clusters/$TendrlContext.integration_id/Peers
       help: Gluster cluster peers
-    Config:
-      attrs:
-        data:
-          help: Configuration data of Gluster Integration for this Tendrl deployment
-          type: String
-        etcd_connection:
-          help: Host/IP of the etcd central store for this Tendrl deployment
-          type: String
-        etcd_port:
-          help: Port of the etcd central store for this Tendrl deployment
-          type: String
-        file_path:
-          default: /etc/tendrl/gluster-integration/gluster-integration.conf.yaml
-          help: Path to the Gluster integration tendrl configuration
-          type: String
-      enabled: true
-      value: _NS/gluster/config/data
-      list: _NS/gluster/config/
-      help: gluster integration component configuration
     SyncObject:
       attrs:
         cluster_id:
