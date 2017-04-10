@@ -41,7 +41,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
         if disperse_count:
             args.update({"disperse_count": disperse_count})
         if redundancy_count:
-            args.update({"redundancy_count": redundacy_count})
+            args.update({"redundancy_count": redundancy_count})
         if tuned_profile:
             args.update({"tuned_profile": tuned_profile})
         if force:
