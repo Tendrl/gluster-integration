@@ -1,3 +1,4 @@
+import etcd
 import subprocess
 
 from tendrl.commons.event import Event
@@ -83,26 +84,27 @@ class Delete(objects.BaseAtom):
             )
             return False
 
-        NS.etcd_orm.client.delete(
-            "clusters/%s/Volumes/%s" % (
-                NS.tendrl_context.integration_id,
-                self.parameters['Volume.vol_id']
-            ),
-            recursive=True
-        )
-
-        Event(
-            Message(
-                priority="info",
-                publisher=NS.publisher_id,
-                payload={
-                    "message": "Deleted the volume %s" %
-                    self.parameters['Volume.volname']
-                },
-                job_id=self.parameters["job_id"],
-                flow_id=self.parameters["flow_id"],
-                cluster_id=NS.tendrl_context.integration_id,
-            )
-        )
-
-        return True
+        while True:
+            try:
+                NS.etcd_orm.client.delete(
+                    "clusters/%s/Volumes/%s" % (
+                        NS.tendrl_context.integration_id,
+                        self.parameters['Volume.vol_id']
+                    ),
+                    recursive=True
+                )
+            except (etcd.EtcdKeyNotFound, KeyError):
+                Event(
+                    Message(
+                        priority="info",
+                        publisher=NS.publisher_id,
+                        payload={
+                            "message": "Deleted the volume %s" %
+                            self.parameters['Volume.volname']
+                        },
+                        job_id=self.parameters["job_id"],
+                        flow_id=self.parameters["flow_id"],
+                        cluster_id=NS.tendrl_context.integration_id,
+                    )
+                )
+                return True
