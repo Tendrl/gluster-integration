@@ -26,9 +26,12 @@ class VolumeNotExists(objects.BaseAtom):
             )
         )
         try:
-            fetched_volume = Volume(
-                vol_id=self.parameters['Volume.vol_id']
-            ).load()
+            NS.etcd_orm.client.read(
+                'clusters/%s/Volumes/%s' % (
+                    NS.tendrl_context.integration_id,
+                    self.parameters['Volume.vol_id']
+                )
+            )
         except etcd.EtcdKeyNotFound:
             Event(
                 Message(
