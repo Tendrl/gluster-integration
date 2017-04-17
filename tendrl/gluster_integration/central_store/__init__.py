@@ -26,6 +26,9 @@ class GlusterIntegrationEtcdCentralStore(central_store.EtcdCentralStore):
     def save_brick(self, brick):
         NS.etcd_orm.save(brick)
 
+    def save_glusterbrick(self, gluster_brick):
+        NS.etcd_orm.save(gluster_brick)
+
     def save_volumeoptions(self, vol_options):
         NS.etcd_orm.save(vol_options)
 

@@ -339,7 +339,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
             disk_count,
             stripe_count
         )
-        if rc == 0:
+        if rc == 0 and err == "":
             Event(
                 Message(
                     priority="error",
