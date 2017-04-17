@@ -12,9 +12,7 @@ class Create(objects.BaseAtom):
     def run(self):
         bricks = self.parameters.get('Cluster.node_configuration')
         brick_dict = {}
-        brick_prefix = NS.gluster.definitions.get_parsed_defs()[
-            'namespace.gluster'
-        ]['gluster_brick_path']
+        brick_prefix = NS.config.data.get('gluster_bricks_dir', "/tendrl_gluster_bricks")
         for k, v in bricks.iteritems():
             key = "nodes/%s/NodeContext/fqdn" % k
             host = NS.etcd_orm.client.read(key).value
