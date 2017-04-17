@@ -2,7 +2,7 @@ namespace.gluster:
   flows:
     CreateVolume:
       tags:
-       - "tendrl/integration/$TendrlContext.integration_id"
+       - "provisioner/$TendrlContext.integration_id"
       atoms:
         - gluster.objects.Volume.atoms.Create
       help: "Create Volume with bricks"
@@ -230,7 +230,7 @@ namespace.gluster:
       flows:
         DeleteVolume:
           tags:
-            - "tendrl/integration/$TendrlContext.integration_id"
+            - "provisioner/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.Delete
           help: "Delete Volume"
@@ -251,7 +251,7 @@ namespace.gluster:
           version: 1
         StartVolume:
           tags:
-            - "tendrl/integration/$TendrlContext.integration_id"
+            - "provisioner/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.Start
           help: "Start Volume"
@@ -269,7 +269,7 @@ namespace.gluster:
           version: 1
         StopVolume:
           tags:
-            - "tendrl/integration/$TendrlContext.integration_id"       
+            - "provisioner/$TendrlContext.integration_id"       
           atoms:
             - gluster.objects.Volume.atoms.Stop
           help: "Stop Volume"
