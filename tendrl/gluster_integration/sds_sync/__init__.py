@@ -1,3 +1,4 @@
+import etcd
 import gevent
 import json
 import os
@@ -28,6 +29,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         while not self._complete.is_set():
             try:
+                # Acquire lock before updating the volume details in etcd
+                # We are blocking till we acquire the lock
+                lock = etcd.Lock(NS.etcd_orm.client, 'volume')
+                lock.acquire(blocking=True,lock_ttl=None)
                 gevent.sleep(3)
                 subprocess.call(
                     [
@@ -262,7 +267,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     rebal_files=volume.rebal_files,
                                     rebal_data=volume.rebal_data
                                 ).save()
-
             except Exception as ex:
                 Event(
                     ExceptionMessage(
@@ -273,6 +277,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
+            finally:
+                lock.release()                
 
         Event(
             Message(
