@@ -1,5 +1,4 @@
 namespace.gluster:
-  gluster_brick_path: "/glusterfs"
   flows:
     CreateVolume:
       tags:
