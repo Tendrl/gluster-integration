@@ -2,6 +2,8 @@ namespace.gluster:
   gluster_brick_path: "/glusterfs"
   flows:
     CreateVolume:
+      tags:
+       - "tendrl/integration/$TendrlContext.integration_id"
       atoms:
         - gluster.objects.Volume.atoms.Create
       help: "Create Volume with bricks"
@@ -301,6 +303,8 @@ namespace.gluster:
           help: check if volume is stopped
       flows:
         DeleteVolume:
+          tags:
+            - "tendrl/integration/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.Delete
           help: "Delete Volume"
@@ -320,6 +324,8 @@ namespace.gluster:
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
           version: 1
         StartVolume:
+          tags:
+            - "tendrl/integration/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.Start
           help: "Start Volume"
@@ -336,6 +342,8 @@ namespace.gluster:
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b6e
           version: 1
         StopVolume:
+          tags:
+            - "tendrl/integration/$TendrlContext.integration_id"       
           atoms:
             - gluster.objects.Volume.atoms.Stop
           help: "Stop Volume"

@@ -1,9 +1,11 @@
 [Unit]
 Description=Tendrl Gluster Daemon to Manage gluster tasks
+Requires=tendrl-node-agent.service
 
 [Service]
 Type=simple
 Environment="HOME=/var/lib/tendrl"
+Environment="ANSIBLE_HOST_KEY_CHECKING=False"
 ExecStart=/usr/bin/tendrl-gluster-integration
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
