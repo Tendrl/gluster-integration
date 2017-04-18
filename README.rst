@@ -31,6 +31,8 @@ Code Coverage
 Developer/Install documentation
 -----------------------
 
+This component is installed automatically by node-agent during cluster import.
+
 We also have sphinx documentation in ``docs/source``.
 
 *To build it, run:*
