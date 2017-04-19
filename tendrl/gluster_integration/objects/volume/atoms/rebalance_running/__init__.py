@@ -3,7 +3,7 @@ import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
-from tendrl.gluster_integration import objects
+from tendrl.commons import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
 
@@ -20,7 +20,7 @@ class RebalanceRunning(objects.BaseAtom):
                 payload={
                     "message": "Checking if rebalance is running"
                 },
-                request_id=self.parameters["request_id"],
+                job_id=self.parameters["job_id"],
                 flow_id=self.parameters["flow_id"],
                 cluster_id=NS.tendrl_context.integration_id,
             )
@@ -33,11 +33,23 @@ class RebalanceRunning(objects.BaseAtom):
                 )
             ).value
             if rebal_status is not None:
-                if rebal_status == "not applicable" or\
-                    rebal_status == "completed":
-                    return False
                 if rebal_status == "in progress":
                     return True
+                else:
+                    Event(
+                        Message(
+                            priority="info",
+                            publisher=NS.publisher_id,
+                            payload={
+                                "message": "No rebalance running for volume %s" %
+                                self.parameters['Volume.volname']
+                            },
+                            job_id=self.parameters["job_id"],
+                            flow_id=self.parameters["flow_id"],
+                            cluster_id=NS.tendrl_context.integration_id,
+                        )
+                    )
+                    return False
             else:
                 return False
         except etcd.EtcdKeyNotFound:
@@ -49,7 +61,7 @@ class RebalanceRunning(objects.BaseAtom):
                         "message": "Volume %s not found" %
                         self.parameters['Volume.volname']
                     },
-                    request_id=self.parameters["request_id"],
+                    job_id=self.parameters["job_id"],
                     flow_id=self.parameters["flow_id"],
                     cluster_id=NS.tendrl_context.integration_id,
                 )

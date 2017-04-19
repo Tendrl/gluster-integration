@@ -3,7 +3,7 @@ import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
-from tendrl.gluster_integration import objects
+from tendrl.commons import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
 
@@ -20,7 +20,7 @@ class RebalanceNotRunning(objects.BaseAtom):
                 payload={
                     "message": "Checking if rebalance is not running"
                 },
-                request_id=self.parameters["request_id"],
+                job_id=self.parameters["job_id"],
                 flow_id=self.parameters["flow_id"],
                 cluster_id=NS.tendrl_context.integration_id,
             )
@@ -34,6 +34,7 @@ class RebalanceNotRunning(objects.BaseAtom):
             ).value
             if rebal_status is not None:
                 if rebal_status == "not applicable" or\
+                    rebal_status == "not_started" or\
                     rebal_status == "completed":
                     return True
                 if rebal_status == "in progress":
@@ -46,7 +47,7 @@ class RebalanceNotRunning(objects.BaseAtom):
                             "message": "Volume rebalance status is %s" %
                             rebal_status
                         },
-                        request_id=self.parameters["request_id"],
+                        job_id=self.parameters["job_id"],
                         flow_id=self.parameters["flow_id"],
                         cluster_id=NS.tendrl_context.integration_id,
                     )
@@ -63,7 +64,7 @@ class RebalanceNotRunning(objects.BaseAtom):
                         "message": "Volume %s not found" %
                         self.parameters['Volume.volname']
                     },
-                    request_id=self.parameters["request_id"],
+                    job_id=self.parameters["job_id"],
                     flow_id=self.parameters["flow_id"],
                     cluster_id=NS.tendrl_context.integration_id,
                 )

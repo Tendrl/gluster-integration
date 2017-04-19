@@ -2,7 +2,7 @@ import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
-from tendrl.gluster_integration import objects
+from tendrl.commons import objects
 from tendrl.gluster_integration.objects.volume import Volume
 
 
@@ -15,8 +15,8 @@ class StartRebalance(objects.BaseAtom):
         if NS.gdeploy_plugin.rebalance_volume(
                 self.parameters.get('Volume.volname'),
                 "start",
-                force=self.parameters['Volume.force'],
-                fix_layout=self.parameters['Volume.fix_layout']
+                force=self.parameters.get('Volume.force'),
+                fix_layout=self.parameters.get('Volume.fix_layout')
         ):
             Event(
                 Message(

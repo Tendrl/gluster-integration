@@ -344,7 +344,6 @@ namespace.gluster:
               - Volume.volname
               - Volume.vol_id
             optional:
-              - Volume.fix_layout
               - Volume.force
           name: stop_rebalance
           run: gluster.objects.Volume.atoms.StopRebalance
@@ -438,7 +437,6 @@ namespace.gluster:
               - Volume.volname
               - Volume.vol_id
             optional:
-              - Volume.fix_layout
               - Volume.force
           pre_run:
             - gluster.objects.Volume.atoms.VolumeExists
