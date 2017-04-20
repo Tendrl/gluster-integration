@@ -30,9 +30,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             try:
                 # Acquire lock before updating the volume details in etcd
-                # We are blocking till we acquire the lock
+                # We are blocking till we acquire the lock.
+                # the lock will live for 60 sec after which it will be released.
                 lock = etcd.Lock(NS.etcd_orm.client, 'volume')
-                lock.acquire(blocking=True,lock_ttl=None)
+                try:
+                    lock.acquire(blocking=True,lock_ttl=60)
+                    if lock.is_acquired:
+                        # renewing the lock
+                        lock.acquire(lock_ttl=60)
+                except etcd.EtcdLockExpired:
+                    continue
                 gevent.sleep(3)
                 subprocess.call(
                     [
