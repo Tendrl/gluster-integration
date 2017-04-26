@@ -30,9 +30,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             try:
                 # Acquire lock before updating the volume details in etcd
-                # We are blocking till we acquire the lock
+                # We are blocking till we acquire the lock.
+                # the lock will live for 60 sec after which it will be released.
                 lock = etcd.Lock(NS.etcd_orm.client, 'volume')
-                lock.acquire(blocking=True,lock_ttl=None)
+                try:
+                    lock.acquire(blocking=True,lock_ttl=60)
+                    if lock.is_acquired:
+                        # renewing the lock
+                        lock.acquire(lock_ttl=60)
+                except etcd.EtcdLockExpired:
+                    continue
                 gevent.sleep(3)
                 subprocess.call(
                     [
@@ -267,6 +274,41 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     rebal_files=volume.rebal_files,
                                     rebal_data=volume.rebal_data
                                 ).save()
+
+                else:
+                    # If gstatus does not return any status details in absence
+                    # of volumes, default set the status and utilization details
+                    # A sample output from gstatus if no volumes in cluster is as below
+                    #
+                    # >gstatus -o json
+                    # This cluster doesn't have any volumes/daemons running.
+                    # The output below shows the current nodes attached to this host.
+                    #
+                    # UUID					Hostname    	State
+                    # 6a48d2f7-3859-4542-86e0-0a8146588f31	{FQDN-1}	Connected
+                    # 7380e303-83b6-4728-918f-e99029bc1bce	{FQDN-2}	Connected
+                    # 751ecb42-da85-4c3d-834d-9824d1ce7fd3	{FQDN-3}	Connected
+                    # 388b708c-a86c-4a16-9a6f-f0d53ea79a51	localhost   	Connected
+
+                    out_lines = stdout.split('\n')
+                    connected = True
+                    for index in range(4, len(out_lines) - 2):
+                        if out_lines[index].split('\t')[2].strip() != 'Connected':
+                            connected = connected and False
+                    if connected:
+                        NS.gluster.objects.GlobalDetails(
+                            status='healthy'
+                        ).save()
+                    else:
+                        NS.gluster.objects.GlobalDetails(
+                            status='unhealthy'
+                        ).save()
+                    NS.gluster.objects.Utilization(
+                        raw_capacity=0,
+                        usable_capacity=0,
+                        used_capacity=0,
+                        pcnt_used=0
+                    ).save()
             except Exception as ex:
                 Event(
                     ExceptionMessage(
