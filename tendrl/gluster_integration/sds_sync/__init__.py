@@ -54,22 +54,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 raw_data = ini2json.ini_to_dict('/var/run/glusterd-state')
                 subprocess.call(['rm', '-rf', '/var/run/glusterd-state'])
-                NS.sync_object = NS.gluster.objects.\
+                sync_object = NS.gluster.objects.\
                     SyncObject(data=json.dumps(raw_data))
-                NS.sync_object.save()
+                sync_object.save()
 
                 if "Peers" in raw_data:
                     index = 1
                     peers = raw_data["Peers"]
                     while True:
                         try:
-                            NS.peer = NS.gluster.\
+                            peer = NS.gluster.\
                                 objects.Peer(
                                     peer_uuid=peers['peer%s.uuid' % index],
                                     hostname=peers['peer%s.primary_hostname' % index],
                                     state=peers['peer%s.state' % index]
                                 )
-                            NS.peer.save()
+                            peer.save()
                             index += 1
                         except KeyError:
                             break
@@ -78,7 +78,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     volumes = raw_data['Volumes']
                     while True:
                         try:
-                            NS.volume = NS.gluster.objects.Volume(
+                            volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
                                 ],
@@ -149,11 +149,23 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            NS.volume.save()
+                            volume.save()
+
+                            try:
+                                NS.etcd_orm.client.delete(
+                                    "clusters/%s/Volumes/%s/Bricks" % (
+                                        NS.tendrl_context.integration_id,
+                                        volume.vol_id,
+                                    ),
+                                    recursive=True
+                                )
+                            except etcd.EtcdKeyNotFound:
+                                pass
+
                             b_index = 1
                             while True:
                                 try:
-                                    NS.brick = NS.gluster\
+                                    brick = NS.gluster\
                                         .objects.Brick(
                                             vol_id=volumes['volume%s.id' % index],
                                             path=volumes[
@@ -175,7 +187,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 'volume%s.brick%s.mount_options' % (
                                                     index, b_index))
                                         )
-                                    NS.brick.save()
+                                    # Store the bricks sequentially, as the order of bricks
+                                    # matter while figuring out the sub-volumes
+                                    b = brick.__dict__.copy()
+                                    b.pop('_etcd_cls')
+                                    b['name'] = brick.path.replace("/", "_")
+                                    NS.etcd_orm.client.write(
+                                        "clusters/%s/Volumes/%s/Bricks/" % (
+                                            NS.tendrl_context.integration_id,
+                                            volume.vol_id,
+                                        ),
+                                        json.dumps(b),
+                                        append=True
+                                    )
+
                                     b_index += 1
                                 except KeyError:
                                     break
@@ -197,12 +222,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
-                        NS.vol_options = NS.gluster.objects.\
+                        vol_options = NS.gluster.objects.\
                             VolumeOptions(
                                 vol_id=vol_id,
                                 options=dict1
                             )
-                        NS.vol_options.save()
+                        vol_options.save()
 
                 # Sync the cluster status details
                 args = ["gstatus", "-o", "json"]
