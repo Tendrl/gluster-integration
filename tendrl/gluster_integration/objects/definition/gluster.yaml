@@ -46,6 +46,15 @@ namespace.gluster:
         status:
           help: status of the cluster
           type: String
+        connection_count:
+          help: total connection count
+          type: Integer
+        connection_active:
+          help: no.of connections active
+          type: Integer
+        volume_up_degraded:
+          help: no.of volumes degraded
+          type: Integer
       enabled: true
       list: clusters/$TendrlContext.integration_id/GlobalDetails
       value: clusters/$TendrlContext.integration_id/GlobalDetails
