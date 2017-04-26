@@ -209,7 +209,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
 
         out, err, rc = rebalance_volume.rebalance_volume(
             volume_name,
-            action
+            action,
             **args
         )
         if rc == 0:

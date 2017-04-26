@@ -30,9 +30,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             try:
                 # Acquire lock before updating the volume details in etcd
-                # We are blocking till we acquire the lock
+                # We are blocking till we acquire the lock.
+                # the lock will live for 60 sec after which it will be released.
                 lock = etcd.Lock(NS.etcd_orm.client, 'volume')
-                lock.acquire(blocking=True,lock_ttl=None)
+                try:
+                    lock.acquire(blocking=True,lock_ttl=60)
+                    if lock.is_acquired:
+                        # renewing the lock
+                        lock.acquire(lock_ttl=60)
+                except etcd.EtcdLockExpired:
+                    continue
                 gevent.sleep(3)
                 subprocess.call(
                     [
@@ -47,22 +54,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 raw_data = ini2json.ini_to_dict('/var/run/glusterd-state')
                 subprocess.call(['rm', '-rf', '/var/run/glusterd-state'])
-                NS.sync_object = NS.gluster.objects.\
+                sync_object = NS.gluster.objects.\
                     SyncObject(data=json.dumps(raw_data))
-                NS.sync_object.save()
+                sync_object.save()
 
                 if "Peers" in raw_data:
                     index = 1
                     peers = raw_data["Peers"]
                     while True:
                         try:
-                            NS.peer = NS.gluster.\
+                            peer = NS.gluster.\
                                 objects.Peer(
                                     peer_uuid=peers['peer%s.uuid' % index],
                                     hostname=peers['peer%s.primary_hostname' % index],
                                     state=peers['peer%s.state' % index]
                                 )
-                            NS.peer.save()
+                            peer.save()
                             index += 1
                         except KeyError:
                             break
@@ -71,7 +78,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     volumes = raw_data['Volumes']
                     while True:
                         try:
-                            NS.volume = NS.gluster.objects.Volume(
+                            volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
                                 ],
@@ -142,11 +149,23 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            NS.volume.save()
+                            volume.save()
+
+                            try:
+                                NS.etcd_orm.client.delete(
+                                    "clusters/%s/Volumes/%s/Bricks" % (
+                                        NS.tendrl_context.integration_id,
+                                        volume.vol_id,
+                                    ),
+                                    recursive=True
+                                )
+                            except etcd.EtcdKeyNotFound:
+                                pass
+
                             b_index = 1
                             while True:
                                 try:
-                                    NS.brick = NS.gluster\
+                                    brick = NS.gluster\
                                         .objects.Brick(
                                             vol_id=volumes['volume%s.id' % index],
                                             path=volumes[
@@ -168,7 +187,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 'volume%s.brick%s.mount_options' % (
                                                     index, b_index))
                                         )
-                                    NS.brick.save()
+                                    # Store the bricks sequentially, as the order of bricks
+                                    # matter while figuring out the sub-volumes
+                                    b = brick.__dict__.copy()
+                                    b.pop('_etcd_cls')
+                                    b['name'] = brick.path.replace("/", "_")
+                                    NS.etcd_orm.client.write(
+                                        "clusters/%s/Volumes/%s/Bricks/" % (
+                                            NS.tendrl_context.integration_id,
+                                            volume.vol_id,
+                                        ),
+                                        json.dumps(b),
+                                        append=True
+                                    )
+
                                     b_index += 1
                                 except KeyError:
                                     break
@@ -190,12 +222,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
-                        NS.vol_options = NS.gluster.objects.\
+                        vol_options = NS.gluster.objects.\
                             VolumeOptions(
                                 vol_id=vol_id,
                                 options=dict1
                             )
-                        NS.vol_options.save()
+                        vol_options.save()
 
                 # Sync the cluster status details
                 args = ["gstatus", "-o", "json"]
@@ -267,6 +299,41 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     rebal_files=volume.rebal_files,
                                     rebal_data=volume.rebal_data
                                 ).save()
+
+                else:
+                    # If gstatus does not return any status details in absence
+                    # of volumes, default set the status and utilization details
+                    # A sample output from gstatus if no volumes in cluster is as below
+                    #
+                    # >gstatus -o json
+                    # This cluster doesn't have any volumes/daemons running.
+                    # The output below shows the current nodes attached to this host.
+                    #
+                    # UUID					Hostname    	State
+                    # 6a48d2f7-3859-4542-86e0-0a8146588f31	{FQDN-1}	Connected
+                    # 7380e303-83b6-4728-918f-e99029bc1bce	{FQDN-2}	Connected
+                    # 751ecb42-da85-4c3d-834d-9824d1ce7fd3	{FQDN-3}	Connected
+                    # 388b708c-a86c-4a16-9a6f-f0d53ea79a51	localhost   	Connected
+
+                    out_lines = stdout.split('\n')
+                    connected = True
+                    for index in range(4, len(out_lines) - 2):
+                        if out_lines[index].split('\t')[2].strip() != 'Connected':
+                            connected = connected and False
+                    if connected:
+                        NS.gluster.objects.GlobalDetails(
+                            status='healthy'
+                        ).save()
+                    else:
+                        NS.gluster.objects.GlobalDetails(
+                            status='unhealthy'
+                        ).save()
+                    NS.gluster.objects.Utilization(
+                        raw_capacity=0,
+                        usable_capacity=0,
+                        used_capacity=0,
+                        pcnt_used=0
+                    ).save()
             except Exception as ex:
                 Event(
                     ExceptionMessage(
