@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 
+from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage, Message
 from tendrl.commons.utils import cmd_utils
@@ -152,23 +153,19 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             )
                             volume.save()
 
-                            try:
-                                NS.etcd_orm.client.delete(
-                                    "clusters/%s/Volumes/%s/Bricks" % (
-                                        NS.tendrl_context.integration_id,
-                                        volume.vol_id,
-                                    ),
-                                    recursive=True
-                                )
-                            except etcd.EtcdKeyNotFound:
-                                pass
-
                             b_index = 1
                             while True:
                                 try:
+                                    # Update brick node wise
+                                    if NS.node_context.fqdn != volumes[
+                                        'volume%s.brick%s.hostname' % (
+                                            index, b_index)]:
+                                        b_index += 1
+                                        continue
                                     brick = NS.gluster\
                                         .objects.Brick(
                                             vol_id=volumes['volume%s.id' % index],
+                                            sequence_number=b_index, 
                                             path=volumes[
                                                 'volume%s.brick%s.path' % (
                                                     index, b_index)],
@@ -186,21 +183,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                     index, b_index)),
                                             mount_opts=volumes.get(
                                                 'volume%s.brick%s.mount_options' % (
-                                                    index, b_index))
+                                                    index, b_index)),
+                                            utilization=brick_utilization\
+                                                .brick_utilization(
+                                                    volumes['volume%s.brick%s.path' % (
+                                                        index, b_index)])
                                         )
-                                    # Store the bricks sequentially, as the order of bricks
-                                    # matter while figuring out the sub-volumes
-                                    b = brick.__dict__.copy()
-                                    b.pop('_etcd_cls')
-                                    b['name'] = brick.path.replace("/", "_")
-                                    NS.etcd_orm.client.write(
-                                        "clusters/%s/Volumes/%s/Bricks/" % (
-                                            NS.tendrl_context.integration_id,
-                                            volume.vol_id,
-                                        ),
-                                        json.dumps(b),
-                                        append=True
-                                    )
+                                    brick.save()
 
                                     b_index += 1
                                 except KeyError:
@@ -208,7 +197,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             index += 1
                         except KeyError:
                             break
-
                     # poplate the volume options
                     reg_ex = re.compile("^volume[0-9]+.options+")
                     options = {}

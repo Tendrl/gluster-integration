@@ -127,6 +127,9 @@ namespace.gluster:
         vol_id:
           help: Volume id
           type: String
+        sequence_number:
+          help: Sequence number
+          type: Integer
         path:
           help: Path of the brick
           type: String
@@ -145,6 +148,9 @@ namespace.gluster:
         mount_opts:
           help: Mount options
           type: String
+        utilization:
+          help: Brick utilization
+          type: json        
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks
