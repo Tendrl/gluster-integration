@@ -150,7 +150,7 @@ namespace.gluster:
           type: String
         utilization:
           help: Brick utilization
-          type: json        
+          type: Dict        
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks
@@ -539,7 +539,7 @@ namespace.gluster:
           type: String
         options:
           help: "options list for volume"
-          type: json
+          type: Dict
         quorum_status:
           help: "Quorum status"
           type: String
