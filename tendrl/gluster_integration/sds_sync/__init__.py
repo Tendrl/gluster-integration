@@ -7,6 +7,7 @@ import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage, Message
+from tendrl.commons.utils import cmd_utils
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
@@ -253,16 +254,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # volume_name": "vol1"}]}\n"
 
                     out_dict = json.loads(stdout[stdout.index('{'): -1])
-                    NS.gluster.objects.GlobalDetails(
-                        status=out_dict['status']
-                    ).save()
                     NS.gluster.objects.Utilization(
                         raw_capacity=out_dict['raw_capacity'],
                         usable_capacity=out_dict['usable_capacity'],
                         used_capacity=out_dict['used_capacity'],
                         pcnt_used=(out_dict['used_capacity'] * 100 / out_dict['usable_capacity'])
                     ).save()
+                    volume_up_degraded = 0
                     for item in out_dict['volume_summary']:
+                        if "up(degraded)" in item['state']:
+                            volume_up_degraded = volume_up_degraded + 1
                         volumes = NS.etcd_orm.client.read(
                             "clusters/%s/Volumes" % NS.tendrl_context.integration_id
                         )
@@ -299,6 +300,34 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     rebal_files=volume.rebal_files,
                                     rebal_data=volume.rebal_data
                                 ).save()
+                    connection_count = None
+                    connection_active  = None
+                    # gstatus result:
+                    # Product: Community          Capacity:  25.00 GiB(raw bricks)
+                    # Status: HEALTHY                        3.00 GiB(raw used)
+                    # Glusterfs: 3.9.0                         87.00 GiB(usable from volumes)
+                    # OverCommit: Yes               Snapshots:   0
+                    # Nodes       :  2/  2		  Volumes:   4 Up
+                    # Self Heal   :  0/  0		             0 Up(Degraded)
+                    # Bricks      :  7/  7		             0 Up(Partial)
+                    # Connections :  1/   2                     0 Down
+
+                    # grep result:
+                    # Connections :  0/   0        1 Down
+                    cmd = cmd_utils.Command('gstatus -s | grep Connections', True)
+                    out, err, rc = cmd.run()
+                    if not err:
+                        if "Connection" in out:
+                            out = (re.split(r'\s{5,}', out)[0])
+                            out = out.split(":")[1].replace(" ", "").split("/")
+                            connection_active  = int(out[0])
+                            connection_count = int(out[1])
+                    NS.gluster.objects.GlobalDetails(
+                        status=out_dict['status'],
+                        volume_up_degraded=volume_up_degraded,
+                        connection_active=connection_active,
+                        connection_count=connection_count
+                    ).save()
 
                 else:
                     # If gstatus does not return any status details in absence
