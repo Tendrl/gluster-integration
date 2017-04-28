@@ -1,7 +1,9 @@
 import os
+
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons.utils import cmd_utils
+
 ONE_GB_BYTES = 1073741824.0
 
 
@@ -13,7 +15,7 @@ def _get_mount_point(path):
 
 
 def _parse_proc_mounts(filter=True):
-    mountPoints = {}
+    mount_points = {}
     with open('/proc/mounts', 'r') as f:
         for line in f:
             if line.startswith("/") or not filter:
@@ -22,12 +24,12 @@ def _parse_proc_mounts(filter=True):
                 mount['device'] = tokens[0]
                 mount['fsType'] = tokens[2]
                 mount['mountOptions'] = tokens[3]
-                mountPoints[tokens[1]] = mount
-    return mountPoints
+                mount_points[tokens[1]] = mount
+    return mount_points
 
 
-def _get_stats(mountPoint):
-    data = os.statvfs(mountPoint)
+def _get_stats(mount_point):
+    data = os.statvfs(mount_point)
     total = (data.f_blocks * data.f_bsize) / ONE_GB_BYTES
     free = (data.f_bfree * data.f_bsize) / ONE_GB_BYTES
     used_percent = 100 - (100.0 * free / total)
@@ -47,11 +49,11 @@ def _get_stats(mountPoint):
 
 
 def get_lvs():
-    lvmCommand = ("lvm vgs --unquoted --noheading --nameprefixes "
+    _lvm_cmd = ("lvm vgs --unquoted --noheading --nameprefixes "
                  "--separator $ --nosuffix --units m -o lv_uuid,"
                  "lv_name,data_percent,pool_lv,lv_attr,lv_size,"
                  "lv_path,lv_metadata_size,metadata_percent,vg_name")
-    cmd = cmd_utils.Command(lvmCommand, True)
+    cmd = cmd_utils.Command(_lvm_cmd, True)
     out, err, rc = cmd.run()
     if rc != 0:
         Event(
@@ -80,12 +82,12 @@ def get_lvs():
 def get_mount_stats(mount_path):
     def _get_mounts(mount_path=[]):
         mount_list = map(_get_mount_point, mount_path)
-        mountPoints = _parse_proc_mounts()
-        outList = set(mountPoints).intersection(set(mount_list))
+        mount_points = _parse_proc_mounts()
+        outList = set(mount_points).intersection(set(mount_list))
         # list comprehension to build dictionary does not work in python 2.6.6
         mounts = {}
         for k in outList:
-            mounts[k] = mountPoints[k]
+            mounts[k] = mount_points[k]
         return mounts
 
     def _get_thin_pool_stat(device):
@@ -118,16 +120,16 @@ def get_mount_stats(mount_path):
             out['metadata_used'] = out['metadata_size'] - out['metadata_free']
         return out
 
-    mountPoints = _get_mounts(mount_path)
+    mount_points = _get_mounts(mount_path)
     lvs = get_lvs()
-    mountDetail = {}
-    for mount, info in mountPoints.iteritems():
-        mountDetail[mount] = _get_stats(mount)
-        mountDetail[mount].update(
+    mount_detail = {}
+    for mount, info in mount_points.iteritems():
+        mount_detail[mount] = _get_stats(mount)
+        mount_detail[mount].update(
             _get_thin_pool_stat(os.path.realpath(info['device']))
         )
-        mountDetail[mount].update({'mount_point': mount})
-    return mountDetail
+        mount_detail[mount].update({'mount_point': mount})
+    return mount_detail
 
 
 def brick_utilization(path):
