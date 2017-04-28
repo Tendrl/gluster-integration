@@ -128,7 +128,7 @@ namespace.gluster:
           help: Volume id
           type: String
         sequence_number:
-          help: Sequence number
+          help: Sequence number amongst gluster replica-set
           type: Integer
         path:
           help: Path of the brick
