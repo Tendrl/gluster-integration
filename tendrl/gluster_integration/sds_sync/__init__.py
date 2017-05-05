@@ -152,7 +152,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ],
                             )
                             volume.save()
-
                             b_index = 1
                             while True:
                                 try:

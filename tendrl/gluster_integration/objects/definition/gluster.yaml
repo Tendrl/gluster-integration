@@ -245,6 +245,71 @@ namespace.gluster:
           type: Delete
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
           help: Delete gluster volume
+        Expand:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+            optional:
+              - Volume.replica_count
+              - Volume.force
+              - Volume.disperse_count
+          name: expand_volume
+          run: gluster.objects.Volume.atoms.Expand
+          type: Create
+          uuid: b4733069-052f-48b3-8d18-9a9b08373ae2
+          help: Expand gluster volume
+        ValidateExpandVolumeInputs:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+            optional:
+              - Volume.replica_count
+              - Volume.force
+              - Volume.disperse_count
+          name: validate_expand_volume_inputs
+          run: gluster.objects.Volume.atoms.ValidateExpandVolumeInputs
+          type: Check
+          uuid: c7a2b247-2065-49a3-af62-247ec59ab3b2
+          help: Validate expand gluster volume inputs
+        ValidateShrinkVolumeInputs:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+            optional:
+              - Volume.replica_count
+              - Volume.force
+              - Volume.disperse_count
+          name: validate_shrink_volume_inputs
+          run: gluster.objects.Volume.atoms.ValidateShrinkVolumeInputs
+          type: Check
+          uuid: 984b5748-c5f1-42d4-b9e6-b3927d04cb0a
+          help: Validate shrink gluster volume inputs
+        Shrink:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+              - Volume.action
+            optional:
+              - Volume.replica_count
+              - Volume.force
+              - Volume.disperse_count
+          name: shrink_volume
+          run: gluster.objects.Volume.atoms.Shrink
+          type: Shrink
+          uuid: 9eadf1e3-a2be-4a3e-9f8b-584b44c66e9d
+          help: Shrink gluster volume
         Start:
           enabled: true
           inputs:
@@ -385,6 +450,52 @@ namespace.gluster:
           run: gluster.objects.Volume.flows.DeleteVolume
           type: Delete
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b9e
+          version: 1
+        ExpandVolume:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
+          atoms:
+            - gluster.objects.Volume.atoms.Expand
+          help: "expand volume by adding bricks"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+            optional:
+              - Volume.replica_count
+              - Volume.force
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.ValidateExpandVolumeInputs
+          run: gluster.objects.Volume.flows.ExpandVolume
+          type: Create
+          uuid: 23f95de7-e4ac-4c0b-9db2-88b3bd542eb9
+          version: 1
+        ShrinkVolume:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
+          atoms:
+            - gluster.objects.Volume.atoms.Shrink
+          help: "shrink volume by removing bricks"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.volname
+              - Volume.vol_id
+              - Volume.bricks
+              - Volume.action
+            optional:
+              - Volume.replica_count
+              - Volume.force
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+            - gluster.objects.Volume.atoms.ValidateShrinkVolumeInputs
+            - gluster.objects.Volume.atoms.VolumeStarted
+          run: gluster.objects.Volume.flows.ShrinkVolume
+          type: Delete
+          uuid: 85108d0f-91d0-4a6c-8d67-030a4e724ed6
           version: 1
         StartVolume:
           tags:

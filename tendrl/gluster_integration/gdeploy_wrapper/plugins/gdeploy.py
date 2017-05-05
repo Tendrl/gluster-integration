@@ -241,16 +241,17 @@ class GdeployPlugin(ProvisionerBasePlugin):
 
     def expand_volume(self, volume_name, brick_details,
                       replica_count=None, disperse_count=None,
-                      redundancy_count=None, force=False):
+                      force=False,
+                      increase_replica_count=False):
         args = {}
         if replica_count:
             args.update({"replica_count": replica_count})
         if disperse_count:
             args.update({"disperse_count": disperse_count})
-        if redundancy_count:
-            args.update({"redundancy_count": redundacy_count})
         if force:
             args.update({"force":force})
+        if increase_replica_count:
+            args.update({"increase_replica_count": increase_replica_count})
 
         out, err, rc = expand_gluster_volume.expand_volume(
             volume_name,
@@ -287,16 +288,17 @@ class GdeployPlugin(ProvisionerBasePlugin):
 
     def shrink_volume(self, volume_name, brick_details, action,
                       replica_count=None, disperse_count=None,
-                      redundancy_count=None, force=False):
+                      force=False,
+                      decrease_replica_count=False):
         args = {}
         if replica_count:
             args.update({"replica_count": replica_count})
         if disperse_count:
             args.update({"disperse_count": disperse_count})
-        if redundancy_count:
-            args.update({"redundancy_count": redundacy_count})
         if force:
             args.update({"force":force})
+        if decrease_replica_count:
+            args.update({"decrease_replica_count": decrease_replica_count})
 
         out, err, rc = shrink_gluster_volume.shrink_gluster_volume(
             volume_name,
