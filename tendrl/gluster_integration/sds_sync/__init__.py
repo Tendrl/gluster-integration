@@ -334,8 +334,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     out_lines = stdout.split('\n')
                     connected = True
                     for index in range(4, len(out_lines) - 2):
-                        if out_lines[index].split('\t')[2].strip() != 'Connected':
-                            connected = connected and False
+                        node_status_det = out_lines[index].split('\t')
+                        if len(node_status_det) > 2:
+                            if node_status_det[2].strip() != 'Connected':
+                                connected = connected and False
                     if connected:
                         NS.gluster.objects.GlobalDetails(
                             status='healthy'
