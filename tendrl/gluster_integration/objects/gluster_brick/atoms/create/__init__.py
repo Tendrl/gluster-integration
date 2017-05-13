@@ -15,7 +15,7 @@ class Create(objects.BaseAtom):
         brick_prefix = NS.config.data.get('gluster_bricks_dir', "/tendrl_gluster_bricks")
         for k, v in bricks.iteritems():
             key = "nodes/%s/NodeContext/fqdn" % k
-            host = NS.etcd_orm.client.read(key).value
+            host = NS._int.client.read(key).value
             brick_dict[host] = {}
             for dev_name, details in v.iteritems():
                 mount_path = brick_prefix + "/" + details["brick_name"] + "_mount"

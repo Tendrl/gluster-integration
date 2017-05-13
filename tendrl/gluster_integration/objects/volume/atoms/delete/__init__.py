@@ -89,7 +89,7 @@ class Delete(objects.BaseAtom):
                 # Acquire lock before deleting the volume from etcd
                 # We are blocking till we acquire the lock
                 # the lock will live for 60 sec after which it will be released.
-                lock = etcd.Lock(NS.etcd_orm.client, 'volume')
+                lock = etcd.Lock(NS._int.wclient, 'volume')
 
                 while not lock.is_acquired:
                     try:
@@ -105,7 +105,7 @@ class Delete(objects.BaseAtom):
                     except etcd.EtcdLockExpired:
                         continue
                 
-                NS.etcd_orm.client.delete(
+                NS._int.wclient.delete(
                     "clusters/%s/Volumes/%s" % (
                         NS.tendrl_context.integration_id,
                         self.parameters['Volume.vol_id']

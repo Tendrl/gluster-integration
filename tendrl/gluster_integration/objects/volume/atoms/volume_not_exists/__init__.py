@@ -26,7 +26,7 @@ class VolumeNotExists(objects.BaseAtom):
             )
         )
         try:
-            NS.etcd_orm.client.read(
+            NS._int.client.read(
                 'clusters/%s/Volumes/%s' % (
                     NS.tendrl_context.integration_id,
                     self.parameters['Volume.vol_id']

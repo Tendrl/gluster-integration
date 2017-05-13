@@ -1,6 +1,5 @@
 import logging
 
-from tendrl.commons.etcdobj import EtcdObj
 from tendrl.commons import objects
 
 LOG = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ class GlusterBrick(objects.BaseObject):
     ):
         super(GlusterBrick, self).__init__(*args, **kwargs)
 
-        self.value = 'clusters/%s/nodes/%s/GlusterBricks/%s'
         self.disk = disk
         self.name = name
         self.node_id = node_id
@@ -39,19 +37,11 @@ class GlusterBrick(objects.BaseObject):
         self.pool = pool
         self.pv = pv
         self.stripe_size = stripe_size
-        self._etcd_cls = _GlusterBrick
-
-
-class _GlusterBrick(EtcdObj):
-    """A table of the gluster brick, lazily updated
-    """
-    __name__ = 'clusters/%s/nodes/%s/GlusterBricks/%s'
-    _tendrl_cls = GlusterBrick
+        self.value = 'clusters/{0}/nodes/{1}/GlusterBricks/{2}'
 
     def render(self):
-        self.__name__ = self.__name__ % (
-            NS.tendrl_context.integration_id,
-            self.node_id,
-            self.name.replace("/", "_")
+        self.value = self.value.format(NS.tendrl_context.integration_id,
+                                       self.node_id,
+                                       self.name.replace("/", "_")
         )
-        return super(_GlusterBrick, self).render()
+        return super(GlusterBrick, self).render()
