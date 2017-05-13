@@ -1,4 +1,3 @@
-from tendrl.commons.etcdobj import EtcdObj
 from tendrl.commons import objects
 
 
@@ -19,7 +18,6 @@ class Brick(objects.BaseObject):
     ):
         super(Brick, self).__init__(*args, **kwargs)
 
-        self.value = 'clusters/%s/Volumes/%s/Bricks/%s'
         self.vol_id = vol_id
         self.sequence_number = sequence_number
         self.path = path
@@ -29,19 +27,11 @@ class Brick(objects.BaseObject):
         self.filesystem_type = filesystem_type
         self.mount_opts = mount_opts
         self.utilization = utilization
-        self._etcd_cls = _Brick
-
-
-class _Brick(EtcdObj):
-    """A table of the Volume, lazily updated
-    """
-    __name__ = 'clusters/%s/Volumes/%s/Bricks/%s'
-    _tendrl_cls = Brick
+        self.value = 'clusters/{0}/Volumes/{1}/Bricks/{2}'
 
     def render(self):
-        self.__name__ = self.__name__ % (
-            NS.tendrl_context.integration_id,
-            self.vol_id,
-            self.path.replace("/", "_")
+        self.value = self.value.format(NS.tendrl_context.integration_id,
+                                       self.vol_id,
+                                       self.path.replace("/", "_")
         )
-        return super(_Brick, self).render()
+        return super(Brick, self).render()

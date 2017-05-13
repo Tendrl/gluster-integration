@@ -1,4 +1,3 @@
-from tendrl.commons.etcdobj import EtcdObj
 from tendrl.commons import objects
 
 
@@ -64,15 +63,9 @@ class Volume(objects.BaseObject):
         self.usable_capacity = usable_capacity
         self.used_capacity = used_capacity
         self.pcnt_used = pcnt_used
-        self._etcd_cls = _Volume
-
-
-class _Volume(EtcdObj):
-    """A table of the Peer, lazily updated
-    """
-    __name__ = 'clusters/%s/Volumes/%s'
-    _tendrl_cls = Volume
+        self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):
-        self.__name__ = self.__name__ % (NS.tendrl_context.integration_id, self.vol_id)
-        return super(_Volume, self).render()
+        self.value = self.value.format(NS.tendrl_context.integration_id,
+                                       self.vol_id)
+        return super(Volume, self).render()

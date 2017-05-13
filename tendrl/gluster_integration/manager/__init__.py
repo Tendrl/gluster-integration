@@ -8,7 +8,6 @@ from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import manager as common_manager
 from tendrl.gluster_integration import sds_sync
-from tendrl.gluster_integration import central_store
 from tendrl.gluster_integration.gdeploy_wrapper.manager import \
     ProvisioningManager
 
@@ -20,8 +19,7 @@ class GlusterIntegrationManager(common_manager.Manager):
             GlusterIntegrationManager,
             self
         ).__init__(
-            NS.state_sync_thread,
-            NS.central_store_thread
+            NS.state_sync_thread
         )
 
 
@@ -32,7 +30,6 @@ def main():
     NS.type = "sds"
     NS.publisher_id = "gluster_integration"
 
-    NS.central_store_thread = central_store.GlusterIntegrationEtcdCentralStore()
     NS.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
 
     NS.node_context.save()

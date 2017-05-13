@@ -34,7 +34,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 # Acquire lock before updating the volume details in etcd
                 # We are blocking till we acquire the lock.
                 # the lock will live for 60 sec after which it will be released.
-                lock = etcd.Lock(NS.etcd_orm.client, 'volume')
+                lock = etcd.Lock(NS._int.wclient, 'volume')
                 try:
                     lock.acquire(blocking=True,lock_ttl=60)
                     if lock.is_acquired:
@@ -251,7 +251,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for item in out_dict['volume_summary']:
                         if "up(degraded)" in item['state']:
                             volume_up_degraded = volume_up_degraded + 1
-                        volumes = NS.etcd_orm.client.read(
+                        volumes = NS._int.client.read(
                             "clusters/%s/Volumes" % NS.tendrl_context.integration_id
                         )
                         for child in volumes._children:
