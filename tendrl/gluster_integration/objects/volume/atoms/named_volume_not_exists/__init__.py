@@ -26,7 +26,7 @@ class NamedVolumeNotExists(objects.BaseAtom):
             )
         )
         try:
-            volumes = NS.etcd_orm.client.read(
+            volumes = NS._int.client.read(
                 "clusters/%s/Volumes" % NS.tendrl_context.integration_id
             )
         except etcd.EtcdKeyNotFound:

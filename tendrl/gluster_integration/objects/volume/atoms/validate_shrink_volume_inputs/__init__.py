@@ -14,7 +14,7 @@ class ValidateShrinkVolumeInputs(objects.BaseAtom):
 
     def _getBrickList(self, brick_count, sub_vol_len, volume_id):
         try:
-            result = NS.etcd_orm.client.read(
+            result = NS._int.client.read(
                 "clusters/%s/Volumes/%s/Bricks" % (
                     NS.tendrl_context.integration_id,
                     volume_id
@@ -40,7 +40,7 @@ class ValidateShrinkVolumeInputs(objects.BaseAtom):
         b_list = ["" for el in range(brick_count)]
 
         for el in bricks:
-            result = NS.etcd_orm.client.read(
+            result = NS._int.client.read(
                 el.key + "/" + "sequence_number"
             )
             b_list[int(result.value)-1]=el.key.split("/")[-1]

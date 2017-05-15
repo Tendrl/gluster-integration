@@ -81,7 +81,7 @@ class Shrink(objects.BaseAtom):
                 # Acquire lock before deleting the bricks from etcd
                 # We are blocking till we acquire the lock
                 # the lock will live for 60 sec after which it will be released.
-                lock = etcd.Lock(NS.etcd_orm.client, 'volume')
+                lock = etcd.Lock(NS._int.wclient, 'volume')
                 
                 while not lock.is_acquired:
                     try:
@@ -100,7 +100,7 @@ class Shrink(objects.BaseAtom):
                     for b in sub_vol:
                         brick_name = b.keys()[0] + ":" + b.values()[0].replace("/", "_")
                         try:
-                            NS.etcd_orm.client.delete(
+                            NS._int.wclient.delete(
                                 "clusters/%s/Volumes/%s/Bricks/%s" % (
                                     NS.tendrl_context.integration_id,
                                     self.parameters['Volume.vol_id'],

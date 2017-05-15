@@ -26,7 +26,7 @@ class RebalanceRunning(objects.BaseAtom):
             )
         )
         try:
-            rebal_status = NS.etcd_orm.client.read(
+            rebal_status = NS._int.client.read(
                 'clusters/%s/Volumes/%s/rebal_status' % (
                     NS.tendrl_context.integration_id,
                     self.parameters['Volume.vol_id']
