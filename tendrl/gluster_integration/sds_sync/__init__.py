@@ -29,6 +29,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             )
         )
 
+        gluster_brick_dir = NS.gluster.objects.\
+                            GlusterBrickDir()
+        gluster_brick_dir.save()
+
         while not self._complete.is_set():
             try:
                 # Acquire lock before updating the volume details in etcd

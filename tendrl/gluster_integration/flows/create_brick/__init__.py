@@ -3,7 +3,7 @@ from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 
 
-class CreateGlusterBrick(flows.BaseFlow):
+class CreateBrick(flows.BaseFlow):
     def run(self):
         Event(
             Message(
@@ -18,4 +18,4 @@ class CreateGlusterBrick(flows.BaseFlow):
             )
         )
 
-        super(CreateGlusterBrick, self).run()
+        super(CreateBrick, self).run()

@@ -72,6 +72,37 @@ class Create(objects.BaseAtom):
                     cluster_id=NS.tendrl_context.integration_id,
                 )
             )
+
+            # mark the bricks that were used to create this volume as
+            # used bricks so that they are not consumed again
+            for sub_vol in self.parameters.get('Volume.bricks'):
+                for brick in sub_vol:
+                    ip = brick.keys()[0]
+                    brick_path = brick.values()[0]
+                    node_id = NS._int.client.read("indexes/ip/%s" % ip).value
+                    NS._int.wclient.delete(
+                        ("clusters/%s/nodes/%s/GlusterBricks/free/%s") % (
+                            NS.tendrl_context.integration_id,
+                            NS.node_context.node_id,
+                            brick_path.replace("/","_")
+                        )
+                    )
+                    NS._int.wclient.write(
+                        ("clusters/%s/nodes/%s/GlusterBricks/used/%s") % (
+                            NS.tendrl_context.integration_id,
+                            NS.node_context.node_id,
+                            brick_path.replace("/","_")
+                        ),
+                        ""
+                    )
+                    NS._int.wclient.write(
+                        ("clusters/%s/nodes/%s/GlusterBricks/all/%s/volume_name") % (
+                            NS.tendrl_context.integration_id,
+                            NS.node_context.node_id,
+                            brick_path.replace("/","_")
+                        ),
+                        self.parameters['Volume.volname']
+                    )
         else:
             Event(
                 Message(

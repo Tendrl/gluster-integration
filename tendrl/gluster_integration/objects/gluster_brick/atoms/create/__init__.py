@@ -18,17 +18,18 @@ class Create(objects.BaseAtom):
             host = NS._int.client.read(key).value
             brick_dict[host] = {}
             for dev_name, details in v.iteritems():
+                dev = dev_name.split("/")[-1]
                 mount_path = brick_prefix + "/" + details["brick_name"] + "_mount"
                 brick_path = mount_path + "/" + details["brick_name"]
                 brick_dict[host].update({
-                    dev_name: {
+                    dev: {
                         "node_id": k,
                         "mount_path": mount_path,
                         "brick_path": brick_path,
-                        "lv": "tendrl" + brick_path.replace("/", "_") + "_lv",
-                        "pv": "tendrl" + brick_path.replace("/", "_") + "_pv",
-                        "pool": "tendrl" + brick_path.replace("/", "_") + "_pool",
-                        "vg": "tendrl" + brick_path.replace("/", "_") + "_vg",
+                        "lv": "tendrl" + details["brick_name"] + "_lv",
+                        "pv": "tendrl" + details["brick_name"] + "_pv",
+                        "pool": "tendrl" + details["brick_name"] + "_pool",
+                        "vg": "tendrl" + details["brick_name"] + "_vg",
                     }
                 })
         
@@ -87,8 +88,13 @@ class Create(objects.BaseAtom):
                         pool=val["pool"],
                         pv=val["pv"],
                         **args
-                    ).save(update=False)
-
+                    ).save()
+                    free_brick_key = "clusters/%s/nodes/%s/GlusterBricks/free/%s" % (
+                        NS.tendrl_context.integration_id,
+                        val["node_id"],
+                        brick_name.replace("/","_")
+                    )
+                    NS._int.wclient.write(free_brick_key, "")
             return True
         else:
             Event(
