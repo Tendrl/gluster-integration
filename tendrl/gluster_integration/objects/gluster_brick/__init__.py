@@ -20,6 +20,7 @@ class GlusterBrick(objects.BaseObject):
         disk_type=None,
         disk_count=None,
         stripe_size=None,
+        volume_name=None,
         *args,
         **kwargs
     ):
@@ -36,8 +37,9 @@ class GlusterBrick(objects.BaseObject):
         self.vg = vg
         self.pool = pool
         self.pv = pv
+        self.volume_name = volume_name if volume_name else ""
         self.stripe_size = stripe_size
-        self.value = 'clusters/{0}/nodes/{1}/GlusterBricks/{2}'
+        self.value = 'clusters/{0}/nodes/{1}/GlusterBricks/all/{2}'
 
     def render(self):
         self.value = self.value.format(NS.tendrl_context.integration_id,
