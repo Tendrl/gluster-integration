@@ -80,17 +80,20 @@ class Create(objects.BaseAtom):
                     ip = brick.keys()[0]
                     brick_path = brick.values()[0]
                     node_id = NS._int.client.read("indexes/ip/%s" % ip).value
+                    key = "nodes/%s/NodeContext/fqdn" % node_id
+                    host = NS._int.client.read(key).value
+                    brick_path = host + ":" + brick_path
                     NS._int.wclient.delete(
                         ("clusters/%s/nodes/%s/GlusterBricks/free/%s") % (
                             NS.tendrl_context.integration_id,
-                            NS.node_context.node_id,
+                            node_id,
                             brick_path.replace("/","_")
                         )
                     )
                     NS._int.wclient.write(
                         ("clusters/%s/nodes/%s/GlusterBricks/used/%s") % (
                             NS.tendrl_context.integration_id,
-                            NS.node_context.node_id,
+                            node_id,
                             brick_path.replace("/","_")
                         ),
                         ""
@@ -98,7 +101,7 @@ class Create(objects.BaseAtom):
                     NS._int.wclient.write(
                         ("clusters/%s/nodes/%s/GlusterBricks/all/%s/volume_name") % (
                             NS.tendrl_context.integration_id,
-                            NS.node_context.node_id,
+                            node_id,
                             brick_path.replace("/","_")
                         ),
                         self.parameters['Volume.volname']
@@ -110,37 +113,6 @@ class Create(objects.BaseAtom):
                     publisher=NS.publisher_id,
                     payload={
                         "message": "Volume creation failed for volume %s" %
-                        self.parameters['Volume.volname']
-                    },
-                    job_id=self.parameters["job_id"],
-                    flow_id=self.parameters["flow_id"],
-                    cluster_id=NS.tendrl_context.integration_id,
-                )
-            )
-            return False
-        if NS.gdeploy_plugin.start_volume(
-                self.parameters.get('Volume.volname'),
-        ):
-            Event(
-                Message(
-                    priority="info",
-                    publisher=NS.publisher_id,
-                    payload={
-                        "message": "Started the volume %s" %
-                        self.parameters['Volume.volname']
-                    },
-                    job_id=self.parameters["job_id"],
-                    flow_id=self.parameters["flow_id"],
-                    cluster_id=NS.tendrl_context.integration_id,
-                )
-            )
-        else:
-            Event(
-                Message(
-                    priority="error",
-                    publisher=NS.publisher_id,
-                    payload={
-                        "message": "Failed to start the volume %s" %
                         self.parameters['Volume.volname']
                     },
                     job_id=self.parameters["job_id"],
