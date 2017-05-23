@@ -157,12 +157,34 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             )
                             volume.save()
                             b_index = 1
+                            # ipv4 address of current node
+                            try:
+                                network_ip = []
+                                networks = NS._int.client.read(
+                                    "nodes/%s/Networks" % NS.node_context.node_id
+                                )
+                                for interface in networks.leaves:
+                                    key = interface.key.split("/")[-1]
+                                    network = NS.tendrl.objects.NodeNetwork(
+                                        interface=key).load()
+                                    network_ip.extend(network.ipv4)
+                            except etcd.EtcdKeyNotFound as ex:
+                                Event(
+                                    ExceptionMessage(
+                                        priority="error",
+                                        publisher=NS.publisher_id,
+                                        payload={"message": "Could not find any ipv4 networks for node %s" % NS.node_context.node_id,
+                                                 "exception": ex
+                                                 }
+                                    )
+                                )
                             while True:
                                 try:
                                     # Update brick node wise
-                                    if NS.node_context.fqdn != volumes[
-                                        'volume%s.brick%s.hostname' % (
-                                            index, b_index)]:
+                                    hostname  = volumes['volume%s.brick%s.hostname' % (
+                                        index, b_index)]
+                                    if (NS.node_context.fqdn != hostname) and (
+                                        hostname not in network_ip):
                                         b_index += 1
                                         continue
                                     brick = NS.gluster\
