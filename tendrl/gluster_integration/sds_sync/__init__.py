@@ -173,8 +173,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     ExceptionMessage(
                                         priority="error",
                                         publisher=NS.publisher_id,
-                                        payload={"message": "Given key is not present in "
-                                                            "etcd",
+                                        payload={"message": "Could not find any ipv4 networks for node %s" % NS.node_context.node_id,
                                                  "exception": ex
                                                  }
                                     )
