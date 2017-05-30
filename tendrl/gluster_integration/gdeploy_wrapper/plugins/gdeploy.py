@@ -344,7 +344,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
         if rc == 0 and err == "":
             Event(
                 Message(
-                    priority="error",
+                    priority="info",
                     publisher=NS.publisher_id,
                     payload={
                         "message": "Bricks Provisioned successfully"
