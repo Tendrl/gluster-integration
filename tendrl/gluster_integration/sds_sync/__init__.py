@@ -256,18 +256,23 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         hostname not in network_ip):
                                         b_index += 1
                                         continue
+                                    sub_vol_size = (int(volumes['volume%s.brickcount' % index])) / int(
+                                        volumes[
+                                            'volume%s.subvol_count' % index
+                                        ]
+                                    )
+                                    brick_name = NS.node_context.fqdn + ":" + volumes[
+                                        'volume%s.brick%s.path' % (
+                                            index, b_index
+                                        )
+                                    ].split(":")[-1].replace("/","_")
 
                                     # Raise alerts if the brick path changes
                                     try:
                                         stored_brick_status = NS._int.client.read(
-                                            "clusters/%s/Volumes/%s/Bricks/%s/status" % (
+                                            "clusters/%s/Bricks/all/%s/status" % (
                                                 NS.tendrl_context.integration_id,
-                                                volumes['volume%s.id' % index],
-                                                volumes[
-                                                    'volume%s.brick%s.path' % (
-                                                        index, b_index
-                                                    )
-                                                ].replace("/", "_")
+                                                brick_name
                                             )
                                         ).value
                                         current_status = volumes.get(
@@ -305,8 +310,21 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     except etcd.EtcdKeyNotFound:
                                         pass
 
+                                    vol_brick_path = "clusters/%s/Volumes/%s/Bricks/subvolume%s/%s" % (
+                                        NS.tendrl_context.integration_id,
+                                        volumes['volume%s.id' % index],
+                                        str((b_index - 1) / sub_vol_size),
+                                        brick_name
+                                    )
+
+                                    NS._int.wclient.write(
+                                        vol_brick_path,
+                                        ""
+                                    )
+
                                     brick = NS.gluster\
                                         .objects.Brick(
+                                            brick_name,
                                             vol_id=volumes['volume%s.id' % index],
                                             sequence_number=b_index, 
                                             path=volumes[
@@ -318,6 +336,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             port=volumes.get(
                                                 'volume%s.brick%s.port' % (
                                                     index, b_index)),
+                                            used=True,
                                             status=volumes.get(
                                                  'volume%s.brick%s.status' % (
                                                     index, b_index)),

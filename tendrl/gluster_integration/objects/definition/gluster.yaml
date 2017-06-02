@@ -30,16 +30,16 @@ namespace.gluster:
       tags:
        - "provisioner/$TendrlContext.integration_id"
       atoms:
-        - tendrl.gluster.objects.GlusterBrick.atoms.Create
+        - tendrl.gluster.objects.Brick.atoms.Create
       help: "Create gluster bricks that can be used by volumes"
       enabled: true
       inputs:
         mandatory:
           - Cluster.node_configuration
         optional:
-          - GlusterBrick.disk_type
-          - GlusterBrick.disk_count
-          - GlusterBrick.stripe_size
+          - Brick.disk_type
+          - Brick.disk_count
+          - Brick.stripe_size
       run: tendrl.gluster.flows.CreateBrick
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8d
@@ -134,39 +134,6 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       help: gluster volume options
-    Brick:
-      attrs:
-        vol_id:
-          help: Volume id
-          type: String
-        sequence_number:
-          help: Sequence number amongst gluster replica-set
-          type: Integer
-        path:
-          help: Path of the brick
-          type: String
-        hostname:
-          help: Name of the host
-          type: String
-        port:
-          help: Brick port
-          type: int
-        status:
-          help: Status of the brick
-          type: String
-        filesystem_type:
-          help: File system type
-          type: String
-        mount_opts:
-          help: Mount options
-          type: String
-        utilization:
-          help: Brick utilization
-          type: Dict        
-      enabled: true
-      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
-      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks
-      help: gluster volume bricks
     RebalanceDetails:
       attrs:
         vol_id:
@@ -197,7 +164,7 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails/$TendrlContext.node_id
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails
       help: gluster volume rebalance details
-    GlusterBrick:
+    Brick:
       atoms:
         Create:
           enabled: true
@@ -205,11 +172,11 @@ namespace.gluster:
             mandatory:
               - Cluster.node_configuration
             optional:
-              - GlusterBrick.disk_type
-              - GlusterBrick.disk_count
-              - GlusterBrick.stripe_size
+              - Brick.disk_type
+              - Brick.disk_count
+              - Brick.stripe_size
           name: create_brick
-          run: tendrl.gluster.objects.GlusterBrick.atoms.Create
+          run: tendrl.gluster.objects.Brick.atoms.Create
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649d
           help: Create gluster brick for gluster volume
@@ -222,9 +189,6 @@ namespace.gluster:
           type: String
         node_id:
           help: node_id of the node on which brick recides
-          type: String
-        volume_name:
-          help: volume_name of the volume to which brick belongs
           type: String
         mount_path:
           help: mount point of the brick
@@ -241,6 +205,9 @@ namespace.gluster:
         stripe_size:
           help: stripe size in case disk is a raid device
           type: String
+        size:
+          help: size of the underlying device
+          type: String
         lv:
           help: The underlying lv name of the brick
           type: String
@@ -253,10 +220,37 @@ namespace.gluster:
         pool:
           help: The underlying pool name of the brick
           type: String
+        vol_id:
+          help: Volume id
+          type: String
+        used:
+          help: whether the brick is part of a volume
+          type: Boolean
+        sequence_number:
+          help: Sequence number amongst gluster replica-set
+          type: Integer
+        hostname:
+          help: Name of the host
+          type: String
+        port:
+          help: Brick port
+          type: int
+        status:
+          help: Status of the brick
+          type: String
+        filesystem_type:
+          help: File system type
+          type: String
+        mount_opts:
+          help: Mount options
+          type: String
+        utilization:
+          help: Brick utilization
+          type: Dict        
       enabled: true
-      value: clusters/$TendrlContext.integration_id/nodes/$TendrlContext.node_id/GlusterBricks/$GlusterBrick.brick_name
-      list:  clusters/$TendrlContext.integration_id/nodes/$TendrlContext.node_id/GlusterBricks/all
-      help: gluster bricks that can be used for gluster volumes
+      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name
+      list:  clusters/$TendrlContext.integration_id/Bricks/all
+      help: gluster brick details
     Volume:
       atoms:
         Create:
