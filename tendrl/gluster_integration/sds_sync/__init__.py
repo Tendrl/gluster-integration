@@ -29,7 +29,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         alert['time_stamp'] = tendrl_now().isoformat()
         alert['alert_type'] = 'status'
         severity = "info"
-        if curr_value == "Stopped":
+        if curr_value.lower() == "stopped":
             severity = "critical"
         alert['severity'] = severity
         alert['resource'] = resource
