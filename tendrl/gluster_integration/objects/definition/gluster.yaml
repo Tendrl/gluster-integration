@@ -30,7 +30,7 @@ namespace.gluster:
       tags:
        - "provisioner/$TendrlContext.integration_id"
       atoms:
-        - tendrl.gluster.objects.Brick.atoms.Create
+        - gluster.objects.Brick.atoms.Create
       help: "Create gluster bricks that can be used by volumes"
       enabled: true
       inputs:
@@ -40,9 +40,25 @@ namespace.gluster:
           - Brick.disk_type
           - Brick.disk_count
           - Brick.stripe_size
-      run: tendrl.gluster.flows.CreateBrick
+      run: gluster.flows.CreateBrick
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8d
+      version: 1
+    GenerateBrickMapping:
+      tags:
+       - "provisioner/$TendrlContext.integration_id"
+      atoms:
+        - gluster.objects.Volume.atoms.GenerateBrickMapping
+      help: "Get brick mapping for a gluster volume"
+      enabled: true
+      inputs:
+        mandatory:
+          - Cluster.node_configuration
+          - Volume.brick_count
+          - Volume.subvol_size
+      run: gluster.flows.GenerateBrickMapping
+      type: Create
+      uuid: b8dd2b4a-96de-4ded-b17d-374d26ec7593
       version: 1
   objects:
     GlobalDetails:
@@ -176,7 +192,7 @@ namespace.gluster:
               - Brick.disk_count
               - Brick.stripe_size
           name: create_brick
-          run: tendrl.gluster.objects.Brick.atoms.Create
+          run: gluster.objects.Brick.atoms.Create
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649d
           help: Create gluster brick for gluster volume
@@ -271,6 +287,18 @@ namespace.gluster:
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
           help: Create gluster volume
+        GenerateBrickMapping:
+          enabled: true
+          inputs:
+            mandatory:
+              - Cluster.node_configuration
+              - Volume.brick_count
+              - Volume.subvol_size
+          name: get_mapping
+          run: gluster.objects.Volume.atoms.GenerateBrickMapping
+          type: Create
+          uuid: aa355f87-fd02-488c-bab8-2f755e2c1dfc
+          help: Get brick mapping for gluster volume
         Delete:
           enabled: true
           inputs:
@@ -672,6 +700,9 @@ namespace.gluster:
           type: String
         subvol_count:
           help: "Count of subvolumes"
+          type: Integer
+        subvol_size:
+          help: "Count of bricks in subvolumes"
           type: Integer
         brick_count:
           help: "Count of bricks"
