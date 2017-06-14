@@ -20,6 +20,8 @@ namespace.gluster:
           - Volume.tuned_profile
       pre_run:
         - gluster.objects.Volume.atoms.NamedVolumeNotExists
+      post_run:
+        - gluster.objects.Volume.atoms.CheckVolumeAvailable
       run: gluster.flows.CreateVolume
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
@@ -440,6 +442,16 @@ namespace.gluster:
           run: gluster.objects.Volume.atoms.StopRebalance
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d96567
+        CheckVolumeAvailable:
+          enabled: true
+          help: check if volume is available
+          inputs:
+            mandatory:
+              - Volume.volname
+          name: volume available
+          run: gluster.objects.Volume.atoms.CheckVolumeAvailable
+          type: Start
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96765
       flows:
         DeleteVolume:
           tags:
