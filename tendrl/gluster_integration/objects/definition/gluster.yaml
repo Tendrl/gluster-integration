@@ -555,6 +555,8 @@ namespace.gluster:
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b5e
           version: 1
         StartVolumeRebalance:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.StartRebalance
           help: "Start Volume Rebalance"
@@ -575,6 +577,8 @@ namespace.gluster:
           uuid: 1951e821-7aa9-4a91-8183-e73bc8275b7d
           version: 1
         StopVolumeRebalance:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
           atoms:
             - gluster.objects.Volume.atoms.StopRebalance
           help: "Stop Volume Rebalance"
