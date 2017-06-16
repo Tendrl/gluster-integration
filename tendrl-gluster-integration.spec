@@ -41,6 +41,7 @@ install -Dm 0644 etc/tendrl/gluster-integration/logging.yaml.timedrotation.sampl
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
+systemctl enable tendrl-gluster-integration
 %systemd_post tendrl-gluster-integration.service
 
 %preun
