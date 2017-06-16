@@ -15,6 +15,7 @@ class CheckVolumeAvailable(objects.BaseAtom):
     def run(self):
         retry_count = 0
         while True:
+            volumes = None
             try:
                 volumes = NS._int.client.read(
                     "clusters/%s/Volumes" % NS.tendrl_context.integration_id
