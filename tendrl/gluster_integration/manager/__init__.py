@@ -67,7 +67,10 @@ def main():
 
     pm = ProvisioningManager("GdeployPlugin")
     NS.gdeploy_plugin = pm.get_plugin()
-
+    if NS.config.data.get("with_internal_profiling", False):
+        from tendrl.commons import profiler
+        profiler.start()
+        
     m = GlusterIntegrationManager()
     m.start()
 
