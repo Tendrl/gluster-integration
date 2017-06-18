@@ -4,3 +4,4 @@ logging_socket_path: /var/run/tendrl/message.sock
 
 # Directory to store tendrl managed brick mounts
 gluster_bricks_dir: /tendrl_gluster_bricks
+with_internal_profiling: False # This flag turns on internal profiling and saves stats at /var/lib/tendrl/profiling/node_agent/ on service stop  (Note: profiling requires "pip install GreenletProfiler")
