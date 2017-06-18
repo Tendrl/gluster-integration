@@ -18,7 +18,9 @@ class Definition(objects.BaseObject):
         self.value = 'clusters/{0}/_NS/definitions'
 
     def get_parsed_defs(self):
-        if 
+        if self._parsed_defs:
+            return self._parsed_defs
+        
         self._parsed_defs = yaml.safe_load(self.data)
         return self._parsed_defs
 
