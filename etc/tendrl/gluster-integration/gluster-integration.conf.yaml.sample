@@ -4,3 +4,4 @@ logging_socket_path: /var/run/tendrl/message.sock
 
 # Directory to store tendrl managed brick mounts
 gluster_bricks_dir: /tendrl_gluster_bricks
+with_internal_profiling: False
