@@ -198,6 +198,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 snapd_inited=volumes[
                                     'volume%s.snapd_svc.inited' % index
                                 ],
+                            )
+                            volume.save()
+                            rebalance_details = NS.gluster.objects.RebalanceDetails(
+                                vol_id=volumes[
+                                    'volume%s.id' % index
+                                ],
                                 rebal_id=volumes[
                                     'volume%s.rebalance.id' % index
                                 ],
@@ -220,7 +226,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            volume.save()
+                            rebalance_details.save()
                             b_index = 1
                             # ipv4 address of current node
                             try:
