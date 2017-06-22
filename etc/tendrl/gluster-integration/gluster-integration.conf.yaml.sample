@@ -1,6 +1,7 @@
 etcd_port: 2379
 etcd_connection: 0.0.0.0
 logging_socket_path: /var/run/tendrl/message.sock
+sync_interval: 10
 
 # Directory to store tendrl managed brick mounts
 gluster_bricks_dir: /tendrl_gluster_bricks
