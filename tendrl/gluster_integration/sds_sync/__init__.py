@@ -79,7 +79,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         lock.acquire(lock_ttl=60)
                 except etcd.EtcdLockExpired:
                     continue
-                gevent.sleep(10)
+                gevent.sleep(
+                    int(NS.config.data.get("sync_interval", 10))
+                )
                 subprocess.call(
                     [
                         'gluster',
