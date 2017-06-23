@@ -1,6 +1,6 @@
 ===============================
 gluster-integration
-===================
+===============================
 
 Tendrl integration for Gluster Storage
 
@@ -20,13 +20,13 @@ Builds
 ------
 
 .. image:: https://travis-ci.org/Tendrl/gluster-integration.svg?branch=master
-    :target: https://travis-ci.org/Tendrl/gluster-integration
+  :target: https://travis-ci.org/Tendrl/gluster-integration
 
 Code Coverage
 -------------
 
 .. image:: https://coveralls.io/repos/github/Tendrl/gluster-integration/badge.svg
-    :target: https://coveralls.io/github/Tendrl/gluster-integration
+  :target: https://coveralls.io/github/Tendrl/gluster-integration
 
 Developer/Install documentation
 -----------------------
