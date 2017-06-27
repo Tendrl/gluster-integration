@@ -54,6 +54,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         )
 
     def _run(self):
+        # To detect out of band deletes
+        # refresh gluster object inventory at config['sync_interval']
+        # Default is 260 seconds
+        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
         Event(
             Message(
                 priority="info",
@@ -68,17 +72,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         while not self._complete.is_set():
             try:
-                # Acquire lock before updating the volume details in etcd
-                # We are blocking till we acquire the lock.
-                # the lock will live for 60 sec after which it will be released.
-                lock = etcd.Lock(NS._int.wclient, 'volume')
-                try:
-                    lock.acquire(blocking=True,lock_ttl=60)
-                    if lock.is_acquired:
-                        # renewing the lock
-                        lock.acquire(lock_ttl=60)
-                except etcd.EtcdLockExpired:
-                    continue
                 gevent.sleep(
                     int(NS.config.data.get("sync_interval", 10))
                 )
@@ -110,7 +103,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     hostname=peers['peer%s.primary_hostname' % index],
                                     state=peers['peer%s.state' % index]
                                 )
-                            peer.save()
+                            peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
                             break
@@ -199,7 +192,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.snapd_svc.inited' % index
                                 ],
                             )
-                            volume.save()
+                            volume.save(ttl=SYNC_TTL)
                             rebalance_details = NS.gluster.objects.RebalanceDetails(
                                 vol_id=volumes[
                                     'volume%s.id' % index
@@ -226,7 +219,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            rebalance_details.save()
+                            rebalance_details.save(ttl=SYNC_TTL)
                             b_index = 1
                             # ipv4 address of current node
                             try:
@@ -353,7 +346,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                     volumes['volume%s.brick%s.path' % (
                                                         index, b_index)])
                                         )
-                                    brick.save()
+                                    brick.save(ttl=SYNC_TTL)
 
                                     b_index += 1
                                 except KeyError:
@@ -527,8 +520,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
-            finally:
-                lock.release()                
 
         Event(
             Message(
