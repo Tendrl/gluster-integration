@@ -54,7 +54,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         )
 
     def _run(self):
-        # For 10 min (sync_time(10) + 250)
+        # To detect out of band deletes
+        # refresh gluster object inventory at config['sync_interval']
+        # Default is 260 seconds
         SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
         Event(
             Message(
