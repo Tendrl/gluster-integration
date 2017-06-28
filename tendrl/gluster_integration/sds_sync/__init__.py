@@ -10,6 +10,7 @@ from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage, Message
 from tendrl.commons.utils import cmd_utils
+from tendrl.commons.utils import etcd_utils
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
@@ -69,6 +70,35 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         gluster_brick_dir = NS.gluster.objects.\
                             GlusterBrickDir()
         gluster_brick_dir.save()
+
+        try:
+            etcd_utils.read(
+                "clusters/%s/cluster_network" % NS.tendrl_context.integration_id
+            )
+        except etcd.EtcdKeyNotFound:
+            try:
+                node_networks = etcd_utils.read(
+                    "nodes/%s/Networks" % NS.node_context.node_id
+                )
+                # TODO: (team) this logic needs to change later
+                # multiple networks supported for gluster use case
+                node_network = NS.tendrl.objects.NodeNetwork(
+                    interface=node_networks.leaves.next().key.split('/')[-1]
+                ).load()
+                cluster = NS.tendrl.objects.Cluster(
+                    integration_id=NS.tendrl_context.integration_id
+                ).load()
+                cluster.cluster_network = node_network.subnet
+                cluster.save()
+            except etcd.EtcdKeyNotFound as ex:
+                Event(
+                    Message(
+                        "error",
+                        publisher=NS.publisher_id,
+                        {'message': "Failed to sync cluster network details"}
+                    )
+                )
+                raise ex
 
         while not self._complete.is_set():
             try:
