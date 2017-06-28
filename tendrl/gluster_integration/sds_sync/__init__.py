@@ -7,6 +7,7 @@ import socket
 import subprocess
 
 from tendrl.gluster_integration.sds_sync import brick_utilization
+from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage, Message
 from tendrl.commons.utils import cmd_utils
@@ -142,6 +143,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 except etcd.EtcdKeyNotFound:
                                     pass
 
+                            rebalance_status = ""
+                            if volumes[
+                                    'volume%s.type' % index
+                            ].startswith("Distribute"):
+                                status = rebal_stat.get_rebalance_status(volumes[
+                                    'volume%s.name' % index
+                                ])
+                                if status:
+                                    rebalance_status = status.replace(" ", "_")
+                                else:
+                                    rebalance_status = "not_started"
+                            
                             volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
@@ -191,6 +204,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 snapd_inited=volumes[
                                     'volume%s.snapd_svc.inited' % index
                                 ],
+                                rebal_status=rebalance_status,
                             )
                             volume.save(ttl=SYNC_TTL)
                             rebalance_details = NS.gluster.objects.RebalanceDetails(
@@ -437,13 +451,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     quorum_status=volume.quorum_status,
                                     snapd_status=volume.snapd_status,
                                     snapd_inited=volume.snapd_inited,
-                                    rebal_id=volume.rebal_id,
                                     rebal_status=volume.rebal_status,
-                                    rebal_failures=volume.rebal_failures,
-                                    rebal_skipped=volume.rebal_skipped,
-                                    rebal_lookedup=volume.rebal_lookedup,
-                                    rebal_files=volume.rebal_files,
-                                    rebal_data=volume.rebal_data
                                 ).save()
                     connection_count = None
                     connection_active  = None
