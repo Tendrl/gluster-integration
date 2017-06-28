@@ -33,7 +33,7 @@ class RebalanceRunning(objects.BaseAtom):
                 )
             ).value
             if rebal_status is not None:
-                if rebal_status == "in progress":
+                if rebal_status in ["in progress", "in_progress"]:
                     return True
                 else:
                     Event(

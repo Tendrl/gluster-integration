@@ -21,13 +21,7 @@ class Volume(objects.BaseObject):
         quorum_status=None,
         snapd_status=None,
         snapd_inited=None,
-        rebal_id=None,
         rebal_status=None,
-        rebal_failures=None,
-        rebal_skipped=None,
-        rebal_lookedup=None,
-        rebal_files=None,
-        rebal_data=None,
         usable_capacity=None,
         used_capacity=None,
         pcnt_used=None,
@@ -53,13 +47,7 @@ class Volume(objects.BaseObject):
         self.quorum_status = quorum_status
         self.snapd_status = snapd_status
         self.snapd_inited = snapd_inited
-        self.rebal_id = rebal_id
         self.rebal_status = rebal_status
-        self.rebal_failures = rebal_failures
-        self.rebal_skipped = rebal_skipped
-        self.rebal_lookedup = rebal_lookedup
-        self.rebal_files = rebal_files
-        self.rebal_data = rebal_data
         self.usable_capacity = usable_capacity
         self.used_capacity = used_capacity
         self.pcnt_used = pcnt_used
