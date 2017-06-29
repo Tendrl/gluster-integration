@@ -94,9 +94,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             except etcd.EtcdKeyNotFound as ex:
                 Event(
                     Message(
-                        "error",
+                        priority="error",
                         publisher=NS.publisher_id,
-                        {'message': "Failed to sync cluster network details"}
+                        payload={"message": "Failed to sync cluster network details"}
                     )
                 )
                 raise ex
@@ -554,6 +554,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         used_capacity=0,
                         pcnt_used=0
                     ).save()
+                    
                 _cluster = NS.tendrl.objects.Cluster(integration_id=NS.tendrl_context.integration_id)
                 if _cluster.exists():
                     _cluster.sync_status = "done"
@@ -570,6 +571,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
+                raise ex
 
         Event(
             Message(
