@@ -7,9 +7,11 @@ import socket
 import subprocess
 
 from tendrl.gluster_integration.sds_sync import brick_utilization
+from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage, Message
 from tendrl.commons.utils import cmd_utils
+from tendrl.commons.utils import etcd_utils
 
 from tendrl.commons import sds_sync
 from tendrl.gluster_integration import ini2json
@@ -54,6 +56,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         )
 
     def _run(self):
+        # To detect out of band deletes
+        # refresh gluster object inventory at config['sync_interval']
+        # Default is 260 seconds
+        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
         Event(
             Message(
                 priority="info",
@@ -66,20 +72,46 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             GlusterBrickDir()
         gluster_brick_dir.save()
 
+        try:
+            etcd_utils.read(
+                "clusters/%s/cluster_network" % NS.tendrl_context.integration_id
+            )
+        except etcd.EtcdKeyNotFound:
+            try:
+                node_networks = etcd_utils.read(
+                    "nodes/%s/Networks" % NS.node_context.node_id
+                )
+                # TODO: (team) this logic needs to change later
+                # multiple networks supported for gluster use case
+                node_network = NS.tendrl.objects.NodeNetwork(
+                    interface=node_networks.leaves.next().key.split('/')[-1]
+                ).load()
+                cluster = NS.tendrl.objects.Cluster(
+                    integration_id=NS.tendrl_context.integration_id
+                ).load()
+                cluster.cluster_network = node_network.subnet
+                cluster.save()
+            except etcd.EtcdKeyNotFound as ex:
+                Event(
+                    Message(
+                        priority="error",
+                        publisher=NS.publisher_id,
+                        payload={"message": "Failed to sync cluster network details"}
+                    )
+                )
+                raise ex
+
         while not self._complete.is_set():
             try:
-                # Acquire lock before updating the volume details in etcd
-                # We are blocking till we acquire the lock.
-                # the lock will live for 60 sec after which it will be released.
-                lock = etcd.Lock(NS._int.wclient, 'volume')
+                gevent.sleep(
+                    int(NS.config.data.get("sync_interval", 10))
+                )
                 try:
-                    lock.acquire(blocking=True,lock_ttl=60)
-                    if lock.is_acquired:
-                        # renewing the lock
-                        lock.acquire(lock_ttl=60)
-                except etcd.EtcdLockExpired:
-                    continue
-                gevent.sleep(10)
+                    NS._int.wclient.write("clusters/%s/sync_status" % NS.tendrl_context.integration_id,
+                                          "in_progress", prevExist=False)
+                except (etcd.EtcdAlreadyExist, etcd.EtcdCompareFailed) as ex:
+                    pass
+
                 subprocess.call(
                     [
                         'gluster',
@@ -108,7 +140,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     hostname=peers['peer%s.primary_hostname' % index],
                                     state=peers['peer%s.state' % index]
                                 )
-                            peer.save()
+                            peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
                             break
@@ -147,6 +179,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 except etcd.EtcdKeyNotFound:
                                     pass
 
+                            rebalance_status = ""
+                            if volumes[
+                                    'volume%s.type' % index
+                            ].startswith("Distribute"):
+                                status = rebal_stat.get_rebalance_status(volumes[
+                                    'volume%s.name' % index
+                                ])
+                                if status:
+                                    rebalance_status = status.replace(" ", "_")
+                                else:
+                                    rebalance_status = "not_started"
+                            
                             volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
@@ -196,6 +240,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 snapd_inited=volumes[
                                     'volume%s.snapd_svc.inited' % index
                                 ],
+                                rebal_status=rebalance_status,
+                            )
+                            volume.save(ttl=SYNC_TTL)
+                            rebalance_details = NS.gluster.objects.RebalanceDetails(
+                                vol_id=volumes[
+                                    'volume%s.id' % index
+                                ],
                                 rebal_id=volumes[
                                     'volume%s.rebalance.id' % index
                                 ],
@@ -218,7 +269,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            volume.save()
+                            rebalance_details.save(ttl=SYNC_TTL)
                             b_index = 1
                             # ipv4 address of current node
                             try:
@@ -250,18 +301,23 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         hostname not in network_ip):
                                         b_index += 1
                                         continue
+                                    sub_vol_size = (int(volumes['volume%s.brickcount' % index])) / int(
+                                        volumes[
+                                            'volume%s.subvol_count' % index
+                                        ]
+                                    )
+                                    brick_name = NS.node_context.fqdn + ":" + volumes[
+                                        'volume%s.brick%s.path' % (
+                                            index, b_index
+                                        )
+                                    ].split(":")[-1].replace("/","_")
 
                                     # Raise alerts if the brick path changes
                                     try:
                                         stored_brick_status = NS._int.client.read(
-                                            "clusters/%s/Volumes/%s/Bricks/%s/status" % (
+                                            "clusters/%s/Bricks/all/%s/status" % (
                                                 NS.tendrl_context.integration_id,
-                                                volumes['volume%s.id' % index],
-                                                volumes[
-                                                    'volume%s.brick%s.path' % (
-                                                        index, b_index
-                                                    )
-                                                ].replace("/", "_")
+                                                brick_name
                                             )
                                         ).value
                                         current_status = volumes.get(
@@ -299,8 +355,21 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     except etcd.EtcdKeyNotFound:
                                         pass
 
+                                    vol_brick_path = "clusters/%s/Volumes/%s/Bricks/subvolume%s/%s" % (
+                                        NS.tendrl_context.integration_id,
+                                        volumes['volume%s.id' % index],
+                                        str((b_index - 1) / sub_vol_size),
+                                        brick_name
+                                    )
+
+                                    NS._int.wclient.write(
+                                        vol_brick_path,
+                                        ""
+                                    )
+
                                     brick = NS.gluster\
                                         .objects.Brick(
+                                            brick_name,
                                             vol_id=volumes['volume%s.id' % index],
                                             sequence_number=b_index, 
                                             path=volumes[
@@ -312,6 +381,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             port=volumes.get(
                                                 'volume%s.brick%s.port' % (
                                                     index, b_index)),
+                                            used=True,
                                             status=volumes.get(
                                                  'volume%s.brick%s.status' % (
                                                     index, b_index)),
@@ -326,7 +396,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                     volumes['volume%s.brick%s.path' % (
                                                         index, b_index)])
                                         )
-                                    brick.save()
+                                    brick.save(ttl=SYNC_TTL)
 
                                     b_index += 1
                                 except KeyError:
@@ -417,13 +487,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     quorum_status=volume.quorum_status,
                                     snapd_status=volume.snapd_status,
                                     snapd_inited=volume.snapd_inited,
-                                    rebal_id=volume.rebal_id,
                                     rebal_status=volume.rebal_status,
-                                    rebal_failures=volume.rebal_failures,
-                                    rebal_skipped=volume.rebal_skipped,
-                                    rebal_lookedup=volume.rebal_lookedup,
-                                    rebal_files=volume.rebal_files,
-                                    rebal_data=volume.rebal_data
                                 ).save()
                     connection_count = None
                     connection_active  = None
@@ -490,6 +554,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         used_capacity=0,
                         pcnt_used=0
                     ).save()
+                    
+                _cluster = NS.tendrl.objects.Cluster(integration_id=NS.tendrl_context.integration_id)
+                if _cluster.exists():
+                    _cluster.sync_status = "done"
+                    _cluster.last_sync = str(tendrl_now())
+                    _cluster.save()
+
             except Exception as ex:
                 Event(
                     ExceptionMessage(
@@ -500,8 +571,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
-            finally:
-                lock.release()                
+                raise ex
 
         Event(
             Message(

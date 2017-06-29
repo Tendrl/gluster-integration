@@ -30,19 +30,35 @@ namespace.gluster:
       tags:
        - "provisioner/$TendrlContext.integration_id"
       atoms:
-        - tendrl.gluster.objects.GlusterBrick.atoms.Create
+        - gluster.objects.Brick.atoms.Create
       help: "Create gluster bricks that can be used by volumes"
       enabled: true
       inputs:
         mandatory:
           - Cluster.node_configuration
         optional:
-          - GlusterBrick.disk_type
-          - GlusterBrick.disk_count
-          - GlusterBrick.stripe_size
-      run: tendrl.gluster.flows.CreateBrick
+          - Brick.disk_type
+          - Brick.disk_count
+          - Brick.stripe_size
+      run: gluster.flows.CreateBrick
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8d
+      version: 1
+    GenerateBrickMapping:
+      tags:
+       - "provisioner/$TendrlContext.integration_id"
+      atoms:
+        - gluster.objects.Volume.atoms.GenerateBrickMapping
+      help: "Get brick mapping for a gluster volume"
+      enabled: true
+      inputs:
+        mandatory:
+          - Cluster.node_configuration
+          - Volume.brick_count
+          - Volume.subvol_size
+      run: gluster.flows.GenerateBrickMapping
+      type: Create
+      uuid: b8dd2b4a-96de-4ded-b17d-374d26ec7593
       version: 1
   objects:
     GlobalDetails:
@@ -134,17 +150,101 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       help: gluster volume options
-    Brick:
+    RebalanceDetails:
       attrs:
         vol_id:
           help: Volume id
           type: String
+        rebal_status:
+          help: "Status of rebalance task"
+          type: String
+        rebal_failures:
+          help: "Failed no of files for rebalance"
+          type: Integer
+        rebal_id:
+          help: "UUID of the rabalance task"
+          typoe: String
+        rebal_lookedup:
+          help: "Looked up files for rebalance"
+          type: Integer
+        rebal_files:
+          help: "No of files rebalanced"
+          type: Integer
+        rebal_data:
+          help: "Rebalance data"
+          type: String
+        rebal_skipped:
+          help: "Skipped files while rebalance"
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails/$TendrlContext.node_id
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails
+      help: gluster volume rebalance details
+    Brick:
+      atoms:
+        Create:
+          enabled: true
+          inputs:
+            mandatory:
+              - Cluster.node_configuration
+            optional:
+              - Brick.disk_type
+              - Brick.disk_count
+              - Brick.stripe_size
+          name: create_brick
+          run: gluster.objects.Brick.atoms.Create
+          type: Create
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d9649d
+          help: Create gluster brick for gluster volume
+      attrs:
+        disk:
+          help: the underlying disk for the device
+          type: String
+        name:
+          help: name of the brick
+          type: String
+        node_id:
+          help: node_id of the node on which brick recides
+          type: String
+        mount_path:
+          help: mount point of the brick
+          type: String
+        brick_path:
+          help: Brick path
+          type: int
+        disk_type:
+          help: type of the disk(raid10/raid6/jbods)
+          type: String
+        disk_count:
+          help: disk count in case the disk is a raid device
+          type: String
+        stripe_size:
+          help: stripe size in case disk is a raid device
+          type: String
+        size:
+          help: size of the underlying device
+          type: String
+        lv:
+          help: The underlying lv name of the brick
+          type: String
+        pv:
+          help: The underlying pv name of the brick
+          type: String
+        vg:
+          help: The underlying vg name of the brick
+          type: String
+        pool:
+          help: The underlying pool name of the brick
+          type: String
+        vol_id:
+          help: Volume id
+          type: String
+        used:
+          help: whether the brick is part of a volume
+          type: Boolean
         sequence_number:
           help: Sequence number amongst gluster replica-set
           type: Integer
-        path:
-          help: Path of the brick
-          type: String
         hostname:
           help: Name of the host
           type: String
@@ -164,69 +264,9 @@ namespace.gluster:
           help: Brick utilization
           type: Dict        
       enabled: true
-      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks/$Brick.path
-      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Bricks
-      help: gluster volume bricks
-    GlusterBrick:
-      atoms:
-        Create:
-          enabled: true
-          inputs:
-            mandatory:
-              - Cluster.node_configuration
-            optional:
-              - GlusterBrick.disk_type
-              - GlusterBrick.disk_count
-              - GlusterBrick.stripe_size
-          name: create_brick
-          run: tendrl.gluster.objects.GlusterBrick.atoms.Create
-          type: Create
-          uuid: 242f6190-9b37-11e6-950d-a24fc0d9649d
-          help: Create gluster brick for gluster volume
-      attrs:
-        disk:
-          help: the underlying disk for the device
-          type: String
-        name:
-          help: name of the brick
-          type: String
-        node_id:
-          help: node_id of the node on which brick recides
-          type: String
-        volume_name:
-          help: volume_name of the volume to which brick belongs
-          type: String
-        mount_path:
-          help: mount point of the brick
-          type: String
-        brick_path:
-          help: Brick path
-          type: int
-        disk_type:
-          help: type of the disk(raid10/raid6/jbods)
-          type: String
-        disk_count:
-          help: disk count in case the disk is a raid device
-          type: String
-        stripe_size:
-          help: stripe size in case disk is a raid device
-          type: String
-        lv:
-          help: The underlying lv name of the brick
-          type: String
-        pv:
-          help: The underlying pv name of the brick
-          type: String
-        vg:
-          help: The underlying vg name of the brick
-          type: String
-        pool:
-          help: The underlying pool name of the brick
-          type: String
-      enabled: true
-      value: clusters/$TendrlContext.integration_id/nodes/$TendrlContext.node_id/GlusterBricks/$GlusterBrick.brick_name
-      list:  clusters/$TendrlContext.integration_id/nodes/$TendrlContext.node_id/GlusterBricks/all
-      help: gluster bricks that can be used for gluster volumes
+      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name
+      list:  clusters/$TendrlContext.integration_id/Bricks/all
+      help: gluster brick details
     Volume:
       atoms:
         Create:
@@ -247,6 +287,18 @@ namespace.gluster:
           type: Create
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
           help: Create gluster volume
+        GenerateBrickMapping:
+          enabled: true
+          inputs:
+            mandatory:
+              - Cluster.node_configuration
+              - Volume.brick_count
+              - Volume.subvol_size
+          name: get_mapping
+          run: gluster.objects.Volume.atoms.GenerateBrickMapping
+          type: Create
+          uuid: aa355f87-fd02-488c-bab8-2f755e2c1dfc
+          help: Get brick mapping for gluster volume
         Delete:
           enabled: true
           inputs:
@@ -646,14 +698,11 @@ namespace.gluster:
         vol_type:
           help: "Type of the volume"
           type: String
-        rebal_data:
-          help: "Rebalance data"
-          type: String
-        rebal_skipped:
-          help: "Skipped files while rebalance"
-          type: String
         subvol_count:
           help: "Count of subvolumes"
+          type: Integer
+        subvol_size:
+          help: "Count of bricks in subvolumes"
           type: Integer
         brick_count:
           help: "Count of bricks"
@@ -667,17 +716,8 @@ namespace.gluster:
         status:
           help: "Status of the volume"
           type: String
-        rebal_id:
-          help: "UUID of the rabalance task"
-          typoe: String
-        rebal_lookedup:
-          help: "Looked up files for rebalance"
-          type: Integer
         snap_count:
           help: "Count of the snapshots"
-          type: Integer
-        rebal_files:
-          help: "No of files rebalanced"
           type: Integer
         snapd_status:
           help: "Status of snapd"
@@ -688,12 +728,6 @@ namespace.gluster:
         quorum_status:
           help: "Quorum status"
           type: String
-        rebal_status:
-          help: "Status of rebalance task"
-          type: String
-        rebal_failures:
-          help: "Failed no of files for rebalance"
-          type: Integer
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
       list: clusters/$TendrlContext.integration_id/Volumes
