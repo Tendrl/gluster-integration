@@ -1,14 +1,11 @@
 import etcd
-import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class Create(objects.BaseAtom):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(Create, self).__init__(*args, **kwargs)
 
@@ -82,7 +79,9 @@ class Create(objects.BaseAtom):
                     brick_path = brick.values()[0]
                     try:
                         # Find node id using ip
-                        node_id = NS._int.client.read("indexes/ip/%s" % ip).value
+                        node_id = NS._int.client.read(
+                            "indexes/ip/%s" % ip
+                        ).value
                     except etcd.EtcdKeyNotFound:
                         # Find node id using hostname
                         nodes = NS._int.client.read("nodes/")
@@ -97,13 +96,13 @@ class Create(objects.BaseAtom):
                     NS._int.wclient.delete(
                         ("clusters/%s/Bricks/free/%s") % (
                             NS.tendrl_context.integration_id,
-                            brick_path.replace("/","_")
+                            brick_path.replace("/", "_")
                         )
                     )
                     NS._int.wclient.write(
                         ("clusters/%s/Bricks/used/%s") % (
                             NS.tendrl_context.integration_id,
-                            brick_path.replace("/","_")
+                            brick_path.replace("/", "_")
                         ),
                         ""
                     )

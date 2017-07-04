@@ -26,7 +26,9 @@ class CheckVolumeAvailable(objects.BaseAtom):
 
             if volumes:
                 for entry in volumes.leaves:
-                    volume = Volume(vol_id=entry.key.split("Volumes/")[-1]).load()
+                    volume = Volume(
+                        vol_id=entry.key.split("Volumes/")[-1]
+                    ).load()
                     if volume.name == self.parameters['Volume.volname']:
                         return True
 
@@ -38,13 +40,15 @@ class CheckVolumeAvailable(objects.BaseAtom):
                         priority="error",
                         publisher=NS.publisher_id,
                         payload={
-                            "message": "Volume %s not reflected in tendrl yet. Timing out" %
-                            self.parameters['Volume.volname']
+                            "message": "Volume %s not reflected in tendrl"
+                            " yet. Timing out" % self.parameters[
+                                'Volume.volname'
+                            ]
                         },
                         job_id=self.parameters['job_id'],
                         flow_id=self.parameters['flow_id'],
-                        cluster_id=NS.tendrl_context.integration_id,
-                   )
+                        cluster_id=NS.tendrl_context.integration_id
+                    )
                 )
                 raise AtomExecutionFailedError(
                     "Volume %s not reflected in tendrl yet. Timing out" %

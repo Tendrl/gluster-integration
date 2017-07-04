@@ -6,16 +6,16 @@ import re
 import socket
 import subprocess
 
-from tendrl.gluster_integration.sds_sync import brick_utilization
-from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 from tendrl.commons.event import Event
-from tendrl.commons.message import ExceptionMessage, Message
+from tendrl.commons.message import ExceptionMessage
+from tendrl.commons.message import Message
+from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
-
-from tendrl.commons import sds_sync
-from tendrl.gluster_integration import ini2json
 from tendrl.commons.utils.time_utils import now as tendrl_now
+from tendrl.gluster_integration import ini2json
+from tendrl.gluster_integration.sds_sync import brick_utilization
+from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -68,20 +68,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             )
         )
 
-        gluster_brick_dir = NS.gluster.objects.\
-                            GlusterBrickDir()
+        gluster_brick_dir = NS.gluster.objects.GlusterBrickDir()
         gluster_brick_dir.save()
 
         try:
             etcd_utils.read(
-                "clusters/%s/cluster_network" % NS.tendrl_context.integration_id
+                "clusters/%s/"
+                "cluster_network" % NS.tendrl_context.integration_id
             )
         except etcd.EtcdKeyNotFound:
             try:
                 node_networks = etcd_utils.read(
                     "nodes/%s/Networks" % NS.node_context.node_id
                 )
-                # TODO: (team) this logic needs to change later
+                # TODO(team) this logic needs to change later
                 # multiple networks supported for gluster use case
                 node_network = NS.tendrl.objects.NodeNetwork(
                     interface=node_networks.leaves.next().key.split('/')[-1]
@@ -96,7 +96,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     Message(
                         priority="error",
                         publisher=NS.publisher_id,
-                        payload={"message": "Failed to sync cluster network details"}
+                        payload={
+                            "message": "Failed to sync cluster network details"
+                        }
                     )
                 )
                 raise ex
@@ -107,8 +109,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     int(NS.config.data.get("sync_interval", 10))
                 )
                 try:
-                    NS._int.wclient.write("clusters/%s/sync_status" % NS.tendrl_context.integration_id,
-                                          "in_progress", prevExist=False)
+                    NS._int.wclient.write(
+                        "clusters/%s/"
+                        "sync_status" % NS.tendrl_context.integration_id,
+                        "in_progress",
+                        prevExist=False
+                    )
                 except (etcd.EtcdAlreadyExist, etcd.EtcdCompareFailed) as ex:
                     pass
 
@@ -137,7 +143,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             peer = NS.gluster.\
                                 objects.Peer(
                                     peer_uuid=peers['peer%s.uuid' % index],
-                                    hostname=peers['peer%s.primary_hostname' % index],
+                                    hostname=peers[
+                                        'peer%s.primary_hostname' % index
+                                    ],
                                     state=peers['peer%s.state' % index]
                                 )
                             peer.save(ttl=SYNC_TTL)
@@ -152,7 +160,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     while True:
                         try:
                             # Raise alerts for volume state change.
-                            cluster_provisioner = "provisioner/%s" % NS.tendrl_context.integration_id
+                            cluster_provisioner = "provisi" + \
+                                                  "oner/%s" % \
+                                                  NS.tendrl_context.\
+                                                  integration_id
                             if cluster_provisioner in tag_list:
                                 try:
                                     stored_volume_status = NS._int.client.read(
@@ -161,21 +172,28 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             volumes['volume%s.id' % index]
                                         )
                                     ).value
-                                    current_status = volumes['volume%s.status' % index]
+                                    current_status = volumes[
+                                        'volume%s.status' % index
+                                    ]
                                     if current_status != stored_volume_status:
-                                        msg = "Status of volume: %s changed from %s to %s" % (
-                                            volumes['volume%s.name' % index],
-                                            stored_volume_status,
-                                            current_status
-                                        )
-                                        instance = "volume_%s" % volumes['volume%s.name' % index]
+                                        msg = "Status of volume: %s " + \
+                                              "changed from %s to %s" % (
+                                                  volumes[
+                                                      'volume%s.name' % index
+                                                  ],
+                                                  stored_volume_status,
+                                                  current_status
+                                              )
+                                        instance = "volume_%s" % volumes[
+                                            'volume%s.name' % index
+                                        ]
                                         self._emit_event(
                                             "volume_status",
                                             current_status,
                                             msg,
                                             instance
-                                        )                                        
-                                    
+                                        )
+
                                 except etcd.EtcdKeyNotFound:
                                     pass
 
@@ -183,14 +201,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if volumes[
                                     'volume%s.type' % index
                             ].startswith("Distribute"):
-                                status = rebal_stat.get_rebalance_status(volumes[
-                                    'volume%s.name' % index
-                                ])
+                                status = rebal_stat.get_rebalance_status(
+                                    volumes[
+                                        'volume%s.name' % index
+                                    ]
+                                )
                                 if status:
                                     rebalance_status = status.replace(" ", "_")
                                 else:
                                     rebalance_status = "not_started"
-                            
+
                             volume = NS.gluster.objects.Volume(
                                 vol_id=volumes[
                                     'volume%s.id' % index
@@ -227,7 +247,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ],
                                 disperse_count=volumes[
                                     'volume%s.disperse_count' % index
-                                 ],
+                                ],
                                 redundancy_count=volumes[
                                     'volume%s.redundancy_count' % index
                                 ],
@@ -243,7 +263,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 rebal_status=rebalance_status,
                             )
                             volume.save(ttl=SYNC_TTL)
-                            rebalance_details = NS.gluster.objects.RebalanceDetails(
+                            rebal_det = NS.gluster.objects.RebalanceDetails(
                                 vol_id=volumes[
                                     'volume%s.id' % index
                                 ],
@@ -269,13 +289,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     'volume%s.rebalance.data' % index
                                 ],
                             )
-                            rebalance_details.save(ttl=SYNC_TTL)
+                            rebal_det.save(ttl=SYNC_TTL)
                             b_index = 1
                             # ipv4 address of current node
                             try:
                                 network_ip = []
                                 networks = NS._int.client.read(
-                                    "nodes/%s/Networks" % NS.node_context.node_id
+                                    "nodes/%s/Networks" % NS.node_context.
+                                    node_id
                                 )
                                 for interface in networks.leaves:
                                     key = interface.key.split("/")[-1]
@@ -287,36 +308,51 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     ExceptionMessage(
                                         priority="debug",
                                         publisher=NS.publisher_id,
-                                        payload={"message": "Could not find any ipv4 networks for node %s" % NS.node_context.node_id,
-                                                 "exception": ex
-                                                 }
+                                        payload={
+                                            "message": "Could not find "
+                                            "any ipv4 networks for node"
+                                            " %s" % NS.node_context.node_id,
+                                            "exception": ex
+                                        }
                                     )
                                 )
                             while True:
                                 try:
                                     # Update brick node wise
-                                    hostname  = volumes['volume%s.brick%s.hostname' % (
-                                        index, b_index)]
+                                    hostname = volumes[
+                                        'volume%s.brick%s.hostname' % (
+                                            index, b_index)
+                                    ]
                                     if (NS.node_context.fqdn != hostname) and (
                                         hostname not in network_ip):
                                         b_index += 1
                                         continue
-                                    sub_vol_size = (int(volumes['volume%s.brickcount' % index])) / int(
+                                    sub_vol_size = (int(
+                                        volumes[
+                                            'volume%s.brickcount' % index
+                                        ]
+                                    )) / int(
                                         volumes[
                                             'volume%s.subvol_count' % index
                                         ]
                                     )
-                                    brick_name = NS.node_context.fqdn + ":" + volumes[
-                                        'volume%s.brick%s.path' % (
-                                            index, b_index
+                                    brick_name = NS.node_context.fqdn
+                                    brick_name += ":"
+                                    brick_name += volumes[
+                                        'volume%s.brick%s'
+                                        '.path' % (
+                                            index,
+                                            b_index
                                         )
-                                    ].split(":")[-1].replace("/","_")
+                                    ].split(":")[-1].replace("/", "_")
 
                                     # Raise alerts if the brick path changes
                                     try:
-                                        stored_brick_status = NS._int.client.read(
-                                            "clusters/%s/Bricks/all/%s/status" % (
-                                                NS.tendrl_context.integration_id,
+                                        sbs = NS._int.client.read(
+                                            "clusters/%s/Bricks/all/"
+                                            "%s/status" % (
+                                                NS.tendrl_context.
+                                                integration_id,
                                                 brick_name
                                             )
                                         ).value
@@ -326,19 +362,28 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 b_index
                                             )
                                         )
-                                        if current_status != stored_brick_status:
-                                            msg = "Status of brick: %s under volume %s changed from %s to %s" % (
-                                                volumes[
-                                                    'volume%s.brick%s.path' % (
-                                                        index, b_index
-                                                    )
-                                                ],
-                                                volumes['volume%s.name' % index],
-                                                stored_brick_status,
-                                                current_status
-                                            )
+                                        if current_status != sbs:
+                                            msg = "Status of brick: %s " + \
+                                                  "under volume %s chan" + \
+                                                  "ged from %s to %s" % (
+                                                      volumes[
+                                                          'volume%s.brick%s'
+                                                          '.path' % (
+                                                              index,
+                                                              b_index
+                                                          )
+                                                      ],
+                                                      volumes[
+                                                          'volume%s.'
+                                                          'name' % index
+                                                      ],
+                                                      sbs,
+                                                      current_status
+                                                  )
                                             instance = "volume_%s|brick_%s" % (
-                                                volumes['volume%s.name' % index],
+                                                volumes[
+                                                    'volume%s.name' % index
+                                                ],
                                                 volumes[
                                                     'volume%s.brick%s.path' % (
                                                         index, b_index
@@ -350,15 +395,23 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 current_status,
                                                 msg,
                                                 instance
-                                            )                                        
-                                    
+                                            )
+
                                     except etcd.EtcdKeyNotFound:
                                         pass
 
-                                    vol_brick_path = "clusters/%s/Volumes/%s/Bricks/subvolume%s/%s" % (
+                                    brk_pth = "clusters/%s/Volumes/%s" + \
+                                              "/Bricks/subvolume%s/%s"
+
+                                    vol_brick_path = brk_pth % (
                                         NS.tendrl_context.integration_id,
-                                        volumes['volume%s.id' % index],
-                                        str((b_index - 1) / sub_vol_size),
+                                        volumes[
+                                            'volume%s'
+                                            '.id' % index
+                                        ],
+                                        str(
+                                            (b_index - 1) / sub_vol_size
+                                        ),
                                         brick_name
                                     )
 
@@ -370,8 +423,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     brick = NS.gluster\
                                         .objects.Brick(
                                             brick_name,
-                                            vol_id=volumes['volume%s.id' % index],
-                                            sequence_number=b_index, 
+                                            vol_id=volumes[
+                                                'volume%s.id' % index
+                                            ],
+                                            sequence_number=b_index,
                                             path=volumes[
                                                 'volume%s.brick%s.path' % (
                                                     index, b_index)],
@@ -383,18 +438,32 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                     index, b_index)),
                                             used=True,
                                             status=volumes.get(
-                                                 'volume%s.brick%s.status' % (
-                                                    index, b_index)),
+                                                'volume%s.brick%s.status' % (
+                                                    index, b_index
+                                                )
+                                            ),
                                             filesystem_type=volumes.get(
-                                                'volume%s.brick%s.filesystem_type' % (
-                                                    index, b_index)),
+                                                'volume%s.brick%s.'
+                                                'filesystem_type' % (
+                                                    index, b_index
+                                                )
+                                            ),
                                             mount_opts=volumes.get(
-                                                'volume%s.brick%s.mount_options' % (
-                                                    index, b_index)),
-                                            utilization=brick_utilization\
-                                                .brick_utilization(
-                                                    volumes['volume%s.brick%s.path' % (
-                                                        index, b_index)])
+                                                'volume%s.brick%s'
+                                                '.mount_options' % (
+                                                    index, b_index
+                                                )
+                                            ),
+                                            utilization=brick_utilization.
+                                            brick_utilization(
+                                                volumes[
+                                                    'volume%s.brick%s'
+                                                    '.path' % (
+                                                        index,
+                                                        b_index
+                                                    )
+                                                ]
+                                            )
                                         )
                                     brick.save(ttl=SYNC_TTL)
 
@@ -445,7 +514,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # status": "healthy", "usable_capacity": 52181536768,
                     # used_capacity": 2117836800, "volume_count": 1,
                     # volume_summary": [{"snapshot_count": 0, "state": "up",
-                    # usable_capacity": 52181536768, "used_capacity": 2117836800,
+                    # usable_capacity":52181536768,"used_capacity":2117836800,
                     # volume_name": "vol1"}]}\n"
 
                     out_dict = json.loads(stdout[stdout.index('{'): -1])
@@ -453,14 +522,21 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         raw_capacity=out_dict['raw_capacity'],
                         usable_capacity=out_dict['usable_capacity'],
                         used_capacity=out_dict['used_capacity'],
-                        pcnt_used=(out_dict['used_capacity'] * 100 / out_dict['usable_capacity'])
+                        pcnt_used=(
+                            out_dict[
+                                'used_capacity'
+                            ] * 100 / out_dict['usable_capacity']
+                        )
                     ).save()
                     volume_up_degraded = 0
                     for item in out_dict['volume_summary']:
+                        if not item:
+                            continue
                         if "up(degraded)" in item['state']:
                             volume_up_degraded = volume_up_degraded + 1
                         volumes = NS._int.client.read(
-                            "clusters/%s/Volumes" % NS.tendrl_context.integration_id
+                            "clusters/%s/Volumes" % NS.tendrl_context.
+                            integration_id
                         )
                         for child in volumes._children:
                             volume = NS.gluster.objects.Volume(
@@ -469,9 +545,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if volume.name == item['volume_name']:
                                 NS.gluster.objects.Volume(
                                     vol_id=child['key'].split('/')[-1],
-                                    usable_capacity=str(item['usable_capacity']),
+                                    usable_capacity=str(
+                                        item['usable_capacity']
+                                    ),
                                     used_capacity=str(item['used_capacity']),
-                                    pcnt_used=str(item['used_capacity'] * 100 / item['usable_capacity']),
+                                    pcnt_used=str(
+                                        item['used_capacity'] * 100 / item[
+                                            'usable_capacity']
+                                    ),
                                     vol_type=volume.vol_type,
                                     name=volume.name,
                                     transport_type=volume.transport_type,
@@ -490,26 +571,28 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     rebal_status=volume.rebal_status,
                                 ).save()
                     connection_count = None
-                    connection_active  = None
+                    connection_active = None
                     # gstatus result:
-                    # Product: Community          Capacity:  25.00 GiB(raw bricks)
-                    # Status: HEALTHY                        3.00 GiB(raw used)
-                    # Glusterfs: 3.9.0                         87.00 GiB(usable from volumes)
-                    # OverCommit: Yes               Snapshots:   0
-                    # Nodes       :  2/  2		  Volumes:   4 Up
-                    # Self Heal   :  0/  0		             0 Up(Degraded)
-                    # Bricks      :  7/  7		             0 Up(Partial)
-                    # Connections :  1/   2                     0 Down
+                    # Product: Community      Capacity:  25.00 GiB(raw bricks)
+                    # Status: HEALTHY         3.00 GiB(raw used)
+                    # Glusterfs: 3.9.0        87.00 GiB(usable from volumes)
+                    # OverCommit: Yes         Snapshots:   0
+                    # Nodes       :  2/  2    Volumes:   4 Up
+                    # Self Heal   :  0/  0    0 Up(Degraded)
+                    # Bricks      :  7/  7    0 Up(Partial)
+                    # Connections :  1/   2   0 Down
 
                     # grep result:
                     # Connections :  0/   0        1 Down
-                    cmd = cmd_utils.Command('gstatus -s | grep Connections', True)
+                    cmd = cmd_utils.Command(
+                        'gstatus -s | grep Connections', True
+                    )
                     out, err, rc = cmd.run()
                     if not err:
                         if "Connection" in out:
                             out = (re.split(r'\s{5,}', out)[0])
                             out = out.split(":")[1].replace(" ", "").split("/")
-                            connection_active  = int(out[0])
+                            connection_active = int(out[0])
                             connection_count = int(out[1])
                     NS.gluster.objects.GlobalDetails(
                         status=out_dict['status'],
@@ -520,18 +603,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
                 else:
                     # If gstatus does not return any status details in absence
-                    # of volumes, default set the status and utilization details
-                    # A sample output from gstatus if no volumes in cluster is as below
+                    # of volumes, default set the status and utilization
+                    # details A sample output from gstatus if no volumes
+                    # in cluster is as below
                     #
                     # >gstatus -o json
                     # This cluster doesn't have any volumes/daemons running.
-                    # The output below shows the current nodes attached to this host.
+                    # The output below shows the current nodes attached to
+                    # this host.
                     #
-                    # UUID					Hostname    	State
-                    # 6a48d2f7-3859-4542-86e0-0a8146588f31	{FQDN-1}	Connected
-                    # 7380e303-83b6-4728-918f-e99029bc1bce	{FQDN-2}	Connected
-                    # 751ecb42-da85-4c3d-834d-9824d1ce7fd3	{FQDN-3}	Connected
-                    # 388b708c-a86c-4a16-9a6f-f0d53ea79a51	localhost   	Connected
+                    # UUID				   Hostname  State
+                    # 6a48d2f7-3859-4542-86e0-0a8146588f31 {FQDN-1}  Connected
+                    # 7380e303-83b6-4728-918f-e99029bc1bce {FQDN-2}  Connected
+                    # 751ecb42-da85-4c3d-834d-9824d1ce7fd3 {FQDN-3}  Connected
+                    # 388b708c-a86c-4a16-9a6f-f0d53ea79a51 localhost Connected
 
                     out_lines = stdout.split('\n')
                     connected = True
@@ -554,8 +639,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         used_capacity=0,
                         pcnt_used=0
                     ).save()
-                    
-                _cluster = NS.tendrl.objects.Cluster(integration_id=NS.tendrl_context.integration_id)
+
+                _cluster = NS.tendrl.objects.Cluster(
+                    integration_id=NS.tendrl_context.integration_id
+                )
                 if _cluster.exists():
                     _cluster.sync_status = "done"
                     _cluster.last_sync = str(tendrl_now())
@@ -580,4 +667,3 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 payload={"message": "%s complete" % self.__class__.__name__}
             )
         )
-

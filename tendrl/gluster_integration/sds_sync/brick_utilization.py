@@ -50,9 +50,9 @@ def _get_stats(mount_point):
 
 def get_lvs():
     _lvm_cmd = ("lvm vgs --unquoted --noheading --nameprefixes "
-                 "--separator $ --nosuffix --units m -o lv_uuid,"
-                 "lv_name,data_percent,pool_lv,lv_attr,lv_size,"
-                 "lv_path,lv_metadata_size,metadata_percent,vg_name")
+                "--separator $ --nosuffix --units m -o lv_uuid,"
+                "lv_name,data_percent,pool_lv,lv_attr,lv_size,"
+                "lv_path,lv_metadata_size,metadata_percent,vg_name")
     cmd = cmd_utils.Command(_lvm_cmd, True)
     out, err, rc = cmd.run()
     if rc != 0:
@@ -134,24 +134,43 @@ def get_mount_stats(mount_path):
 
 def brick_utilization(path):
     """{
+
          'used_percent': 0.6338674168297445,
+
          'used': 0.0316314697265625,
+
          'free_inode': 2621390,
+
          'used_inode': 50,
+
          'free': 4.9586029052734375,
+
          'total_inode': 2621440,
+
          'mount_point': u'/bricks/brick2',
+
          'metadata_used_percent': None,
+
          'total': 4.990234375,
+
          'thinpool_free': None,
+
          'metadata_used': None,
+
          'thinpool_used_percent': None,
+
          'used_percent_inode': 0.0019073486328125,
+
          'thinpool_used': None,
+
          'metadata_size': None,
+
          'metadata_free': None,
+
          'thinpool_size': None
-    }"""
+
+    }
+    """
     # Below logic will find mount_path from path
     mount_path = [path.split(":")[1]]
     return get_mount_stats(mount_path).values()[0]

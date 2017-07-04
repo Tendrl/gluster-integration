@@ -1,7 +1,6 @@
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
-from tendrl.gluster_integration.objects.brick import Brick
 
 
 class Create(objects.BaseAtom):
@@ -11,19 +10,25 @@ class Create(objects.BaseAtom):
     def run(self):
         bricks = self.parameters.get('Cluster.node_configuration')
         brick_dict = {}
-        brick_prefix = NS.config.data.get('gluster_bricks_dir', "/tendrl_gluster_bricks")
+        brick_prefix = NS.config.data.get(
+            'gluster_bricks_dir',
+            "/tendrl_gluster_bricks"
+        )
         for k, v in bricks.iteritems():
             key = "nodes/%s/NodeContext/fqdn" % k
             host = NS._int.client.read(key).value
             brick_dict[host] = {}
             for dev_name, details in v.iteritems():
                 dev = dev_name.split("/")[-1]
-                mount_path = brick_prefix + "/" + details["brick_name"] + "_mount"
+                mount_path = brick_prefix + "/" + details[
+                    "brick_name"
+                ] + "_mount"
                 brick_path = mount_path + "/" + details["brick_name"]
-                dev_size_path = "nodes/%s/LocalStorage/BlockDevices/all/%s/size" % (
-                    k,
-                    dev_name.replace("/",'_')[1:],
-                )
+                dev_size_path = "nodes/%s/LocalStorage/BlockDevices" + \
+                                "/all/%s/size" % (
+                                    k,
+                                    dev_name.replace("/", '_')[1:],
+                                )
                 size = NS._int.client.read(dev_size_path).value
                 brick_dict[host].update({
                     dev: {
@@ -37,7 +42,7 @@ class Create(objects.BaseAtom):
                         "vg": "tendrl" + details["brick_name"] + "_vg",
                     }
                 })
-        
+
         args = {}
         if self.parameters.get('Brick.disk_type') is not None:
             disk_type = self.parameters.get('Brick.disk_type')
@@ -98,7 +103,7 @@ class Create(objects.BaseAtom):
                     ).save()
                     free_brick_key = "clusters/%s/Bricks/free/%s" % (
                         NS.tendrl_context.integration_id,
-                        brick_name.replace("/","_")
+                        brick_name.replace("/", "_")
                     )
                     NS._int.wclient.write(free_brick_key, "")
             return True

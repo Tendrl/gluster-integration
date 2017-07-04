@@ -2,14 +2,14 @@ import etcd
 import gevent.event
 import signal
 
-from tendrl import gluster_integration
-from tendrl.commons import TendrlNS
 from tendrl.commons.event import Event
-from tendrl.commons.message import Message
 from tendrl.commons import manager as common_manager
-from tendrl.gluster_integration import sds_sync
+from tendrl.commons.message import Message
+from tendrl.commons import TendrlNS
+from tendrl import gluster_integration
 from tendrl.gluster_integration.gdeploy_wrapper.manager import \
     ProvisioningManager
+from tendrl.gluster_integration import sds_sync
 
 
 class GlusterIntegrationManager(common_manager.Manager):
@@ -60,7 +60,7 @@ def main():
             " in Tendrl and include Node %s" %
             NS.node_context.node_id
         )
-    
+
     NS.tendrl_context.save()
     NS.gluster.definitions.save()
     NS.gluster.config.save()
@@ -70,7 +70,7 @@ def main():
     if NS.config.data.get("with_internal_profiling", False):
         from tendrl.commons import profiler
         profiler.start()
-        
+
     m = GlusterIntegrationManager()
     m.start()
 

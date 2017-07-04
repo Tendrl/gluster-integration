@@ -1,11 +1,9 @@
 from tendrl.commons.event import Event
-from tendrl.commons.message import Message
 from tendrl.commons import flows
-from tendrl.gluster_integration.objects.volume import Volume
+from tendrl.commons.message import Message
 
 
 class StartVolume(flows.BaseFlow):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(StartVolume, self).__init__(*args, **kwargs)
 
