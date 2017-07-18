@@ -7,7 +7,6 @@ from tendrl.gluster_integration.objects.volume import Volume
 
 
 class VolumeStopped(objects.BaseAtom):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(VolumeStopped, self).__init__(*args, **kwargs)
 

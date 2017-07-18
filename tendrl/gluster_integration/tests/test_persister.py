@@ -1,11 +1,11 @@
 from mock import MagicMock
 import sys
+from tendrl.gluster_integration.persistence import persister
+from tendrl.gluster_integration.persistence import servers
 sys.modules[
     'tendrl.gluster_integration.persistence.sync_objects'] = MagicMock()
-from tendrl.gluster_integration.persistence import persister
 del sys.modules[
     'tendrl.gluster_integration.persistence.sync_objects']
-from tendrl.gluster_integration.persistence import servers
 
 
 class Test_Persister(object):

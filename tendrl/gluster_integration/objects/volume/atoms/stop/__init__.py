@@ -1,19 +1,15 @@
-import subprocess
-
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class Stop(objects.BaseAtom):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(Stop, self).__init__(*args, **kwargs)
 
     def run(self):
         if NS.gdeploy_plugin.stop_volume(
-                self.parameters.get('Volume.volname')
+            self.parameters.get('Volume.volname')
         ):
             Event(
                 Message(

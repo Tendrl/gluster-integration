@@ -14,7 +14,8 @@ class VolumeOptions(objects.BaseObject):
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):
-        self.value = self.value.format(NS.tendrl_context.integration_id,
-                                       self.vol_id
+        self.value = self.value.format(
+            NS.tendrl_context.integration_id,
+            self.vol_id
         )
         return super(VolumeOptions, self).render()

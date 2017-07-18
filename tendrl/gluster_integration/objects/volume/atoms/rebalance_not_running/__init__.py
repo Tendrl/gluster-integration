@@ -1,14 +1,11 @@
 import etcd
-import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class RebalanceNotRunning(objects.BaseAtom):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(RebalanceNotRunning, self).__init__(*args, **kwargs)
 
@@ -55,7 +52,7 @@ class RebalanceNotRunning(objects.BaseAtom):
                 return False
             else:
                 return True
-        except etcd.EtcdKeyNotFound as ex:
+        except etcd.EtcdKeyNotFound:
             Event(
                 Message(
                     priority="error",

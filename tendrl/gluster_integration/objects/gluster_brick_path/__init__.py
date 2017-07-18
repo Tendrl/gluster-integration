@@ -10,10 +10,13 @@ class GlusterBrickDir(objects.BaseObject):
     ):
         super(GlusterBrickDir, self).__init__(*args, **kwargs)
 
-        self.default_brick_dir = default_brick_dir if default_brick_dir else \
-                                  NS.config.data.get(
-                                      'gluster_bricks_dir', "/tendrl_gluster_bricks"
-                                  )
+        if default_brick_dir:
+            self.default_brick_dir = default_brick_dir
+        else:
+            self.default_brick_dir = NS.config.data.get(
+                'gluster_bricks_dir',
+                "/tendrl_gluster_bricks"
+            )
         self.value = 'clusters/{0}/GlusterBrickDir'
 
     def render(self):

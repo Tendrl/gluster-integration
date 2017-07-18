@@ -1,7 +1,6 @@
 from tendrl.commons.event import Event
-from tendrl.commons.message import Message
 from tendrl.commons import flows
-from tendrl.gluster_integration.objects.volume import Volume
+from tendrl.commons.message import Message
 
 
 class ShrinkVolume(flows.BaseFlow):

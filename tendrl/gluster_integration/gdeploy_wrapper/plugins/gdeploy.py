@@ -1,18 +1,14 @@
-from tendrl.gluster_integration.gdeploy_wrapper.provisioner_base import\
-    ProvisionerBasePlugin
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
-
 try:
-    import python_gdeploy.actions
     from python_gdeploy.actions import create_gluster_volume
     from python_gdeploy.actions import delete_volume
+    from python_gdeploy.actions import expand_gluster_volume
+    from python_gdeploy.actions import gluster_brick_provision
+    from python_gdeploy.actions import rebalance_volume
+    from python_gdeploy.actions import shrink_gluster_volume
     from python_gdeploy.actions import start_volume
     from python_gdeploy.actions import stop_volume
-    from python_gdeploy.actions import rebalance_volume
-    from python_gdeploy.actions import expand_gluster_volume
-    from python_gdeploy.actions import shrink_gluster_volume
-    from python_gdeploy.actions import gluster_brick_provision
 except ImportError:
     Event(
         Message(
@@ -25,6 +21,9 @@ except ImportError:
         )
     )
 
+from tendrl.gluster_integration.gdeploy_wrapper.provisioner_base import\
+    ProvisionerBasePlugin
+
 
 class GdeployPlugin(ProvisionerBasePlugin):
     def __init__(self):
@@ -35,7 +34,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
                       redundancy_count=None, tuned_profile=None, force=False):
         args = {}
         if transport:
-            args.update({"transport":transport})
+            args.update({"transport": transport})
         if replica_count:
             args.update({"replica_count": replica_count})
         if disperse_count:
@@ -45,7 +44,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
         if tuned_profile:
             args.update({"tuned_profile": tuned_profile})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
 
         out, err, rc = create_gluster_volume.create_volume(
             volume_name,
@@ -83,9 +82,9 @@ class GdeployPlugin(ProvisionerBasePlugin):
                       format_bricks=None):
         args = {}
         if host:
-            args.update({"host":host})
+            args.update({"host": host})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
 
         out, err, rc = delete_volume.delete_volume(
             volume_name,
@@ -118,15 +117,15 @@ class GdeployPlugin(ProvisionerBasePlugin):
             return False
         if format_bricks:
             pass
-            #TODO(darshan) Call gdeploy action to clear brick
+            # TODO(darshan) Call gdeploy action to clear brick
         return True
 
     def start_volume(self, volume_name, host=None, force=None):
         args = {}
         if host:
-            args.update({"host":host})
+            args.update({"host": host})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
 
         out, err, rc = start_volume.start_volume(
             volume_name,
@@ -162,9 +161,9 @@ class GdeployPlugin(ProvisionerBasePlugin):
     def stop_volume(self, volume_name, host=None, force=None):
         args = {}
         if host:
-            args.update({"host":host})
+            args.update({"host": host})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
 
         out, err, rc = stop_volume.stop_volume(
             volume_name,
@@ -201,10 +200,10 @@ class GdeployPlugin(ProvisionerBasePlugin):
                          force=None, fix_layout=None):
         args = {}
         if host:
-            args.update({"host":host})
+            args.update({"host": host})
         if force:
-            args.update({"force":force})
-        if fix_layout  and action == "start":
+            args.update({"force": force})
+        if fix_layout and action == "start":
             action = "fix-layout"
 
         out, err, rc = rebalance_volume.rebalance_volume(
@@ -249,7 +248,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
         if disperse_count:
             args.update({"disperse_count": disperse_count})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
         if increase_replica_count:
             args.update({"increase_replica_count": increase_replica_count})
 
@@ -285,7 +284,6 @@ class GdeployPlugin(ProvisionerBasePlugin):
             return False
         return True
 
-
     def shrink_volume(self, volume_name, brick_details, action,
                       replica_count=None, disperse_count=None,
                       force=False,
@@ -296,7 +294,7 @@ class GdeployPlugin(ProvisionerBasePlugin):
         if disperse_count:
             args.update({"disperse_count": disperse_count})
         if force:
-            args.update({"force":force})
+            args.update({"force": force})
         if decrease_replica_count:
             args.update({"decrease_replica_count": decrease_replica_count})
 

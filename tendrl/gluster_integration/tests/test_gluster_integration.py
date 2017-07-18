@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import tempfile
+from tendrl.gluster_integration.manager import manager
 sys.modules[
     'tendrl.gluster_integration.persistence.tendrl_definitions'] = MagicMock()
 sys.modules['tendrl.gluster_integration.persistence.servers'] = MagicMock()
@@ -19,7 +20,6 @@ sys.modules['logging'] = MagicMock()
 sys.modules['tendrl.commons.log'] = MagicMock()
 sys.modules['tendrl.commons.config'] = MagicMock()
 
-from tendrl.gluster_integration.manager import manager
 
 del sys.modules['logging']
 del sys.modules['tendrl.gluster_integration.persistence.tendrl_context']
