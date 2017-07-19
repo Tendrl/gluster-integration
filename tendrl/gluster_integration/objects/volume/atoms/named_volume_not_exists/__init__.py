@@ -7,7 +7,6 @@ from tendrl.gluster_integration.objects.volume import Volume
 
 
 class NamedVolumeNotExists(objects.BaseAtom):
-    obj = Volume
     def __init__(self, *args, **kwargs):
         super(NamedVolumeNotExists, self).__init__(*args, **kwargs)
 

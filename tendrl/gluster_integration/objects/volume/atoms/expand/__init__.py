@@ -16,7 +16,9 @@ class Expand(objects.BaseAtom):
                 "replica_count": self.parameters.get('Volume.replica_count')
             })
             vol = Volume(vol_id=self.parameters['Volume.vol_id']).load()
-            if vol.replica_count != self.parameters.get('Volume.replica_count'):
+            if vol.replica_count != self.parameters.get(
+                    'Volume.replica_count'
+            ):
                 args.update({"increase_replica_count": True})
         elif self.parameters.get('Volume.disperse_count') is not None:
             args.update({
@@ -31,7 +33,7 @@ class Expand(objects.BaseAtom):
                 args.update({
                     "disperse_count": vol.disperse_count
                 })
-                
+
         if self.parameters.get('Volume.force') is not None:
             args.update({
                 "force": self.parameters.get('Volume.force')

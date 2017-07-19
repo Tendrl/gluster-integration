@@ -1,10 +1,8 @@
 import etcd
-import subprocess
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons import objects
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class Delete(objects.BaseAtom):
@@ -12,7 +10,6 @@ class Delete(objects.BaseAtom):
         super(Delete, self).__init__(*args, **kwargs)
 
     def run(self):
-        vol_id = self.parameters['Volume.vol_id']
         if NS.gdeploy_plugin.stop_volume(
                 self.parameters.get('Volume.volname')
         ):
@@ -107,6 +104,4 @@ class Delete(objects.BaseAtom):
                     )
                 )
             finally:
-                lock.release()
-
                 return True

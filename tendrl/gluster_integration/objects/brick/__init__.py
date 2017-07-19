@@ -43,21 +43,22 @@ class Brick(objects.BaseObject):
         self.pool = pool
         self.pv = pv
         self.stripe_size = stripe_size
-        self.vol_id= vol_id
-        self.sequence_number=sequence_number
-        self.hostname=hostname
-        self.port=port
-        self.size=size
-        self.status=status
-        self.filesystem_type=filesystem_type
-        self.mount_opts=mount_opts
+        self.vol_id = vol_id
+        self.sequence_number = sequence_number
+        self.hostname = hostname
+        self.port = port
+        self.size = size
+        self.status = status
+        self.filesystem_type = filesystem_type
+        self.mount_opts = mount_opts
         if utilization:
-            self.utilization=utilization
-        self.used=used
+            self.utilization = utilization
+        self.used = used
         self.value = 'clusters/{0}/Bricks/all/{1}'
 
     def render(self):
-        self.value = self.value.format(NS.tendrl_context.integration_id,
-                                       self.name.replace("/", "_").replace(" ", "")
+        self.value = self.value.format(
+            NS.tendrl_context.integration_id,
+            self.name.replace("/", "_").replace(" ", "")
         )
         return super(Brick, self).render()

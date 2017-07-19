@@ -1,9 +1,8 @@
-import os
-
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons.utils import cmd_utils
 import xml.etree.cElementTree as etree
+
 
 def get_rebalance_status(volume):
     cmd = cmd_utils.Command('gluster volume status %s --xml' % volume)
@@ -29,14 +28,7 @@ def get_rebalance_status(volume):
             )
         )
 
-
     for task in tree.findall('volStatus/volumes/volume/tasks'):
         if task and task.find('task/type').text == "Rebalance":
             return task.find('task/statusStr').text
     return None
-
-
-
-    
-
-

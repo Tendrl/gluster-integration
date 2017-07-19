@@ -33,7 +33,7 @@ class GenerateBrickMapping(objects.BaseAtom):
             key = "nodes/%s/NodeContext/fqdn" % node
             host = NS._int.client.read(key).value
             nodes[host] = []
-        
+
         bricks = NS._int.client.read(
             '/clusters/%s/Bricks/free/' % NS.tendrl_context.integration_id
         )
@@ -51,24 +51,27 @@ class GenerateBrickMapping(objects.BaseAtom):
         total_bricks = len(nodes) * brick_count
         for iterator in range(total_bricks):
             brick_list.append("")
-        
+
         counter = 0
         node_count = len(nodes)
-        for key,value in nodes.iteritems():
+        for key, value in nodes.iteritems():
             if len(value) < brick_count:
-                message = "Host %s has %s bricks which is less than bricks per host %s" % (
-                    key, len(value), brick_count
-                )
+                message = "Host %s has %s bricks which is less than" + \
+                          " bricks per host %s" % (
+                              key,
+                              len(value),
+                              brick_count
+                          )
                 job = Job(job_id=self.parameters["job_id"]).load()
-                res = {"message": message,"result": [[]], "optimal": False}
+                res = {"message": message, "result": [[]], "optimal": False}
                 job.output["GenerateBrickMapping"] = json.dumps(res)
                 job.save()
                 return False
 
             for i in range(brick_count):
-                brick_list[node_count*i+counter] = value[i]
+                brick_list[node_count * i + counter] = value[i]
             counter += 1
-            
+
         # Check if total number of bricks available is less than the
         # sub volume size. If its less, then return accordingly
 
@@ -77,11 +80,11 @@ class GenerateBrickMapping(objects.BaseAtom):
                 len(brick_list), subvol_size
             )
             job = Job(job_id=self.parameters["job_id"]).load()
-            res = {"message": message,"result": [[]], "optimal": False}
+            res = {"message": message, "result": [[]], "optimal": False}
             job.output["GenerateBrickMapping"] = json.dumps(res)
             job.save()
             return False
-            
+
         # Fill the result list with bricks from the brick_list,
         # try to fill untill you exhaust the brick list and
         # also the number of sub volumes is maximum for the
@@ -108,7 +111,7 @@ class GenerateBrickMapping(objects.BaseAtom):
         # Write the result back to the job
 
         job = Job(job_id=self.parameters["job_id"]).load()
-        res = {"message": message,"result": result, "optimal": optimal}
+        res = {"message": message, "result": result, "optimal": optimal}
         job.output["GenerateBrickMapping"] = json.dumps(res)
         job.save()
 

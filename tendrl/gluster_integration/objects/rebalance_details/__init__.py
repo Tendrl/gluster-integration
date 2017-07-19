@@ -18,18 +18,19 @@ class RebalanceDetails(objects.BaseObject):
         super(RebalanceDetails, self).__init__(*args, **kwargs)
 
         self.vol_id = vol_id
-        self.rebal_data=rebal_data
-        self.rebal_skipped=rebal_skipped
-        self.rebal_id=rebal_id
-        self.rebal_lookedup=rebal_lookedup
-        self.rebal_files=rebal_files
-        self.rebal_status=rebal_status
-        self.rebal_failures=rebal_failures
+        self.rebal_data = rebal_data
+        self.rebal_skipped = rebal_skipped
+        self.rebal_id = rebal_id
+        self.rebal_lookedup = rebal_lookedup
+        self.rebal_files = rebal_files
+        self.rebal_status = rebal_status
+        self.rebal_failures = rebal_failures
         self.value = 'clusters/{0}/Volumes/{1}/RebalanceDetails/{2}'
 
     def render(self):
-        self.value = self.value.format(NS.tendrl_context.integration_id,
-                                       self.vol_id,
-                                       NS.node_context.node_id
+        self.value = self.value.format(
+            NS.tendrl_context.integration_id,
+            self.vol_id,
+            NS.node_context.node_id
         )
         return super(RebalanceDetails, self).render()

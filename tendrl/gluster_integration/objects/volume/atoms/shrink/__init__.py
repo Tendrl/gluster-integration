@@ -17,7 +17,9 @@ class Shrink(objects.BaseAtom):
             args.update({
                 "replica_count": self.parameters.get('Volume.replica_count')
             })
-            if vol.replica_count != self.parameters.get('Volume.replica_count'):
+            if vol.replica_count != self.parameters.get(
+                    'Volume.replica_count'
+            ):
                 args.update({"decrease_replica_count": True})
         elif self.parameters.get('Volume.disperse_count') is not None:
             args.update({
@@ -32,7 +34,7 @@ class Shrink(objects.BaseAtom):
                 args.update({
                     "disperse_count": vol.disperse_count
                 })
-                
+
         if self.parameters.get('Volume.force') is not None:
             args.update({
                 "force": self.parameters.get('Volume.force')
@@ -74,21 +76,23 @@ class Shrink(objects.BaseAtom):
                 )
             )
 
-            if action != "commit" and not args.has_key("decrease_replica_count"):
+            if action != "commit" and not "decrease_"\
+               "replica_count" in args:
                 return True
             try:
                 # Delete the bricks from central store
                 # Acquire lock before deleting the bricks from etcd
                 # We are blocking till we acquire the lock
-                # the lock will live for 60 sec after which it will be released.
+                # the lock will live for 60 sec after which it will
+                # be released.
                 lock = etcd.Lock(NS._int.wclient, 'volume')
-                
+
                 while not lock.is_acquired:
                     try:
                         # with ttl set, lock will be blocked only for 60 sec
                         # after which it will raise lock_expired exception.
                         # if this is raised, we have to retry for lock
-                        lock.acquire(blocking=True,lock_ttl=60)
+                        lock.acquire(blocking=True, lock_ttl=60)
                         if lock.is_acquired:
                             # renewing lock as we are not sure, how long we
                             # were blocked before the lock was given.
@@ -98,7 +102,9 @@ class Shrink(objects.BaseAtom):
                         continue
                 for sub_vol in self.parameters.get('Volume.bricks'):
                     for b in sub_vol:
-                        brick_name = b.keys()[0] + ":" + b.values()[0].replace("/", "_")
+                        brick_name = b.keys()[0] + ":" + b.values()[0].replace(
+                            "/", "_"
+                        )
                         try:
                             NS._int.wclient.delete(
                                 "clusters/%s/Volumes/%s/Bricks/%s" % (
@@ -107,7 +113,7 @@ class Shrink(objects.BaseAtom):
                                     brick_name
                                 ),
                                 recursive=True
-                            )            
+                            )
                         except etcd.EtcdKeyNotFound:
                             continue
             except Exception:
@@ -120,8 +126,10 @@ class Shrink(objects.BaseAtom):
                     priority="info",
                     publisher=NS.publisher_id,
                     payload={
-                        "message": "Deleted bricks for volume %s from central store" %
-                        self.parameters['Volume.volname']
+                        "message": "Deleted bricks for volume %s"
+                        " from central store" % self.parameters[
+                            'Volume.volname'
+                        ]
                     },
                     job_id=self.parameters["job_id"],
                     flow_id=self.parameters["flow_id"],

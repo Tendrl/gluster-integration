@@ -1,5 +1,4 @@
 import importlib
-import inspect
 import os
 import pkgutil
 import re
