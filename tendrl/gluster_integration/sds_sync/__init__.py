@@ -740,7 +740,10 @@ def sync_volumes(volumes, index):
                     ),
                     client_count=volumes.get(
                         'volume%s.brick%s.client_count' % (index, b_index)
-                    )
+                    ),
+                    is_arbiter=volumes.get(
+                        'volume%s.brick%s.is_arbiter' % (index, b_index)
+                    ),
                 )
             brick.save(ttl=SYNC_TTL)
             # sync brick device details
