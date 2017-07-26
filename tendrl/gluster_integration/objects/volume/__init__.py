@@ -28,6 +28,7 @@ class Volume(objects.BaseObject):
         pcnt_used=None,
         profiling_enabled=False,
         client_count=None,
+        rebal_estimated_time=None,
         *args,
         **kwargs
     ):
@@ -57,6 +58,7 @@ class Volume(objects.BaseObject):
         self.pcnt_used = pcnt_used
         self.profiling_enabled = profiling_enabled
         self.client_count = client_count
+        self.rebal_estimated_time = rebal_estimated_time
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):

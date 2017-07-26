@@ -271,6 +271,19 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             volume.client_count = vol_connections
             volume.save()
 
+    def _sync_volume_rebalance_estimated_time(self, volumes):
+        for volume in volumes:
+            rebal_estimated_time = 0
+            vol_rebal_details = NS.gluster.objects.RebalanceDetails(
+                vol_id=volume.vol_id
+            ).load_all()
+            for entry in vol_rebal_details:
+                if entry.time_left and \
+                    int(entry.time_left) > rebal_estimated_time:
+                    rebal_estimated_time = int(entry.time_left)
+            volume.rebal_estimated_time = rebal_estimated_time
+            volume.save()
+
     def _run(self):
         # To detect out of band deletes
         # refresh gluster object inventory at config['sync_interval']
@@ -406,6 +419,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 self._sync_cluster_utilization_details(volumes)
                 georep_details.aggregate_session_status()
                 self._sync_volume_connections(volumes)
+                self._sync_volume_rebalance_estimated_time(volumes)
 
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
@@ -566,6 +580,7 @@ def sync_volumes(volumes, index):
         rebal_lookedup=volumes['volume%s.rebalance.lookedup' % index],
         rebal_files=volumes['volume%s.rebalance.files' % index],
         rebal_data=volumes['volume%s.rebalance.data' % index],
+        time_left=volumes.get('volume%s.rebalance.time_left' % index),
     )
     rebal_det.save(ttl=SYNC_TTL)
     georep_details.save_georep_details(volumes, index)
