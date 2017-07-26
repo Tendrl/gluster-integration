@@ -14,7 +14,6 @@ BuildRequires: python-mock
 
 Requires: tendrl-commons
 Requires: systemd
-Requires: gstatus
 Requires: python-blivet
 
 %description
