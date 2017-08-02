@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
 Version: 1.4.2
-Release: 1%{?dist}
+Release: 20170802T141735.d80b2d7
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
