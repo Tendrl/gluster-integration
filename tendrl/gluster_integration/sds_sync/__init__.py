@@ -646,6 +646,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if _cluster.exists():
                     _cluster.sync_status = "done"
                     _cluster.last_sync = str(tendrl_now())
+                    _cluster.is_managed = "Yes"
                     _cluster.save()
 
             except Exception as ex:
