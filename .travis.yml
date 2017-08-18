@@ -31,5 +31,4 @@ env:
   - TOXENV=pep8
   - TOXENV=check_commit_msg
   - TOXENV=py27-cover-master
-  - TOXENV=py27-cover-develop
   - TOXENV=docs
