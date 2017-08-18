@@ -12,9 +12,11 @@ BuildRequires: python2-devel
 BuildRequires: pytest
 BuildRequires: python-mock
 
+Requires: glusterfs-events
 Requires: tendrl-commons
 Requires: systemd
 Requires: python-blivet
+Requires: python-flask
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.

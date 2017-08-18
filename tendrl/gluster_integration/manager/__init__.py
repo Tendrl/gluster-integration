@@ -9,6 +9,8 @@ from tendrl.commons import TendrlNS
 from tendrl import gluster_integration
 from tendrl.gluster_integration.gdeploy_wrapper.manager import \
     ProvisioningManager
+from tendrl.gluster_integration.message.gluster_native_message_handler\
+    import GlusterNativeMessageHandler
 from tendrl.gluster_integration import sds_sync
 
 
@@ -19,7 +21,8 @@ class GlusterIntegrationManager(common_manager.Manager):
             GlusterIntegrationManager,
             self
         ).__init__(
-            NS.state_sync_thread
+            NS.state_sync_thread,
+            message_handler_thread=NS.message_handler_thread
         )
 
 
@@ -31,6 +34,8 @@ def main():
     NS.publisher_id = "gluster_integration"
 
     NS.state_sync_thread = sds_sync.GlusterIntegrationSdsSyncStateThread()
+
+    NS.message_handler_thread = GlusterNativeMessageHandler()
 
     NS.node_context.save()
     try:
