@@ -192,6 +192,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 georep_details.aggregate_session_status()
                 client_connections.sync_volume_connections(volumes)
                 rebal_stat.sync_volume_rebalance_estimated_time(volumes)
+                georep_details.aggregate_session_status()
 
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id

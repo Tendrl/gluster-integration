@@ -75,6 +75,12 @@ namespace.gluster:
         volume_up_degraded:
           help: no.of volumes degraded
           type: Integer
+        peer_count:
+          help: no of peers in cluster
+          type: Integer
+        vol_count:
+          help: no of volumes in cluster
+          type: Integer
       enabled: true
       list: clusters/$TendrlContext.integration_id/GlobalDetails
       value: clusters/$TendrlContext.integration_id/GlobalDetails

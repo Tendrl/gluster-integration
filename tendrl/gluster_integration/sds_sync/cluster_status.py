@@ -7,21 +7,26 @@ def sync_cluster_status(volumes):
     status = 'healthy'
 
     # Calculate status based on volumes status
+    degraded_count = 0
     if len(volumes) > 0:
         volume_states = _derive_volume_states(volumes)
         for vol_id, state in volume_states.iteritems():
             if 'down' in state or 'partial' in state:
                 status = 'unhealthy'
+            if 'degraded' in state:
+                degraded_count += 1
 
     # Change status basd on node status
     cmd = cmd_utils.Command(
         'gluster pool list', True
     )
     out, err, rc = cmd.run()
+    peer_count = 0
     if not err:
         out_lines = out.split('\n')
         connected = True
-        for index in range(1, len(out_lines) - 1):
+        for index in range(1, len(out_lines)):
+            peer_count += 1
             node_status_det = out_lines[index].split('\t')
             if len(node_status_det) > 2:
                 if node_status_det[2].strip() != 'Connected':
@@ -33,9 +38,11 @@ def sync_cluster_status(volumes):
 
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
-        status=status
+        status=status,
+        peer_count=peer_count,
+        vol_count=len(volumes),
+        volume_up_degraded=degraded_count
     ).save()
-
 
 def _derive_volume_states(volumes):
     out_dict = {}
