@@ -186,13 +186,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         ).save()
 
                 # Sync cluster global details
-                volumes = NS.gluster.objects.Volume().load_all()
-                cluster_status.sync_cluster_status(volumes)
-                utilization.sync_utilization_details(volumes)
-                georep_details.aggregate_session_status()
-                client_connections.sync_volume_connections(volumes)
-                rebal_stat.sync_volume_rebalance_estimated_time(volumes)
-                georep_details.aggregate_session_status()
+                if "provisioner/%s" % NS.tendrl_context.integration_id \
+                    in NS.node_context.tags:
+                    volumes = NS.gluster.objects.Volume().load_all()
+                    cluster_status.sync_cluster_status(volumes)
+                    utilization.sync_utilization_details(volumes)
+                    client_connections.sync_volume_connections(volumes)
+                    rebal_stat.sync_volume_rebalance_estimated_time(volumes)
+                    georep_details.aggregate_session_status()
 
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
