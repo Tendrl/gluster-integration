@@ -650,7 +650,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     _cluster.save()
 
                 # check and enable volume profiling
-                self._enable_disable_volume_profiling()
+                if "provisioner/%s" % NS.tendrl_context.integration_id in \
+                    NS.node_context.tags:
+                    self._enable_disable_volume_profiling()
 
             except Exception as ex:
                 Event(
