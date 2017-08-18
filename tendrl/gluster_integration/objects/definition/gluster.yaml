@@ -163,7 +163,7 @@ namespace.gluster:
           type: Integer
         rebal_id:
           help: "UUID of the rabalance task"
-          typoe: String
+          type: String
         rebal_lookedup:
           help: "Looked up files for rebalance"
           type: Integer
@@ -193,7 +193,7 @@ namespace.gluster:
           type: String
         master_node:
           help: "master node ip/fqdn"
-          typoe: String
+          type: String
         master_volume:
           help: "master volume name"
           type: String

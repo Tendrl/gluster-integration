@@ -497,7 +497,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         vol_options.save()
 
                 # aggregate geo-replication status
-                georep_details.aggregate_session_status()
+                if "provisioner/gluster" in NS.node_context.tags:
+                    georep_details.aggregate_session_status()
 
                 # Sync the cluster status details
                 args = ["gstatus", "-o", "json"]
