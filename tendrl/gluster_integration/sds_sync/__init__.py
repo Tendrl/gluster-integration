@@ -15,6 +15,7 @@ from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.sds_sync import brick_utilization
+from tendrl.gluster_integration.sds_sync import georep_details
 from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 
 
@@ -290,6 +291,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ],
                             )
                             rebal_det.save(ttl=SYNC_TTL)
+                            georep_details.save_georep_details(volumes, index)
                             b_index = 1
                             # ipv4 address of current node
                             try:
@@ -493,6 +495,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 options=dict1
                             )
                         vol_options.save()
+
+                # aggregate geo-replication status
+                if "provisioner/gluster" in NS.node_context.tags:
+                    georep_details.aggregate_session_status()
 
                 # Sync the cluster status details
                 args = ["gstatus", "-o", "json"]
