@@ -214,7 +214,7 @@ namespace.gluster:
           type: String
         crawl_status:
           help: "geo replication crawl status"
-          typoe: String
+          type: String
         last_synced:
           help: "last synced time"
           type: String
@@ -256,7 +256,7 @@ namespace.gluster:
           type: List
         session_status:
           help: "aggregated status of geo-replication session"
-          typoe: String
+          type: String
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions/$GeoReplicationPair.session_id
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions
