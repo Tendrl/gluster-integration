@@ -75,6 +75,12 @@ namespace.gluster:
         volume_up_degraded:
           help: no.of volumes degraded
           type: Integer
+        peer_count:
+          help: no of peers in cluster
+          type: Integer
+        vol_count:
+          help: no of volumes in cluster
+          type: Integer
       enabled: true
       list: clusters/$TendrlContext.integration_id/GlobalDetails
       value: clusters/$TendrlContext.integration_id/GlobalDetails
@@ -163,7 +169,7 @@ namespace.gluster:
           type: Integer
         rebal_id:
           help: "UUID of the rabalance task"
-          typoe: String
+          type: String
         rebal_lookedup:
           help: "Looked up files for rebalance"
           type: Integer
@@ -176,10 +182,139 @@ namespace.gluster:
         rebal_skipped:
           help: "Skipped files while rebalance"
           type: String
+        time_left:
+          help: time left for rebalance to complete
+          type: int
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails/$TendrlContext.node_id
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails
       help: gluster volume rebalance details
+    GeoReplicationPair:
+      attrs:
+        vol_id:
+          help: Volume id
+          type: String
+        session_id:
+          help: "unique id of geo replication session"
+          type: String
+        pair:
+          help: "geo replication session pair name"
+          type: String
+        master_node:
+          help: "master node ip/fqdn"
+          type: String
+        master_volume:
+          help: "master volume name"
+          type: String
+        master_brick:
+          help: "master brick name"
+          type: String
+        slave_user:
+          help: "slave user name"
+          type: String
+        slave:
+          help: "slave host and volume name"
+          type: String
+        slave_node:
+          help: "slave node with which geo-rep session is going"
+          type: String
+        status:
+          help: "geo replication session status"
+          type: String
+        crawl_status:
+          help: "geo replication crawl status"
+          type: String
+        last_synced:
+          help: "last synced time"
+          type: String
+        entry:
+          help: "entries synced"
+          type: String
+        data:
+          help: "data synced"
+          type: String
+        meta:
+          help: "metadata synced"
+          type: String
+        failures:
+          help: "number of failures"
+          type: String
+        checkpoint_time:
+          help: "checkpoint time"
+          type: String
+        checkpoint_completed:
+          help: "if checkpoint is completed"
+          type: String
+        checkpoint_completion_time:
+          help: "time of checkpoint completion"
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions/$GeoReplicationPair.session_id/pairs/$GeoReplicationPair.pair
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions/$GeoReplicationPair.session_id/pairs
+      help: gluster volume geo replication pair details
+    GeoReplicationSession:
+      attrs:
+        vol_id:
+          help: Volume id
+          type: String
+        session_id:
+          help: "unique id of geo replication session"
+          type: String
+        pairs:
+          help: "geo replication session pair list"
+          type: List
+        session_status:
+          help: "aggregated status of geo-replication session"
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions/$GeoReplicationPair.session_id
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions
+      help: gluster volume geo replication session details
+    Snapshot:
+      attrs:
+        vol_id:
+          help: Volume id
+          type: String
+        name:
+          help: name of snapshot
+          type: String
+        id:
+          help: uuid of snapshot
+          type: Integer
+        created_at:
+          help: creation time of snapshot
+          type: String
+        description:
+          help: description of snapshot
+          type: String
+        status:
+          help: status of snapshot
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Snapshots/$Snapshot.id
+      list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/Snapshots
+      help: gluster volume snapshot details
+    ClientConnection:
+      attrs:
+        brick_name:
+          help: name of the brick
+          type: String
+        hostname:
+          help: client hostname
+          type: String
+        bytesread:
+          help: no of bytes read
+          type: int
+        byteswrite:
+          help: no of bytes written
+          type: int
+        opversion:
+          help: operational version
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name/ClientConnections/$ClientConnection.hostname
+      list:  clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name/ClientConnections
+      help: brick client connection details
     Brick:
       atoms:
         Create:
@@ -262,7 +397,13 @@ namespace.gluster:
           type: String
         utilization:
           help: Brick utilization
-          type: Dict        
+          type: json
+        client_count:
+          help: no of client connections
+          type: int
+        is_arbiter:
+          help: Flag to mention if brick is arbiter
+          type: int
       enabled: true
       value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name
       list:  clusters/$TendrlContext.integration_id/Bricks/all
@@ -716,6 +857,9 @@ namespace.gluster:
         status:
           help: "Status of the volume"
           type: String
+        state:
+          help: state of the volume
+          type: String
         snap_count:
           help: "Count of the snapshots"
           type: Integer
@@ -731,6 +875,11 @@ namespace.gluster:
         profiling_enabled:
           help: Whether profiling is enabled
           type: Boolean
+        client_count:
+          help: No of client connections
+        rebal_estimated_time:
+          help: Estimated time left for rebalance to complete
+          type: int
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
       list: clusters/$TendrlContext.integration_id/Volumes

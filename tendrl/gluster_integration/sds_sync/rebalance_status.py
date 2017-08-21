@@ -32,3 +32,31 @@ def get_rebalance_status(volume):
         if task and task.find('task/type').text == "Rebalance":
             return task.find('task/statusStr').text
     return None
+
+
+def sync_volume_rebalance_estimated_time(volumes):
+    for volume in volumes:
+        rebal_estimated_time = 0
+        vol_rebal_details = NS.gluster.objects.RebalanceDetails(
+            vol_id=volume.vol_id
+        ).load_all()
+        for entry in vol_rebal_details:
+            if entry.time_left and \
+                int(entry.time_left) > rebal_estimated_time:
+                rebal_estimated_time = int(entry.time_left)
+        volume.rebal_estimated_time = rebal_estimated_time
+        volume.save()
+
+
+def _sync_volume_rebalance_status(volumes):
+    for volume in volumes:
+        if volume.vol_type == "Distribute":
+            status = get_rebalance_status(
+                volume.name
+            )
+            if status:
+                rebal_status = status.replace(" ", "_")
+            else:
+                rebal_status = "not_started"
+            volume.rebal_status = rebal_status
+            volume.save()
