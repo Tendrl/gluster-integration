@@ -672,6 +672,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     _cluster.is_managed = "yes"
                     _cluster.save()
 
+                # check and enable volume profiling
+                if "provisioner/%s" % NS.tendrl_context.integration_id in \
+                    NS.node_context.tags:
+                    self._enable_disable_volume_profiling()
+
             except Exception as ex:
                 Event(
                     ExceptionMessage(
@@ -691,3 +696,43 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 payload={"message": "%s complete" % self.__class__.__name__}
             )
         )
+
+    def _enable_disable_volume_profiling(self):
+        cluster = NS.tendrl.objects.Cluster(
+            integration_id=NS.tendrl_context.integration_id
+        )
+        volumes = NS.gluster.objects.Volume().load_all()
+        failed_vols = []
+        for volume in volumes:
+            if cluster.enable_volume_profiling:
+                if volume.profiling_enabled == 'False':
+                    action = "start"
+                else:
+                    continue
+            else:
+                if volume.profiling_enabled == 'True':
+                    action = "stop"
+                else:
+                    continue
+            out, err, rc = cmd_utils.Command(
+                "gluster volume profile %s %s" %
+                (volume.name,
+                action)
+            ).run()
+            if err or rc != 0:
+                failed_vols.append(volume.name)
+                continue
+            volume.profiling_enabled = cluster.enable_volume_profiling
+            volume.save()
+        if len(failed_vols) > 0:
+            Event(
+                Message(
+                    priority="warning",
+                    publisher=NS.publisher_id,
+                    payload={
+                        "message": "%sing profiling failed for volumes: %s" %
+                        (action,
+                        str(failed_vols))
+                    }
+                )
+            )
