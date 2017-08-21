@@ -15,6 +15,7 @@ BuildRequires: python-mock
 Requires: tendrl-commons
 Requires: systemd
 Requires: gstatus
+Requires: python-blivet
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.

@@ -809,6 +809,9 @@ namespace.gluster:
         quorum_status:
           help: "Quorum status"
           type: String
+        profiling_enabled:
+          help: Whether profiling is enabled
+          type: Boolean
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
       list: clusters/$TendrlContext.integration_id/Volumes

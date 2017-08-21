@@ -25,6 +25,7 @@ class Volume(objects.BaseObject):
         usable_capacity=None,
         used_capacity=None,
         pcnt_used=None,
+        profiling_enabled=False,
         *args,
         **kwargs
     ):
@@ -51,6 +52,7 @@ class Volume(objects.BaseObject):
         self.usable_capacity = usable_capacity
         self.used_capacity = used_capacity
         self.pcnt_used = pcnt_used
+        self.profiling_enabled = profiling_enabled
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):
