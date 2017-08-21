@@ -1,3 +1,4 @@
+import blivet
 import etcd
 import gevent
 import json
@@ -14,6 +15,7 @@ from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
+from tendrl.gluster_integration.sds_sync import brick_device_details
 from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
 
@@ -103,6 +105,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 raise ex
 
+        # instantiating blivet class, this will be used for
+        # getting brick_device_details
+        b = blivet.Blivet()
+
         while not self._complete.is_set():
             try:
                 gevent.sleep(
@@ -134,6 +140,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 sync_object = NS.gluster.objects.\
                     SyncObject(data=json.dumps(raw_data))
                 sync_object.save()
+
+                # reset blivet during every sync to get latest information
+                # about storage devices in the machine
+                b.reset()
+                devicetree = b.devicetree
 
                 if "Peers" in raw_data:
                     index = 1
@@ -427,7 +438,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 'volume%s.id' % index
                                             ],
                                             sequence_number=b_index,
-                                            path=volumes[
+                                            brick_path=volumes[
                                                 'volume%s.brick%s.path' % (
                                                     index, b_index)],
                                             hostname=volumes.get(
@@ -437,6 +448,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                                 'volume%s.brick%s.port' % (
                                                     index, b_index)),
                                             used=True,
+                                            node_id=NS.node_context.node_id,
                                             status=volumes.get(
                                                 'volume%s.brick%s.status' % (
                                                     index, b_index
@@ -466,6 +478,17 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             )
                                         )
                                     brick.save(ttl=SYNC_TTL)
+
+                                    # sync brick device details
+                                    brick_device_details.\
+                                        update_brick_device_details(
+                                            brick_name,
+                                            volumes[
+                                                'volume%s.brick%s.path' % (
+                                                    index, b_index)
+                                            ],
+                                            devicetree
+                                        )
 
                                     b_index += 1
                                 except KeyError:
