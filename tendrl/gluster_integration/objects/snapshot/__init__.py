@@ -7,7 +7,7 @@ class Snapshot(objects.BaseObject):
         vol_id=None,
         id=None,
         name=None,
-        time=None,
+        created_at=None,
         description=None,
         status=None,
         *args,
@@ -18,7 +18,7 @@ class Snapshot(objects.BaseObject):
         self.vol_id = vol_id
         self.id = id
         self.name = name
-        self.time = time
+        self.created_at = created_at
         self.description = description
         self.status = status
         self.value = 'clusters/{0}/Volumes/{1}/Snapshots/{2}'

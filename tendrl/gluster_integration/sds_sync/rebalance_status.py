@@ -46,3 +46,17 @@ def sync_volume_rebalance_estimated_time(volumes):
                 rebal_estimated_time = int(entry.time_left)
         volume.rebal_estimated_time = rebal_estimated_time
         volume.save()
+
+
+def _sync_volume_rebalance_status(volumes):
+    for volume in volumes:
+        if volume.vol_type == "Distribute":
+            status = get_rebalance_status(
+                volume.name
+            )
+            if status:
+                rebal_status = status.replace(" ", "_")
+            else:
+                rebal_status = "not_started"
+            volume.rebal_status=rebal_status
+            volume.save()

@@ -19,7 +19,8 @@ from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import client_connections
 from tendrl.gluster_integration.sds_sync import cluster_status
 from tendrl.gluster_integration.sds_sync import georep_details
-from tendrl.gluster_integration.sds_sync import rebalance_status as rebal_stat
+from tendrl.gluster_integration.sds_sync import rebalance_status
+from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
 
 
@@ -192,8 +193,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     cluster_status.sync_cluster_status(volumes)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
-                    rebal_stat.sync_volume_rebalance_estimated_time(volumes)
                     georep_details.aggregate_session_status()
+                    rebalance_status.sync_volume_rebalance_status(volumes)
+                    rebalance_status.sync_volume_rebalance_estimated_time(volumes)
+                    snapshots.sync_volume_snapshots(raw_data['Volumes'], SYNC_TTL)
 
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
@@ -346,16 +349,6 @@ def sync_volumes(volumes, index, vol_options):
         except etcd.EtcdKeyNotFound:
             pass
 
-    rebalance_status = ""
-    if volumes['volume%s.type' % index].startswith("Distribute"):
-        status = rebal_stat.get_rebalance_status(
-            volumes['volume%s.name' % index]
-        )
-        if status:
-            rebalance_status = status.replace(" ", "_")
-        else:
-            rebalance_status = "not_started"
-
     volume = NS.gluster.objects.Volume(
         vol_id=volumes['volume%s.id' % index],
         vol_type="arbiter"
@@ -375,7 +368,6 @@ def sync_volumes(volumes, index, vol_options):
         quorum_status=volumes['volume%s.quorum_status' % index],
         snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
         snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
-        rebal_status=rebalance_status,
     )
     volume.save(ttl=SYNC_TTL)
     rebal_det = NS.gluster.objects.RebalanceDetails(
@@ -408,31 +400,6 @@ def sync_volumes(volumes, index, vol_options):
         options=vol_opt_dict
     ).save(ttl=SYNC_TTL)
 
-    s_index = 1
-    while True:
-        try:
-            vol_snapshot = NS.gluster.objects.Snapshot(
-                vol_id=volumes['volume%s.id' % index],
-                id=volumes[
-                    'volume%s.snapshot%s.id' % (index, s_index)
-                ],
-                name=volumes[
-                    'volume%s.snapshot%s.name' % (index, s_index)
-                ],
-                time=volumes[
-                    'volume%s.snapshot%s.time' % (index, s_index)
-                ],
-                description=volumes[
-                    'volume%s.snapshot%s.description' % (index, s_index)
-                ],
-                status=volumes[
-                    'volume%s.snapshot%s.status' % (index, s_index)
-                ]
-            )
-            vol_snapshot.save(ttl=SYNC_TTL)
-            s_index += 1
-        except KeyError:
-            break
     b_index = 1
     # ipv4 address of current node
     try:

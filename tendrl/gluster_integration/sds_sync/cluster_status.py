@@ -16,6 +16,27 @@ def sync_cluster_status(volumes):
             if 'degraded' in state:
                 degraded_count += 1
 
+            # Raise the alert if volume state changes
+            volume = NS.gluster.objects.Volume(
+                vol_id=vol_id
+            ).load()
+            if volume.state != "" and \
+                state != volume.state:
+                msg = "State of volume: %s " + \
+                      "changed from %s to %s" % (
+                          volumes.name,
+                          volume.state,
+                          state
+                      )
+                instance = "volume_%s" % volume.name
+                emit_event(
+                    "volume_status",
+                    current_status,
+                    msg,
+                    instance
+                )
+
+
     # Change status basd on node status
     cmd = cmd_utils.Command(
         'gluster pool list', True

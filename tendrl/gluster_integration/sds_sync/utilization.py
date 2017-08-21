@@ -47,6 +47,8 @@ def sync_utilization_details(volumes):
         if up_bricks == len(bricks):
             if int(volume.disperse_count) == 0:
                 # This is distribute or replicate volume
+                # In case of distribite volume the value of replica count
+                # is 1 so the below calculation works fine.
                 vol_usable_capacity = \
                     raw_capacity / int(volume.replica_count)
                 vol_used_capacity = \
@@ -67,6 +69,13 @@ def sync_utilization_details(volumes):
                 vol_usable_capacity = raw_capacity * disperse_yield
                 vol_used_capacity = raw_used * disperse_yield
         else:
+            # If volume type os replicated ot disperse, and few bricks only
+            # are started, we look subvolume wise and decide the utilization
+            # details. For replicate volume only one replica set is
+            # considered for calculation
+            # TODO(shtripat): There is assumption here that all the bricks are
+            # of same size. This logic needs to be refined later based on
+            # suggestions from gluster team
             if int(volume.replica_count) > 1 or \
                 int(volume.disperse_count) > 0:
                 for subvol in subvols:
