@@ -5,7 +5,7 @@ class Brick(objects.BaseObject):
     def __init__(
         self,
         name,
-        disk=None,
+        devices=None,
         brick_path=None,
         mount_path=None,
         node_id=None,
@@ -31,7 +31,7 @@ class Brick(objects.BaseObject):
     ):
         super(Brick, self).__init__(*args, **kwargs)
 
-        self.disk = disk
+        self.devices = devices
         self.name = name
         self.node_id = node_id
         self.brick_path = brick_path
