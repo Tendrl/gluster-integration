@@ -281,9 +281,9 @@ namespace.gluster:
         id:
           help: uuid of snapshot
           type: Integer
-        time:
+        created_at:
           help: creation time of snapshot
-          typoe: String
+          type: String
         description:
           help: description of snapshot
           type: String
