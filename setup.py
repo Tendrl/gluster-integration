@@ -103,6 +103,7 @@ setup(
     install_requires=[
         "gstatus",
         "tendrl-commons",
+        "blivet"
         ],
     entry_points={
         'console_scripts': [
