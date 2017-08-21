@@ -3,7 +3,7 @@ def sync_volume_snapshots(volumes, ttl):
     while True:
         s_index = 1
         try:
-            vol_id=volumes['volume%s.id' % index]
+            vol_id = volumes['volume%s.id' % index]
             while True:
                 try:
                     vol_snapshot = NS.gluster.objects.Snapshot(
@@ -18,7 +18,8 @@ def sync_volume_snapshots(volumes, ttl):
                             'volume%s.snapshot%s.time' % (index, s_index)
                         ]),
                         description=volumes[
-                            'volume%s.snapshot%s.description' % (index, s_index)
+                            'volume%s.snapshot%s.description' %
+                            (index, s_index)
                         ],
                         status=volumes[
                             'volume%s.snapshot%s.status' % (index, s_index)

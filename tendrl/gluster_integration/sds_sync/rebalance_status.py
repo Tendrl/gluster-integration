@@ -58,5 +58,5 @@ def _sync_volume_rebalance_status(volumes):
                 rebal_status = status.replace(" ", "_")
             else:
                 rebal_status = "not_started"
-            volume.rebal_status=rebal_status
+            volume.rebal_status = rebal_status
             volume.save()

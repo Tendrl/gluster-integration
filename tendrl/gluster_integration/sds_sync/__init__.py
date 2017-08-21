@@ -11,6 +11,7 @@ from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
 from tendrl.commons.message import Message
 from tendrl.commons import sds_sync
+from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
@@ -195,8 +196,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
                     rebalance_status.sync_volume_rebalance_status(volumes)
-                    rebalance_status.sync_volume_rebalance_estimated_time(volumes)
-                    snapshots.sync_volume_snapshots(raw_data['Volumes'], SYNC_TTL)
+                    rebalance_status.sync_volume_rebalance_estimated_time(
+                        volumes
+                    )
+                    snapshots.sync_volume_snapshots(
+                        raw_data['Volumes'],
+                        SYNC_TTL
+                    )
 
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
@@ -251,8 +257,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     continue
             out, err, rc = cmd_utils.Command(
                 "gluster volume profile %s %s" %
-                (volume.name,
-                action)
+                (volume.name, action)
             ).run()
             if err or rc != 0:
                 failed_vols.append(volume.name)
@@ -266,8 +271,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     publisher=NS.publisher_id,
                     payload={
                         "message": "%sing profiling failed for volumes: %s" %
-                        (action,
-                        str(failed_vols))
+                        (action, str(failed_vols))
                     }
                 )
             )
@@ -504,39 +508,39 @@ def sync_volumes(volumes, index, vol_options):
             NS._int.wclient.write(vol_brick_path, "")
 
             brick = NS.gluster.objects.Brick(
-                    brick_name,
-                    vol_id=volumes['volume%s.id' % index],
-                    sequence_number=b_index,
-                    brick_path=volumes[
-                        'volume%s.brick%s.path' % (index, b_index)
-                    ],
-                    hostname=volumes.get(
-                        'volume%s.brick%s.hostname' % (index, b_index)
-                    ),
-                    port=volumes.get(
-                        'volume%s.brick%s.port' % (index, b_index)
-                    ),
-                    used=True,
-                    node_id=NS.node_context.node_id,
-                    status=volumes.get(
-                        'volume%s.brick%s.status' % (index, b_index)
-                    ),
-                    filesystem_type=volumes.get(
-                        'volume%s.brick%s.filesystem_type' % (index, b_index)
-                    ),
-                    mount_opts=volumes.get(
-                        'volume%s.brick%s.mount_options' % (index, b_index)
-                    ),
-                    utilization=brick_utilization.brick_utilization(
-                        volumes['volume%s.brick%s.path' % (index, b_index)]
-                    ),
-                    client_count=volumes.get(
-                        'volume%s.brick%s.client_count' % (index, b_index)
-                    ),
-                    is_arbiter=volumes.get(
-                        'volume%s.brick%s.is_arbiter' % (index, b_index)
-                    ),
-                )
+                brick_name,
+                vol_id=volumes['volume%s.id' % index],
+                sequence_number=b_index,
+                brick_path=volumes[
+                    'volume%s.brick%s.path' % (index, b_index)
+                ],
+                hostname=volumes.get(
+                    'volume%s.brick%s.hostname' % (index, b_index)
+                ),
+                port=volumes.get(
+                    'volume%s.brick%s.port' % (index, b_index)
+                ),
+                used=True,
+                node_id=NS.node_context.node_id,
+                status=volumes.get(
+                    'volume%s.brick%s.status' % (index, b_index)
+                ),
+                filesystem_type=volumes.get(
+                    'volume%s.brick%s.filesystem_type' % (index, b_index)
+                ),
+                mount_opts=volumes.get(
+                    'volume%s.brick%s.mount_options' % (index, b_index)
+                ),
+                utilization=brick_utilization.brick_utilization(
+                    volumes['volume%s.brick%s.path' % (index, b_index)]
+                ),
+                client_count=volumes.get(
+                    'volume%s.brick%s.client_count' % (index, b_index)
+                ),
+                is_arbiter=volumes.get(
+                    'volume%s.brick%s.is_arbiter' % (index, b_index)
+                ),
+            )
             brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\

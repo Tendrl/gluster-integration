@@ -1,6 +1,7 @@
 import etcd
 
 from tendrl.commons.utils import cmd_utils
+from tendrl.gluster_integration.sds_sync import emit_event
 
 
 def sync_cluster_status(volumes):
@@ -30,12 +31,11 @@ def sync_cluster_status(volumes):
                       )
                 instance = "volume_%s" % volume.name
                 emit_event(
-                    "volume_status",
-                    current_status,
+                    "volume_state",
+                    state,
                     msg,
                     instance
                 )
-
 
     # Change status basd on node status
     cmd = cmd_utils.Command(
@@ -64,6 +64,7 @@ def sync_cluster_status(volumes):
         vol_count=len(volumes),
         volume_up_degraded=degraded_count
     ).save()
+
 
 def _derive_volume_states(volumes):
     out_dict = {}
