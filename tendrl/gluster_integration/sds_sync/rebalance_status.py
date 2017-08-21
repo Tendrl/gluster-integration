@@ -48,7 +48,7 @@ def sync_volume_rebalance_estimated_time(volumes):
         volume.save()
 
 
-def _sync_volume_rebalance_status(volumes):
+def sync_volume_rebalance_status(volumes):
     for volume in volumes:
         if volume.vol_type == "Distribute":
             status = get_rebalance_status(
