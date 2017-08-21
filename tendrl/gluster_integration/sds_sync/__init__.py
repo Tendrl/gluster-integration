@@ -2,9 +2,7 @@ import blivet
 import etcd
 import gevent
 import json
-import os
 import re
-import socket
 import subprocess
 
 from tendrl.commons.event import Event
@@ -19,6 +17,7 @@ from tendrl.gluster_integration.sds_sync import brick_device_details
 from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import client_connections
 from tendrl.gluster_integration.sds_sync import cluster_status
+from tendrl.gluster_integration.sds_sync import event_utils
 from tendrl.gluster_integration.sds_sync import georep_details
 from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
@@ -277,38 +276,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             )
 
 
-def emit_event(self, resource, curr_value, msg, instance):
-    alert = {}
-    alert['source'] = NS.publisher_id
-    alert['pid'] = os.getpid()
-    alert['time_stamp'] = tendrl_now().isoformat()
-    alert['alert_type'] = 'status'
-    severity = "INFO"
-    if curr_value.lower() == "stopped":
-        severity = "CRITICAL"
-    alert['severity'] = severity
-    alert['resource'] = resource
-    alert['current_value'] = curr_value
-    alert['tags'] = dict(
-        plugin_instance=instance,
-        message=msg,
-        cluster_id=NS.tendrl_context.integration_id,
-        cluster_name=NS.tendrl_context.cluster_name,
-        sds_name=NS.tendrl_context.sds_name,
-        fqdn=socket.getfqdn()
-    )
-    alert['node_id'] = NS.node_context.node_id
-    if not NS.node_context.node_id:
-        return
-    Event(
-        Message(
-            "notice",
-            "alerting",
-            {'message': json.dumps(alert)}
-        )
-    )
-
-
 def sync_volumes(volumes, index, vol_options):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
@@ -344,7 +311,7 @@ def sync_volumes(volumes, index, vol_options):
                 instance = "volume_%s" % volumes[
                     'volume%s.name' % index
                 ]
-                emit_event(
+                event_utils.emit_event(
                     "volume_status",
                     current_status,
                     msg,
@@ -486,7 +453,7 @@ def sync_volumes(volumes, index, vol_options):
                             b_index
                         )]
                     )
-                    emit_event(
+                    event_utils.emit_event(
                         "brick_status",
                         current_status,
                         msg,
