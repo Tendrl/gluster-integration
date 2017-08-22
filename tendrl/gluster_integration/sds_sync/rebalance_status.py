@@ -50,7 +50,7 @@ def sync_volume_rebalance_estimated_time(volumes):
 
 def sync_volume_rebalance_status(volumes):
     for volume in volumes:
-        if volume.vol_type == "Distribute":
+        if volume.vol_type.startswith("Distribute"):
             status = get_rebalance_status(
                 volume.name
             )
