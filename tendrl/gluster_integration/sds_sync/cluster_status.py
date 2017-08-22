@@ -1,7 +1,7 @@
 import etcd
 
 from tendrl.commons.utils import cmd_utils
-from tendrl.gluster_integration.sds_sync import emit_event
+from tendrl.gluster_integration.sds_sync import event_utils
 
 
 def sync_cluster_status(volumes):
@@ -30,7 +30,7 @@ def sync_cluster_status(volumes):
                           state
                       )
                 instance = "volume_%s" % volume.name
-                emit_event(
+                event_utils.emit_event(
                     "volume_state",
                     state,
                     msg,
