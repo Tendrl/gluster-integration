@@ -244,7 +244,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         volumes = NS.gluster.objects.Volume().load_all()
         failed_vols = []
         for volume in volumes:
-            if cluster.enable_volume_profiling:
+            if cluster.enable_volume_profiling is not None and cluster.enable_volume_profiling == "yes":
                 if volume.profiling_enabled == 'False':
                     action = "start"
                 else:
@@ -261,7 +261,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             if err or rc != 0:
                 failed_vols.append(volume.name)
                 continue
-            volume.profiling_enabled = cluster.enable_volume_profiling
+            volume.profiling_enabled = "True" if cluster.enable_volume_profiling == "yes" else "False"
             volume.save()
         if len(failed_vols) > 0:
             Event(
