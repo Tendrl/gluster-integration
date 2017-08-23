@@ -1,6 +1,7 @@
 import blivet
 import etcd
 import gevent
+import gevent.hub
 import json
 import re
 import subprocess
@@ -22,6 +23,8 @@ from tendrl.gluster_integration.sds_sync import georep_details
 from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
+
+gevent.hub.Hub.NOT_ERROR=(Exception,)
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
