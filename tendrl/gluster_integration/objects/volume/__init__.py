@@ -26,7 +26,7 @@ class Volume(objects.BaseObject):
         usable_capacity=None,
         used_capacity=None,
         pcnt_used=None,
-        profiling_enabled=False,
+        profiling_enabled=None,
         client_count=None,
         rebal_estimated_time=None,
         *args,

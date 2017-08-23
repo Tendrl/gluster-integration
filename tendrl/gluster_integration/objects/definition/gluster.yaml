@@ -874,7 +874,7 @@ namespace.gluster:
           type: String
         profiling_enabled:
           help: Whether profiling is enabled
-          type: Boolean
+          type: String
         client_count:
           help: No of client connections
         rebal_estimated_time:
