@@ -248,7 +248,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         failed_vols = []
         for volume in volumes:
             if cluster.enable_volume_profiling == "yes":
-                if volume.profiling_enabled == 'False':
+                if volume.profiling_enabled == 'False' or \
+                    volume.profiling_enabled == '':
                     action = "start"
                 else:
                     continue
