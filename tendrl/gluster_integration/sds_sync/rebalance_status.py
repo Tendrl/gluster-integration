@@ -1,20 +1,36 @@
+import gevent
+
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
 from tendrl.commons.utils import cmd_utils
 import xml.etree.cElementTree as etree
 
+RETRY_COUNT = 3
+RETRY_INTERVAL = 2
 
 def get_rebalance_status(volume):
     cmd = cmd_utils.Command('gluster volume status %s --xml' % volume)
-    out, err, rc = cmd.run()
-    if rc != 0:
-        Event(
-            Message(
-                priority="error",
-                publisher=NS.publisher_id,
-                payload={"message": "volume status command failed: %s" % err}
+
+    index = 0
+    while True:
+        gevent.sleep(RETRY_INTERVAL)
+        index += 1
+        if index >= RETRY_COUNT:
+            Event(
+                Message(
+                    priority="error",
+                    publisher=NS.publisher_id,
+                    payload={
+                        "message": "volume status command"
+                        " failed after retries: %s" % err
+                    }
+                )
             )
-        )
+            return None
+
+        out, err, rc = cmd.run()
+        if rc == 0:
+            break
 
     tree = etree.fromstring(out)
     rv = int(tree.find('opRet').text)
