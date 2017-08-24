@@ -13,8 +13,9 @@ def get_rebalance_status(volume):
 
     index = 0
     while True:
+        gevent.sleep(RETRY_INTERVAL)
         index += 1
-        if index == RETRY_COUNT:
+        if index >= RETRY_COUNT:
             Event(
                 Message(
                     priority="error",
@@ -30,7 +31,6 @@ def get_rebalance_status(volume):
         out, err, rc = cmd.run()
         if rc == 0:
             break
-        gevent.sleep(RETRY_INTERVAL)
 
     tree = etree.fromstring(out)
     rv = int(tree.find('opRet').text)
