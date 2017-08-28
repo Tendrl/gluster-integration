@@ -1,11 +1,3 @@
-import gevent
-
-from tendrl.commons.event import Event
-from tendrl.commons.message import Message
-from tendrl.commons.utils import cmd_utils
-import xml.etree.cElementTree as etree
-
-
 def sync_volume_rebalance_estimated_time(volumes):
     for volume in volumes:
         rebal_estimated_time = 0

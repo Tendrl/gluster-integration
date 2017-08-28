@@ -24,7 +24,7 @@ from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
 
-gevent.hub.Hub.NOT_ERROR=(Exception,)
+gevent.hub.Hub.NOT_ERROR = (Exception,)
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
