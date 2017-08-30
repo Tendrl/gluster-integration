@@ -192,7 +192,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 # Sync cluster global details
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
                     in NS.node_context.tags:
-                    volumes = NS.gluster.objects.Volume().load_all()
+                    volumes = NS.gluster.objects.Volume().load_all() or []
                     cluster_status.sync_cluster_status(volumes)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
