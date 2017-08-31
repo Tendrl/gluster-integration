@@ -12,6 +12,7 @@ from tendrl.commons.message import Message
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
+from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.sds_sync import brick_device_details
@@ -25,6 +26,10 @@ from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
 
 gevent.hub.Hub.NOT_ERROR = (Exception,)
+
+RESOURCE_TYPE_BRICK = "brick"
+RESOURCE_TYPE_PEER = "host"
+RESOURCE_TYPE_VOLUME = "volume"
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -150,6 +155,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         'peer%s.primary_hostname' % index
                                     ],
                                     state=peers['peer%s.state' % index]
+                                )
+                            if not peer.exists():
+                                monitoring_utils.update_dashboard(
+                                    peer.hostname,
+                                    RESOURCE_TYPE_PEER,
+                                    NS.tendrl_context.integration_id,
+                                    "add"
                                 )
                             peer.save(ttl=SYNC_TTL)
                             index += 1
@@ -346,6 +358,13 @@ def sync_volumes(volumes, index, vol_options):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
+        if not volume.exists():
+            monitoring_utils.update_dashboard(
+                volume.name,
+                RESOURCE_TYPE_VOLUME,
+                NS.tendrl_context.integration_id,
+                "add"
+            )
         volume.save(ttl=SYNC_TTL)
 
         # Save the default values of volume options
@@ -514,6 +533,13 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
+            if not brick.exists():
+                monitoring_utils.update_dashboard(
+                    brick.brick_name,
+                    RESOURCE_TYPE_BRICK,
+                    NS.tendrl_context.integration_id,
+                    "add"
+                )
             brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\
