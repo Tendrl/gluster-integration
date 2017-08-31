@@ -244,7 +244,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster = NS.tendrl.objects.Cluster(
             integration_id=NS.tendrl_context.integration_id
         ).load()
-        volumes = NS.gluster.objects.Volume().load_all()
+        volumes = NS.gluster.objects.Volume().load_all() or []
         failed_vols = []
         for volume in volumes:
             if cluster.enable_volume_profiling == "yes":
