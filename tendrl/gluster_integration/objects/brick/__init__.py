@@ -57,11 +57,12 @@ class Brick(objects.BaseObject):
         self.used = used
         self.client_count = client_count
         self.is_arbiter = is_arbiter
-        self.value = 'clusters/{0}/Bricks/all/{1}'
+        self.value = 'clusters/{0}/Bricks/all/{1}/{2}'
 
     def render(self):
         self.value = self.value.format(
             NS.tendrl_context.integration_id,
-            self.name.replace("/", "_").replace(" ", "")
+            self.name.split(":")[0],
+            self.name.replace("/", "_").replace(" ", "").split(":_")[-1]
         )
         return super(Brick, self).render()
