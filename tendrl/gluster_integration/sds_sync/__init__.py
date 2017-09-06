@@ -529,6 +529,7 @@ def sync_volumes(volumes, index, vol_options):
                 port=volumes.get(
                     'volume%s.brick%s.port' % (index, b_index)
                 ),
+                vol_name=volumes['volume%s.name' % index],
                 used=True,
                 node_id=NS.node_context.node_id,
                 status=volumes.get(
