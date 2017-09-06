@@ -85,7 +85,8 @@ def _derive_volume_states(volumes):
                 for entry in subvol.leaves:
                     brick_name = entry.key.split("/")[-1]
                     fetched_brick = NS.gluster.objects.Brick(
-                        name=brick_name
+                        brick_name.split(":")[0],
+                        brick_name.split(":_")[-1]
                     ).load()
                     bricks.append(fetched_brick)
                     if fetched_brick.status != "Started":

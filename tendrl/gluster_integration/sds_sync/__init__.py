@@ -467,10 +467,11 @@ def sync_volumes(volumes, index, vol_options):
             try:
                 sbs = NS._int.client.read(
                     "clusters/%s/Bricks/all/"
-                    "%s/status" % (
+                    "%s/%s/status" % (
                         NS.tendrl_context.
                         integration_id,
-                        brick_name
+                        NS.node_context.fqdn,
+                        brick_name.split(":_")[-1]
                     )
                 ).value
                 current_status = volumes.get(
@@ -517,7 +518,9 @@ def sync_volumes(volumes, index, vol_options):
             NS._int.wclient.write(vol_brick_path, "")
 
             brick = NS.gluster.objects.Brick(
-                brick_name,
+                NS.node_context.fqdn,
+                brick_name.split(":_")[-1],
+                name=brick_name,
                 vol_id=volumes['volume%s.id' % index],
                 sequence_number=b_index,
                 brick_path=volumes[
@@ -552,7 +555,7 @@ def sync_volumes(volumes, index, vol_options):
             )
             if not brick.exists():
                 job_id = monitoring_utils.update_dashboard(
-                    brick.brick_name,
+                    brick.name,
                     RESOURCE_TYPE_BRICK,
                     NS.tendrl_context.integration_id,
                     "add"
@@ -585,6 +588,8 @@ def sync_volumes(volumes, index, vol_options):
                     try:
                         NS.gluster.objects.ClientConnection(
                             brick_name=brick_name,
+                            fqdn=NS.node_context.fqdn,
+                            brick_dir=brick_name.split(":_")[-1],
                             hostname=volumes[
                                 'volume%s.brick%s.client%s.hostname' % (
                                     index, b_index, c_index

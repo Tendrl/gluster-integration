@@ -92,17 +92,17 @@ class Create(objects.BaseAtom):
                                 node_id = node.key.split("/")[-1]
                     key = "nodes/%s/NodeContext/fqdn" % node_id
                     host = NS._int.client.read(key).value
-                    brick_path = host + ":" + brick_path
+                    brick_path = host + "/" + brick_path.replace("/", "_")[1:]
                     NS._int.wclient.delete(
                         ("clusters/%s/Bricks/free/%s") % (
                             NS.tendrl_context.integration_id,
-                            brick_path.replace("/", "_")
+                            brick_path
                         )
                     )
                     NS._int.wclient.write(
                         ("clusters/%s/Bricks/used/%s") % (
                             NS.tendrl_context.integration_id,
-                            brick_path.replace("/", "_")
+                            brick_path
                         ),
                         ""
                     )
