@@ -552,7 +552,7 @@ def sync_volumes(volumes, index, vol_options):
             )
             if not brick.exists():
                 job_id = monitoring_utils.update_dashboard(
-                    brick.brick_name,
+                    brick.name,
                     RESOURCE_TYPE_BRICK,
                     NS.tendrl_context.integration_id,
                     "add"
