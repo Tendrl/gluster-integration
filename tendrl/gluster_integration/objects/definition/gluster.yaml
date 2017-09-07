@@ -374,6 +374,9 @@ namespace.gluster:
         vol_id:
           help: Volume id
           type: String
+        vol_name:
+          help: Volume name
+          type: String
         used:
           help: whether the brick is part of a volume
           type: Boolean

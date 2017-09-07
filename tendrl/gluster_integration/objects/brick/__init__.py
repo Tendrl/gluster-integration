@@ -10,6 +10,7 @@ class Brick(objects.BaseObject):
         mount_path=None,
         node_id=None,
         vol_id=None,
+        vol_name=None,
         sequence_number=None,
         hostname=None,
         port=None,
@@ -46,6 +47,7 @@ class Brick(objects.BaseObject):
         self.pv = pv
         self.stripe_size = stripe_size
         self.vol_id = vol_id
+        self.vol_name = vol_name
         self.sequence_number = sequence_number
         self.hostname = hostname
         self.port = port
