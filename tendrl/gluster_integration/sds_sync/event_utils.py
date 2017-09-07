@@ -1,9 +1,6 @@
 import json
 import os
-import socket
 
-from tendrl.commons.event import Event
-from tendrl.commons.message import Message
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils.time_utils import now as tendrl_now
 
@@ -27,7 +24,7 @@ def emit_event(resource, curr_value, msg, instance):
         integration_id=NS.tendrl_context.integration_id,
         cluster_name=NS.tendrl_context.cluster_name,
         sds_name=NS.tendrl_context.sds_name,
-        fqdn=socket.getfqdn()
+        fqdn=NS.node_context.fqdn
     )
     alert['node_id'] = NS.node_context.node_id
     if not NS.node_context.node_id:

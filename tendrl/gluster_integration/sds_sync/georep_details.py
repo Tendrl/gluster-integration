@@ -1,10 +1,12 @@
 import etcd
+
 from tendrl.gluster_integration.objects.geo_replication_pair\
     import GeoReplicationPair
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSession
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSessionStatus
+from tendrl.gluster_integration.sds_sync import event_utils
 
 
 def save_georep_details(volumes, index):
@@ -36,6 +38,56 @@ def save_georep_details(volumes, index):
                         index, pair_index)
                 ].replace("/", "_")
             )
+
+            try:
+                fetched_pair_status = NS._int.client.read(
+                    "clusters/%s/Volumes/%s/GeoRepSessions/"
+                    "%s/pairs/%s/status" % (
+                        NS.tendrl_context.integration_id,
+                        volumes['volume%s.id' % index],
+                        session_id,
+                        pair_name
+                    )
+                ).value
+                pair_status = volumes[
+                    'volume%s.pair%s.status' % (index, pair_index)
+                ]
+                if fetched_pair_status != pair_status and \
+                    pair_status.lower() == 'faulty':
+                    msg = ("georep status of pair: %s "
+                           "of volume %s is faulty") % (
+                               pair_name,
+                               volumes['volume%s.name' % index])
+                    instance = "volume_%s|georep_%s" % (
+                        volumes['volume%s.name' % index],
+                        pair_name
+                    )
+                    event_utils.emit_event(
+                        "georep_status",
+                        pair_status,
+                        msg,
+                        instance
+                    )
+                if fetched_pair_status.lower() == 'faulty' and \
+                    pair_status.lower() in ['active', 'passive']:
+                    msg = ("georep status of pair: %s "
+                           "of volume %s is %s now") % (
+                               pair_name,
+                               volumes['volume%s.name' % index],
+                               pair_status)
+                    instance = "volume_%s|georep_%s" % (
+                        volumes['volume%s.name' % index],
+                        pair_name
+                    )
+                    event_utils.emit_event(
+                        "georep_status",
+                        pair_status,
+                        msg,
+                        instance
+                    )
+            except etcd.EtcdKeyNotFound:
+                pass
+
             pair = NS.gluster.objects.GeoReplicationPair(
                 vol_id=volumes['volume%s.id' % index],
                 session_id=session_id,

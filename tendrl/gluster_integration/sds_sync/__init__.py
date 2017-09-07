@@ -155,8 +155,41 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     hostname=peers[
                                         'peer%s.primary_hostname' % index
                                     ],
-                                    state=peers['peer%s.state' % index]
+                                    state=peers['peer%s.state' % index],
+                                    connected=peers['peer%s.connected' % index]
                                 )
+                            try:
+                                stored_peer_status = NS._int.client.read(
+                                    "clusters/%s/Peers/%s/connected" % (
+                                        NS.tendrl_context.integration_id,
+                                        peers['peer%s.uuid' % index]
+                                    )
+                                ).value
+                                current_status = peers[
+                                    'peer%s.connected' % index
+                                ]
+                                if stored_peer_status != "" and \
+                                    current_status != stored_peer_status:
+                                    msg = ("Status of peer: %s "
+                                           "changed from %s to %s") % (
+                                               peers[
+                                                   'peer%s.primary_hostname' %
+                                                   index
+                                               ],
+                                               stored_peer_status,
+                                               current_status)
+                                    instance = "peer_%s" % peers[
+                                        'peer%s.primary_hostname' % index
+                                    ]
+                                    event_utils.emit_event(
+                                        "peer_status",
+                                        current_status,
+                                        msg,
+                                        instance
+                                    )
+                            except etcd.EtcdKeyNotFound:
+                                pass
+
                             if not peer.exists():
                                 job_id = monitoring_utils.update_dashboard(
                                     peer.hostname,
@@ -330,11 +363,10 @@ def sync_volumes(volumes, index, vol_options):
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
                 msg = ("Status of volume: %s "
-                      "changed from %s to %s") % (
-                          volumes['volume%s.name' % index],
-                          stored_volume_status,
-                          current_status
-                      )
+                       "changed from %s to %s") % (
+                           volumes['volume%s.name' % index],
+                           stored_volume_status,
+                           current_status)
                 instance = "volume_%s" % volumes[
                     'volume%s.name' % index
                 ]
@@ -479,16 +511,15 @@ def sync_volumes(volumes, index, vol_options):
                 )
                 if current_status != sbs:
                     msg = ("Status of brick: %s "
-                          "under volume %s chan"
-                          "ged from %s to %s") % (
-                              volumes['volume%s.brick%s' '.path' % (
-                                  index,
-                                  b_index
-                              )],
-                              volumes['volume%s.' 'name' % index],
-                              sbs,
-                              current_status
-                          )
+                           "under volume %s chan"
+                           "ged from %s to %s") % (
+                               volumes['volume%s.brick%s' '.path' % (
+                                   index,
+                                   b_index
+                               )],
+                               volumes['volume%s.' 'name' % index],
+                               sbs,
+                               current_status)
                     instance = "volume_%s|brick_%s" % (
                         volumes['volume%s.name' % index],
                         volumes['volume%s.brick%s.path' % (
