@@ -123,6 +123,9 @@ namespace.gluster:
         state:
           help: "Gluster Peer state"
           type: String
+        connected:
+          help: Connected status of peer
+          type: String
         update:
           help: "Last Peer update time"
           type: String
