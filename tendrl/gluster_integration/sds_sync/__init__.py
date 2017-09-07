@@ -185,7 +185,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         "peer_status",
                                         current_status,
                                         msg,
-                                        instance
+                                        instance,
+                                        'WARNING' if current_status != 'Connected' \
+                                        else 'INFO'
+
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
@@ -374,7 +377,9 @@ def sync_volumes(volumes, index, vol_options):
                     "volume_status",
                     current_status,
                     msg,
-                    instance
+                    instance,
+                    'WARNING' if current_status == 'Stopped' \
+                    else 'INFO'
                 )
         except etcd.EtcdKeyNotFound:
             pass
@@ -531,7 +536,9 @@ def sync_volumes(volumes, index, vol_options):
                         "brick_status",
                         current_status,
                         msg,
-                        instance
+                        instance,
+                        'WARNING' if current_status == 'Stopped' \
+                        else 'INFO'
                     )
 
             except etcd.EtcdKeyNotFound:

@@ -43,7 +43,8 @@ def sync_volume_rebalance_status(volumes):
                     "rebalance_status",
                     new_rebal_status,
                     msg,
-                    instance
+                    instance,
+                    'INFO'
                 )
 
             volume.rebal_status = new_rebal_status

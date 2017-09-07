@@ -66,7 +66,8 @@ def save_georep_details(volumes, index):
                         "georep_status",
                         pair_status,
                         msg,
-                        instance
+                        instance,
+                        'WARNING'
                     )
                 if fetched_pair_status.lower() == 'faulty' and \
                     pair_status.lower() in ['active', 'passive']:
@@ -83,7 +84,8 @@ def save_georep_details(volumes, index):
                         "georep_status",
                         pair_status,
                         msg,
-                        instance
+                        instance,
+                        'INFO'
                     )
             except etcd.EtcdKeyNotFound:
                 pass
