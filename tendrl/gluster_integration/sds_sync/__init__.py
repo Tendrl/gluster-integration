@@ -329,8 +329,8 @@ def sync_volumes(volumes, index, vol_options):
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
-                msg = "Status of volume: %s " + \
-                      "changed from %s to %s" % (
+                msg = ("Status of volume: %s "
+                      "changed from %s to %s") % (
                           volumes['volume%s.name' % index],
                           stored_volume_status,
                           current_status
@@ -478,9 +478,9 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.status' % (index, b_index)
                 )
                 if current_status != sbs:
-                    msg = "Status of brick: %s " + \
-                          "under volume %s chan" + \
-                          "ged from %s to %s" % (
+                    msg = ("Status of brick: %s "
+                          "under volume %s chan"
+                          "ged from %s to %s") % (
                               volumes['volume%s.brick%s' '.path' % (
                                   index,
                                   b_index
@@ -532,6 +532,7 @@ def sync_volumes(volumes, index, vol_options):
                 port=volumes.get(
                     'volume%s.brick%s.port' % (index, b_index)
                 ),
+                vol_name=volumes['volume%s.name' % index],
                 used=True,
                 node_id=NS.node_context.node_id,
                 status=volumes.get(
