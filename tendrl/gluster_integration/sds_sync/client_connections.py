@@ -17,7 +17,8 @@ def sync_volume_connections(volumes):
                 for entry in subvol.leaves:
                     brick_name = entry.key.split("/")[-1]
                     fetched_brick = NS.gluster.objects.Brick(
-                        name=brick_name
+                        brick_name.split(":")[0],
+                        brick_name.split(":_")[-1]
                     ).load()
                     vol_connections += 0 if fetched_brick.client_count == '' \
                         else int(fetched_brick.client_count)

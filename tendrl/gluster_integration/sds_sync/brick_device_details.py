@@ -54,7 +54,9 @@ def update_brick_device_details(brick_name, brick_path, devicetree):
         pvs = [dev.path for dev in device.disks]
 
     brick = NS.gluster.objects.Brick(
-        brick_name,
+        brick_name.split(":")[0],
+        brick_name.split(":_")[-1],
+        name=brick_name,
         devices=disks,
         mount_path=mount_point,
         lv=lv,

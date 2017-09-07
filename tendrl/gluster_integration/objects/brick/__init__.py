@@ -4,7 +4,9 @@ from tendrl.commons import objects
 class Brick(objects.BaseObject):
     def __init__(
         self,
-        name,
+        fqdn,
+        brick_dir,
+        name=None,
         devices=None,
         brick_path=None,
         mount_path=None,
@@ -37,6 +39,8 @@ class Brick(objects.BaseObject):
         self.devices = devices
         self.name = name
         self.node_id = node_id
+        self.fqdn = fqdn
+        self.brick_dir = brick_dir
         self.brick_path = brick_path
         self.mount_path = mount_path
         self.disk_type = disk_type
@@ -64,7 +68,7 @@ class Brick(objects.BaseObject):
     def render(self):
         self.value = self.value.format(
             NS.tendrl_context.integration_id,
-            self.name.split(":")[0],
-            self.name.replace("/", "_").replace(" ", "").split(":_")[-1]
+            self.fqdn,
+            self.brick_dir
         )
         return super(Brick, self).render()
