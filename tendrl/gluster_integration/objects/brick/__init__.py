@@ -64,7 +64,14 @@ class Brick(objects.BaseObject):
         self.client_count = client_count
         self.is_arbiter = is_arbiter
         self.value = 'clusters/{0}/Bricks/all/{1}/{2}'
-
+    
+    def save(self, update=True, ttl=None):
+        if not self.hash_compare_with_central_store():
+            _volume = NS.gluster.objects.Volume(vol_id=self.vol_id)
+            _volume.invalidate_hash()
+            
+        return super(Brick, self).save()
+        
     def render(self):
         self.value = self.value.format(
             NS.tendrl_context.integration_id,
