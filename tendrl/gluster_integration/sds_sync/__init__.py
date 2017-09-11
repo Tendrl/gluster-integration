@@ -13,7 +13,6 @@ from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import log_utils as logger
-from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.sds_sync import brick_device_details
@@ -193,21 +192,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             except etcd.EtcdKeyNotFound:
                                 pass
 
-                            if not peer.exists():
-                                job_id = monitoring_utils.update_dashboard(
-                                    peer.hostname,
-                                    RESOURCE_TYPE_PEER,
-                                    NS.tendrl_context.integration_id,
-                                    "add"
-                                )
-                                logger.log(
-                                    "debug",
-                                    NS.publisher_id,
-                                    {
-                                        "message": "Update dashboard job %s "
-                                        "created" % job_id
-                                    }
-                                )
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
@@ -404,21 +388,6 @@ def sync_volumes(volumes, index, vol_options):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
-        if not volume.exists():
-            job_id = monitoring_utils.update_dashboard(
-                volume.name,
-                RESOURCE_TYPE_VOLUME,
-                NS.tendrl_context.integration_id,
-                "add"
-            )
-            logger.log(
-                "debug",
-                NS.publisher_id,
-                {
-                    "message": "Update dashboard job %s "
-                    "created" % job_id
-                }
-            )
         volume.save(ttl=SYNC_TTL)
 
         # Save the default values of volume options
@@ -592,20 +561,6 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            if not brick.exists():
-                job_id = monitoring_utils.update_dashboard(
-                    brick.name,
-                    RESOURCE_TYPE_BRICK,
-                    NS.tendrl_context.integration_id,
-                    "add"
-                )
-                logger.log(
-                    "debug",
-                    NS.publisher_id,
-                    {
-                        "message": "Update dashboard job %s created" % job_id
-                    }
-                )
             brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\
