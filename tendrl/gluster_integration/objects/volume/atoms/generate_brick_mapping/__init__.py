@@ -34,15 +34,22 @@ class GenerateBrickMapping(objects.BaseAtom):
             host = NS._int.client.read(key).value
             nodes[host] = []
 
-        bricks = NS._int.client.read(
+        hosts = NS._int.client.read(
             '/clusters/%s/Bricks/free/' % NS.tendrl_context.integration_id
         )
-        for brick in bricks.leaves:
-            brick = brick.key.split("/")[-1]
-            _brick_host = brick.split(":")[0]
-            if _brick_host in nodes:
-                if len(nodes[_brick_host]) < brick_count:
-                    nodes[_brick_host].append(brick)
+        for host in hosts.leaves:
+            host = host.key.split("/")[-1]
+            bricks = NS._int.client.read(
+                '/clusters/%s/Bricks/free/%s' % (
+                    NS.tendrl_context.integration_id,
+                    host
+                )
+            )
+            for brick in bricks.leaves:
+                brick = brick.key.split("/")[-1]
+                if host in nodes:
+                    if len(nodes[host]) < brick_count:
+                        nodes[host].append(brick)
 
         # Form a brick list such that when you fill sub volumes with
         # bricks from this list, it should honour the failure domains

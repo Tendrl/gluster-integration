@@ -86,13 +86,17 @@ class Create(objects.BaseAtom):
 
             for k, v in brick_dict.iteritems():
                 for key, val in v.iteritems():
-                    brick_name = k + ":" + val["brick_path"].replace("/", "_")
+                    brick_name = k + "/" + val[
+                        "brick_path"
+                    ].replace("/", "_")[1:]
                     NS.gluster.objects.Brick(
-                        brick_name,
                         key,
-                        val["brick_path"],
-                        val["mount_path"],
-                        val["node_id"],
+                        val["brick_path"].replace("/", "_")[1:],
+                        name=brick_name,
+                        hostname=key,
+                        brick_path=val["brick_path"],
+                        mount_path=val["mount_path"],
+                        node_id=val["node_id"],
                         lv=val["lv"],
                         vg=val["vg"],
                         pool=val["pool"],
@@ -103,7 +107,7 @@ class Create(objects.BaseAtom):
                     ).save()
                     free_brick_key = "clusters/%s/Bricks/free/%s" % (
                         NS.tendrl_context.integration_id,
-                        brick_name.replace("/", "_")
+                        brick_name
                     )
                     NS._int.wclient.write(free_brick_key, "")
             return True

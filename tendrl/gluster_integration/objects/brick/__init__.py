@@ -4,12 +4,15 @@ from tendrl.commons import objects
 class Brick(objects.BaseObject):
     def __init__(
         self,
-        name,
+        fqdn,
+        brick_dir,
+        name=None,
         devices=None,
         brick_path=None,
         mount_path=None,
         node_id=None,
         vol_id=None,
+        vol_name=None,
         sequence_number=None,
         hostname=None,
         port=None,
@@ -36,6 +39,8 @@ class Brick(objects.BaseObject):
         self.devices = devices
         self.name = name
         self.node_id = node_id
+        self.fqdn = fqdn
+        self.brick_dir = brick_dir
         self.brick_path = brick_path
         self.mount_path = mount_path
         self.disk_type = disk_type
@@ -46,6 +51,7 @@ class Brick(objects.BaseObject):
         self.pv = pv
         self.stripe_size = stripe_size
         self.vol_id = vol_id
+        self.vol_name = vol_name
         self.sequence_number = sequence_number
         self.hostname = hostname
         self.port = port
@@ -57,11 +63,19 @@ class Brick(objects.BaseObject):
         self.used = used
         self.client_count = client_count
         self.is_arbiter = is_arbiter
-        self.value = 'clusters/{0}/Bricks/all/{1}'
-
+        self.value = 'clusters/{0}/Bricks/all/{1}/{2}'
+    
+    def save(self, update=True, ttl=None):
+        if not self.hash_compare_with_central_store():
+            _volume = NS.gluster.objects.Volume(vol_id=self.vol_id)
+            _volume.invalidate_hash()
+            
+        return super(Brick, self).save()
+        
     def render(self):
         self.value = self.value.format(
             NS.tendrl_context.integration_id,
-            self.name.replace("/", "_").replace(" ", "")
+            self.fqdn,
+            self.brick_dir
         )
         return super(Brick, self).render()

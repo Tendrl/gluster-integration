@@ -12,6 +12,8 @@ from tendrl.commons.message import Message
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
+from tendrl.commons.utils import log_utils as logger
+from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.sds_sync import brick_device_details
@@ -24,7 +26,11 @@ from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
 
-gevent.hub.Hub.NOT_ERROR=(Exception,)
+gevent.hub.Hub.NOT_ERROR = (Exception,)
+
+RESOURCE_TYPE_BRICK = "brick"
+RESOURCE_TYPE_PEER = "host"
+RESOURCE_TYPE_VOLUME = "volume"
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -149,7 +155,58 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     hostname=peers[
                                         'peer%s.primary_hostname' % index
                                     ],
-                                    state=peers['peer%s.state' % index]
+                                    state=peers['peer%s.state' % index],
+                                    connected=peers['peer%s.connected' % index]
+                                )
+                            try:
+                                stored_peer_status = NS._int.client.read(
+                                    "clusters/%s/Peers/%s/connected" % (
+                                        NS.tendrl_context.integration_id,
+                                        peers['peer%s.uuid' % index]
+                                    )
+                                ).value
+                                current_status = peers[
+                                    'peer%s.connected' % index
+                                ]
+                                if stored_peer_status != "" and \
+                                    current_status != stored_peer_status:
+                                    msg = ("Status of peer: %s "
+                                           "changed from %s to %s") % (
+                                               peers[
+                                                   'peer%s.primary_hostname' %
+                                                   index
+                                               ],
+                                               stored_peer_status,
+                                               current_status)
+                                    instance = "peer_%s" % peers[
+                                        'peer%s.primary_hostname' % index
+                                    ]
+                                    event_utils.emit_event(
+                                        "peer_status",
+                                        current_status,
+                                        msg,
+                                        instance,
+                                        'WARNING' if current_status != 'Connected' \
+                                        else 'INFO'
+
+                                    )
+                            except etcd.EtcdKeyNotFound:
+                                pass
+
+                            if not peer.exists():
+                                job_id = monitoring_utils.update_dashboard(
+                                    peer.hostname,
+                                    RESOURCE_TYPE_PEER,
+                                    NS.tendrl_context.integration_id,
+                                    "add"
+                                )
+                                logger.log(
+                                    "debug",
+                                    NS.publisher_id,
+                                    {
+                                        "message": "Update dashboard job %s "
+                                        "created" % job_id
+                                    }
                                 )
                             peer.save(ttl=SYNC_TTL)
                             index += 1
@@ -308,12 +365,11 @@ def sync_volumes(volumes, index, vol_options):
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
-                msg = "Status of volume: %s " + \
-                      "changed from %s to %s" % (
-                          volumes['volume%s.name' % index],
-                          stored_volume_status,
-                          current_status
-                      )
+                msg = ("Status of volume: %s "
+                       "changed from %s to %s") % (
+                           volumes['volume%s.name' % index],
+                           stored_volume_status,
+                           current_status)
                 instance = "volume_%s" % volumes[
                     'volume%s.name' % index
                 ]
@@ -321,7 +377,9 @@ def sync_volumes(volumes, index, vol_options):
                     "volume_status",
                     current_status,
                     msg,
-                    instance
+                    instance,
+                    'WARNING' if current_status == 'Stopped' \
+                    else 'INFO'
                 )
         except etcd.EtcdKeyNotFound:
             pass
@@ -346,6 +404,21 @@ def sync_volumes(volumes, index, vol_options):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
+        if not volume.exists():
+            job_id = monitoring_utils.update_dashboard(
+                volume.name,
+                RESOURCE_TYPE_VOLUME,
+                NS.tendrl_context.integration_id,
+                "add"
+            )
+            logger.log(
+                "debug",
+                NS.publisher_id,
+                {
+                    "message": "Update dashboard job %s "
+                    "created" % job_id
+                }
+            )
         volume.save(ttl=SYNC_TTL)
 
         # Save the default values of volume options
@@ -431,27 +504,27 @@ def sync_volumes(volumes, index, vol_options):
             try:
                 sbs = NS._int.client.read(
                     "clusters/%s/Bricks/all/"
-                    "%s/status" % (
+                    "%s/%s/status" % (
                         NS.tendrl_context.
                         integration_id,
-                        brick_name
+                        NS.node_context.fqdn,
+                        brick_name.split(":_")[-1]
                     )
                 ).value
                 current_status = volumes.get(
                     'volume%s.brick%s.status' % (index, b_index)
                 )
                 if current_status != sbs:
-                    msg = "Status of brick: %s " + \
-                          "under volume %s chan" + \
-                          "ged from %s to %s" % (
-                              volumes['volume%s.brick%s' '.path' % (
-                                  index,
-                                  b_index
-                              )],
-                              volumes['volume%s.' 'name' % index],
-                              sbs,
-                              current_status
-                          )
+                    msg = ("Status of brick: %s "
+                           "under volume %s chan"
+                           "ged from %s to %s") % (
+                               volumes['volume%s.brick%s' '.path' % (
+                                   index,
+                                   b_index
+                               )],
+                               volumes['volume%s.' 'name' % index],
+                               sbs,
+                               current_status)
                     instance = "volume_%s|brick_%s" % (
                         volumes['volume%s.name' % index],
                         volumes['volume%s.brick%s.path' % (
@@ -463,7 +536,9 @@ def sync_volumes(volumes, index, vol_options):
                         "brick_status",
                         current_status,
                         msg,
-                        instance
+                        instance,
+                        'WARNING' if current_status == 'Stopped' \
+                        else 'INFO'
                     )
 
             except etcd.EtcdKeyNotFound:
@@ -481,7 +556,9 @@ def sync_volumes(volumes, index, vol_options):
             NS._int.wclient.write(vol_brick_path, "")
 
             brick = NS.gluster.objects.Brick(
-                brick_name,
+                NS.node_context.fqdn,
+                brick_name.split(":_")[-1],
+                name=brick_name,
                 vol_id=volumes['volume%s.id' % index],
                 sequence_number=b_index,
                 brick_path=volumes[
@@ -493,6 +570,7 @@ def sync_volumes(volumes, index, vol_options):
                 port=volumes.get(
                     'volume%s.brick%s.port' % (index, b_index)
                 ),
+                vol_name=volumes['volume%s.name' % index],
                 used=True,
                 node_id=NS.node_context.node_id,
                 status=volumes.get(
@@ -514,6 +592,20 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
+            if not brick.exists():
+                job_id = monitoring_utils.update_dashboard(
+                    brick.name,
+                    RESOURCE_TYPE_BRICK,
+                    NS.tendrl_context.integration_id,
+                    "add"
+                )
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Update dashboard job %s created" % job_id
+                    }
+                )
             brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\
@@ -535,6 +627,8 @@ def sync_volumes(volumes, index, vol_options):
                     try:
                         NS.gluster.objects.ClientConnection(
                             brick_name=brick_name,
+                            fqdn=NS.node_context.fqdn,
+                            brick_dir=brick_name.split(":_")[-1],
                             hostname=volumes[
                                 'volume%s.brick%s.client%s.hostname' % (
                                     index, b_index, c_index

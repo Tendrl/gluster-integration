@@ -123,6 +123,9 @@ namespace.gluster:
         state:
           help: "Gluster Peer state"
           type: String
+        connected:
+          help: Connected status of peer
+          type: String
         update:
           help: "Last Peer update time"
           type: String
@@ -302,6 +305,12 @@ namespace.gluster:
         hostname:
           help: client hostname
           type: String
+        fqdn:
+          help: Fqdn of node on which brick recides
+          type: String
+        brick_dir:
+          help: Directory of brick
+          type: String
         bytesread:
           help: no of bytes read
           type: int
@@ -312,8 +321,8 @@ namespace.gluster:
           help: operational version
           type: String
       enabled: true
-      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name/ClientConnections/$ClientConnection.hostname
-      list:  clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name/ClientConnections
+      value: clusters/$TendrlContext.integration_id/Bricks/all/$ClientConnection.fqdn/$ClientConnection.brick_dir/ClientConnections/$ClientConnection.hostname
+      list:  clusters/$TendrlContext.integration_id/Bricks/all/$ClientConnection.fqdn/$CleintConnection.brick_dir/ClientConnections
       help: brick client connection details
     Brick:
       atoms:
@@ -374,6 +383,9 @@ namespace.gluster:
         vol_id:
           help: Volume id
           type: String
+        vol_name:
+          help: Volume name
+          type: String
         used:
           help: whether the brick is part of a volume
           type: Boolean
@@ -388,6 +400,12 @@ namespace.gluster:
           type: int
         status:
           help: Status of the brick
+          type: String
+        fqdn:
+          help: Fqdn of node on which brick recides
+          type: String
+        brick_dir:
+          help: Directory of brick
           type: String
         filesystem_type:
           help: File system type
@@ -405,8 +423,8 @@ namespace.gluster:
           help: Flag to mention if brick is arbiter
           type: int
       enabled: true
-      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.brick_name
-      list:  clusters/$TendrlContext.integration_id/Bricks/all
+      value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.fqdn/$Brick.brick_dir
+      list:  clusters/$TendrlContext.integration_id/Bricks/all/$Brick.fqdn
       help: gluster brick details
     Volume:
       atoms:
