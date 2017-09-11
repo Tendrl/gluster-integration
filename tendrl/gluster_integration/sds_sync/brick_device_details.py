@@ -44,14 +44,16 @@ def update_brick_device_details(brick_name, brick_path, devicetree):
     pool = None
     vg = None
     pvs = None
-    disks = [d.path for d in device.ancestors if d.isDisk and not d.parents]
+    disks = [str(
+        d.path
+    ) for d in device.ancestors if d.isDisk and not d.parents]
 
     if device.type in ("lvmthinlv", "lvmlv"):
         lv = device.name
         if hasattr(device, "pool"):
             pool = device.pool.name
         vg = device.vg.name
-        pvs = [dev.path for dev in device.disks]
+        pvs = [str(dev.path) for dev in device.disks]
 
     brick = NS.gluster.objects.Brick(
         brick_name.split(":")[0],
