@@ -25,7 +25,7 @@ def sync_cluster_status(volumes):
                 state != volume.state:
                 msg = "State of volume: %s " + \
                       "changed from %s to %s" % (
-                          volumes.name,
+                          volume.name,
                           volume.state,
                           state
                       )
