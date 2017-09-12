@@ -26,8 +26,10 @@ class NativeEvents(objects.BaseObject):
         self.value = 'clusters/{0}/native_events/{1}'
 
     def render(self):
-        context = self.context.replace(
-            " ", "").replace("/", "_").replace("\\", "-")
+        context = None
+        if self.context:
+            context = self.context.replace(
+                " ", "").replace("/", "_").replace("\\", "-")
         self.value = self.value.format(
             NS.tendrl_context.integration_id,
             context
