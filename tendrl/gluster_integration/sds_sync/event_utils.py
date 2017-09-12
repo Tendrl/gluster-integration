@@ -5,7 +5,8 @@ from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils.time_utils import now as tendrl_now
 
 
-def emit_event(resource, curr_value, msg, instance, severity):
+def emit_event(resource, curr_value, msg,
+               instance, severity, alert_notify=False):
     alert = {}
     alert['source'] = NS.publisher_id
     alert['classification'] = 'cluster'
@@ -26,8 +27,19 @@ def emit_event(resource, curr_value, msg, instance, severity):
     alert['node_id'] = NS.node_context.node_id
     if not NS.node_context.node_id:
         return
+    payload = {'message': json.dumps(alert)}
+    payload['alert_condition_state'] = severity
+    payload['alert_condition_status'] = resource
+
+    if alert_notify:
+        payload['alert_notify'] = alert_notify
+
+    if severity == "INFO":
+        payload['alert_condition_unset'] = True
+    else:
+        payload['alert_condition_unset'] = False
     logger.log(
         "notice",
         "alerting",
-        {'message': json.dumps(alert)}
+        payload
     )

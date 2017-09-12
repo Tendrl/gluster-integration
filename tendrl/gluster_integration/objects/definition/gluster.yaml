@@ -192,6 +192,33 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails/$TendrlContext.node_id
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/RebalanceDetails
       help: gluster volume rebalance details
+    NativeEvents:
+      attrs:
+        context:
+          help: context that identifies this perticular event
+          type: String
+        processed:
+          help: flag to know if this event was processed.
+          type: Boolean
+        recovery_processed:
+          help: flag to know if this revocery event was processed.
+          type: Boolean
+        message:
+          help: message of this event
+          type: String
+        severity:
+          help: severity of this event
+          type: String
+        alert_notify:
+          help: Flag to indicate if the event is just alert notification
+          type: Boolean
+        current_value:
+          help: current_value for which event was raised
+          type: String
+      enabled: true
+      value: clusters/$TendrlContext.integration_id/native_events/$NativeEvents.context
+      list: clusters/$TendrlContext.integration_id/native_events
+      help: gluster native events
     GeoReplicationPair:
       attrs:
         vol_id:

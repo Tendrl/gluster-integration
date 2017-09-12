@@ -16,6 +16,7 @@ from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
+from tendrl.gluster_integration.message import process_events as evt
 from tendrl.gluster_integration.sds_sync import brick_device_details
 from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import client_connections
@@ -186,9 +187,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         current_status,
                                         msg,
                                         instance,
-                                        'WARNING' if current_status != 'Connected' \
+                                        'WARNING' if current_status !=
+                                        'Connected'
                                         else 'INFO'
-
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
@@ -254,6 +255,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
+                    evt.process_events()
                     rebalance_status.sync_volume_rebalance_status(volumes)
                     rebalance_status.sync_volume_rebalance_estimated_time(
                         volumes
@@ -378,7 +380,7 @@ def sync_volumes(volumes, index, vol_options):
                     current_status,
                     msg,
                     instance,
-                    'WARNING' if current_status == 'Stopped' \
+                    'WARNING' if current_status == 'Stopped'
                     else 'INFO'
                 )
         except etcd.EtcdKeyNotFound:
@@ -537,7 +539,7 @@ def sync_volumes(volumes, index, vol_options):
                         current_status,
                         msg,
                         instance,
-                        'WARNING' if current_status == 'Stopped' \
+                        'WARNING' if current_status == 'Stopped'
                         else 'INFO'
                     )
 
