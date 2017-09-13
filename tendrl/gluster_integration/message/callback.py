@@ -431,7 +431,7 @@ class Callback(object):
         added_bricks = event['message']['bricks'].split(" ")
         for brick in added_bricks:
             job_id = monitoring_utils.update_dashboard(
-                brick,
+                "%s|%s" % (event['message']['volume'], brick),
                 RESOURCE_TYPE_BRICK,
                 NS.tendrl_context.integration_id,
                 "add"
@@ -450,7 +450,7 @@ class Callback(object):
         bricks = event['message']['bricks'].split(" ")
         for brick in bricks:
             job_id = monitoring_utils.update_dashboard(
-                brick,
+                "%s|%s" % (event['message']['volume'], brick),
                 RESOURCE_TYPE_BRICK,
                 NS.tendrl_context.integration_id,
                 "delete"
