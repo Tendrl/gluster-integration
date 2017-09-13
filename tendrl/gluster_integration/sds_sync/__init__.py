@@ -12,7 +12,6 @@ from tendrl.commons.message import Message
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
-from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.message import process_events as evt
