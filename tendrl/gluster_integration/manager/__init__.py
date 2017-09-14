@@ -90,6 +90,7 @@ def main():
             )
         )
         complete.set()
+        m.stop()
 
     gevent.signal(signal.SIGTERM, shutdown)
     gevent.signal(signal.SIGINT, shutdown)
