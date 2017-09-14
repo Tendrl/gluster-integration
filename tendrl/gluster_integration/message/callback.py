@@ -17,7 +17,7 @@ RESOURCE_TYPE_VOLUME = "volume"
 
 class Callback(object):
     def quorum_lost(self, event):
-        context = "quorum" + event['message']['name']
+        context = "quorum|" + event['message']['name']
         message = "Quorum of volume: {0} is lost".format(
             event['message']['name']
         )
@@ -30,7 +30,7 @@ class Callback(object):
         native_event.save()
 
     def quorum_regained(self, event):
-        context = "quorum" + event['message']['name']
+        context = "quorum|" + event['message']['name']
         message = "Quorum of volume: {0} is regained".format(
             event['message']['name']
         )
@@ -42,8 +42,8 @@ class Callback(object):
         )
         native_event.save()
 
-    def scv_connected(self, event):
-        context = "svc_connecion" + event['message']['svc_name']
+    def svc_connected(self, event):
+        context = "svc_connecion|" + event['message']['svc_name']
         volname = event['message'].get('volume', '')
         if volname:
             context += volname
@@ -59,8 +59,8 @@ class Callback(object):
         )
         native_event.save()
 
-    def scv_disconnected(self, event):
-        context = "svc_connection" + event['message']['svc_name']
+    def svc_disconnected(self, event):
+        context = "svc_connection|" + event['message']['svc_name']
         volname = event['message'].get('volume', '')
         if volname:
             context += volname
@@ -77,10 +77,11 @@ class Callback(object):
         native_event.save()
 
     def ec_min_bricks_not_up(self, event):
-        context = "ec_min_bricks_up" + event['message']['subvol']
-        message = "Minimum number of bricks not up in EC subvolume: {0}".format(
-            event['message']['subvol']
-        )
+        context = "ec_min_bricks_up|" + event['message']['subvol']
+        message = "Minimum number of bricks not up in EC subvolume" \
+                  ": {0}".format(
+                      event['message']['subvol']
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -90,7 +91,7 @@ class Callback(object):
         native_event.save()
 
     def ec_min_bricks_up(self, event):
-        context = "ec_min_bricks_up" + event['message']['subvol']
+        context = "ec_min_bricks_up|" + event['message']['subvol']
         message = "Minimum number of bricks back online " \
                   "in EC subvolume: {0}".format(
                       event['message']['subvol']
@@ -104,7 +105,7 @@ class Callback(object):
         native_event.save()
 
     def afr_quorum_met(self, event):
-        context = "afr_quorum_state" + event['message']['subvol']
+        context = "afr_quorum_state|" + event['message']['subvol']
         message = "Afr quorum is met for subvolume: {0}".format(
             event['message']['subvol']
         )
@@ -117,7 +118,7 @@ class Callback(object):
         native_event.save()
 
     def afr_quorum_fail(self, event):
-        context = "afr_quorum_state" + event['message']['subvol']
+        context = "afr_quorum_state|" + event['message']['subvol']
         message = "Afr quorum has failed for subvolume: {0}".format(
             event['message']['subvol']
         )
@@ -130,7 +131,7 @@ class Callback(object):
         native_event.save()
 
     def afr_subvol_up(self, event):
-        context = "afr_subvol_state" + event['message']['subvol']
+        context = "afr_subvol_state|" + event['message']['subvol']
         message = "Afr subvolume: {0} is back up".format(
             event['message']['subvol']
         )
@@ -143,7 +144,7 @@ class Callback(object):
         native_event.save()
 
     def afr_subvols_down(self, event):
-        context = "afr_subvol_state" + event['message']['subvol']
+        context = "afr_subvol_state|" + event['message']['subvol']
         message = "Afr subvolume: {0} is down".format(
             event['message']['subvol']
         )
@@ -156,7 +157,7 @@ class Callback(object):
         native_event.save()
 
     def unknown_peer(self, event):
-        context = "unknown_peer" + event['message']['peer']
+        context = "unknown_peer|" + event['message']['peer']
         message = "Peer {0} has moved to unknown state".format(
             event['message']['peer']
         )
@@ -170,7 +171,7 @@ class Callback(object):
         native_event.save()
 
     def brickpath_resolve_failed(self, event):
-        context = "brickpath_resolve_failed" + event['message'][
+        context = "brickpath_resolve_failed|" + event['message'][
             "peer"] + event['message']["volume"] + event['message']["brick"]
         message = "Brick path resolution failed for brick: {0} . Volume: {1}" \
                   ".Peer: {2}".format(
@@ -188,7 +189,7 @@ class Callback(object):
         native_event.save()
 
     def quota_crossed_soft_limit(self, event):
-        context = "quota_crossed_soft_limit" + event[
+        context = "quota_crossed_soft_limit|" + event[
             "message"]["volume"] + event["message"]["path"]
         message = "Quota soft limit crossed in volume: {0} for path: {1}" \
                   ". Current usage: {2}".format(
@@ -206,7 +207,7 @@ class Callback(object):
         native_event.save()
 
     def bitrot_bad_file(self, event):
-        context = "bitrot_bad_file" + event['message'][
+        context = "bitrot_bad_file|" + event['message'][
             "brick"] + event['message']["path"] + event['message']["gfid"]
         message = "File with gfid: {0} is corrupted due to bitrot." \
                   "  Brick: {1}. Path: {2}".format(
@@ -224,11 +225,11 @@ class Callback(object):
         native_event.save()
 
     def afr_split_brain(self, event):
-        context = "afr_split_brain" + event['message']["subvol"]
+        context = "afr_split_brain|" + event['message']["subvol"]
         message = "Subvolume: {0} is affected by split-brain. Some of the" \
                   "replicated files in the volume might be divergent".format(
-            event['message']['subvol']
-        )
+                      event['message']['subvol']
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -239,7 +240,7 @@ class Callback(object):
         native_event.save()
 
     def snapshot_soft_limit_reached(self, event):
-        context = "snapshot_soft_limit_reached" + event[
+        context = "snapshot_soft_limit_reached|" + event[
             'message']['volume_name']
         message = "Snapshot soft limit reached for volume: {0}".format(
             event['message']['volume_name']
@@ -254,7 +255,7 @@ class Callback(object):
         native_event.save()
 
     def snapshot_hard_limit_reached(self, event):
-        context = "snapshot_hard_limit_reached" + event[
+        context = "snapshot_hard_limit_reached|" + event[
             'message']['volume_name']
         message = "Snapshot hard limit reached for volume: {0}".format(
             event['message']['volume_name']
@@ -269,7 +270,7 @@ class Callback(object):
         native_event.save()
 
     def compare_friend_volume_failed(self, event):
-        context = "compare_friend_volume_failed" + event['message']['volume']
+        context = "compare_friend_volume_failed|" + event['message']['volume']
         message = "Compare friend volume failed for volume: {0}".format(
             event['message']['volume']
         )
@@ -283,7 +284,7 @@ class Callback(object):
         native_event.save()
 
     def posix_health_check_failed(self, event):
-        context = "posix_health_check_failed" + event[
+        context = "posix_health_check_failed|" + event[
             'message']["brick"] + event['message']["path"]
         message = "Posix health check failed for brick: {}. Path: {1}" \
                   ". Error: {2}. op: {3}".format(
@@ -302,7 +303,7 @@ class Callback(object):
         native_event.save()
 
     def peer_reject(self, event):
-        context = "peer_reject" + event['message']['peer']
+        context = "peer_reject|" + event['message']['peer']
         message = "Peer: {0} is rejected".format(
             event['message']['peer']
         )
@@ -316,7 +317,8 @@ class Callback(object):
         native_event.save()
 
     def rebalance_status_update_failed(self, event):
-        context = "rebalance_status_update_failed" + event['message']["volume"]
+        context = "rebalance_status_update_failed|" + event[
+            'message']["volume"]
         message = "Rebalance status update failed for volume: {0}".format(
             event['message']["volume"]
         )
@@ -329,8 +331,8 @@ class Callback(object):
         )
         native_event.save()
 
-    def scv_reconfigure_failed(self, event):
-        context = "svc_reconfigure_failed" + event['message']["service"]
+    def svc_reconfigure_failed(self, event):
+        context = "svc_reconfigure_failed|" + event['message']["service"]
         volname = event['message'].get('volume', '')
         if volname:
             context += volname
@@ -349,7 +351,7 @@ class Callback(object):
 
     def georep_checkpoint_completed(self, event):
         # TODO(darshan) json content not known yet
-        context = "georep_checkpoint_completed" + event['message']["session"]
+        context = "georep_checkpoint_completed|" + event['message']["session"]
         message = "Georeplication checkpoint completed for session {0}".format(
             event['message']['session']
         )

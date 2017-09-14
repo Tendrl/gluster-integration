@@ -13,7 +13,7 @@ def process_events():
                 # this perticular event is recovery event
                 # so process this event and delete it
                 event_utils.emit_event(
-                    event.context.split("_")[0],
+                    event.context.split("|")[0],
                     event.current_value,
                     event.message,
                     event.context,
@@ -28,11 +28,11 @@ def process_events():
 
             if event.alert_notify and not event.processed:
                 event_utils.emit_event(
-                    event.context.split("_")[0],
+                    event.context.split("|")[0],
                     event.current_value,
                     event.message,
                     event.context,
-                    "INFO",
+                    event.severity.upper(),
                     alert_notify=event.alert_notify
                 )
                 processed_event = NS.gluster.objects.NativeEvents(
@@ -44,7 +44,7 @@ def process_events():
 
             if event.severity == "warning" and not event.processed:
                 event_utils.emit_event(
-                    event.context.split("_")[0],
+                    event.context.split("|")[0],
                     event.current_value,
                     event.message,
                     event.context,
