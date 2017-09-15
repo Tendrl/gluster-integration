@@ -10,6 +10,9 @@
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
 
+
+import time
+
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
@@ -17,9 +20,9 @@ RESOURCE_TYPE_VOLUME = "volume"
 
 class Callback(object):
     def quorum_lost(self, event):
-        context = "quorum|" + event['message']['name']
+        context = "quorum|" + event['message']['volume']
         message = "Quorum of volume: {0} is lost".format(
-            event['message']['name']
+            event['message']['volume']
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -30,9 +33,9 @@ class Callback(object):
         native_event.save()
 
     def quorum_regained(self, event):
-        context = "quorum|" + event['message']['name']
+        context = "quorum|" + event['message']['volume']
         message = "Quorum of volume: {0} is regained".format(
-            event['message']['name']
+            event['message']['volume']
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -350,15 +353,37 @@ class Callback(object):
         native_event.save()
 
     def georep_checkpoint_completed(self, event):
-        # TODO(darshan) json content not known yet
-        context = "georep_checkpoint_completed|" + event['message']["session"]
-        message = "Georeplication checkpoint completed for session {0}".format(
-            event['message']['session']
+        georep_pair = "{0}:{1}:{2}--->{3}:{4}".format(
+            event['message']["master_node"],
+            event['message']["master_volume"],
+            event['message']["brick_path"],
+            event['message']["slave_host"],
+            event['message']["slave_volume"]
         )
+        context = "georep_checkpoint_completed|" + georep_pair
+        cp_creation_time = time.localtime(
+            float(event['message']['checkpoint_time'])
+        )
+        cp_creation_time = time.strftime("%d %b %Y %H:%M:%S", cp_creation_time)
+        cp_completion_time = time.localtime(
+            float(event['message']['checkpoint_completion_time'])
+        )
+        cp_completion_time = time.strftime(
+            "%d %b %Y %H:%M:%S",
+            cp_completion_time
+        )
+
+        message = "Georeplication checkpoint completed for pair {0}." \
+                  " Check point creation time {1}." \
+                  " Check point completion time {2}.".format(
+                      georep_pair,
+                      cp_creation_time,
+                      cp_completion_time
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
-            severity="info",
+            severity="warning",
             current_value="georep_checkpoint_completed",
             alert_notify=True
         )
