@@ -48,6 +48,11 @@ def update_brick_device_details(brick_name, brick_path, devicetree):
         d.path
     ) for d in device.ancestors if d.isDisk and not d.parents]
 
+    # partitions needed for calculating io stats.
+    partitions = [str(
+        d.path
+    ) for d in device.ancestors if d.type == "partition"]
+
     if device.type in ("lvmthinlv", "lvmlv"):
         lv = device.name
         if hasattr(device, "pool"):
@@ -60,6 +65,7 @@ def update_brick_device_details(brick_name, brick_path, devicetree):
         brick_name.split(":_")[-1],
         name=brick_name,
         devices=disks,
+        partitions=partitions,
         mount_path=mount_point,
         lv=lv,
         vg=vg,

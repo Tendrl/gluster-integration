@@ -368,9 +368,12 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649d
           help: Create gluster brick for gluster volume
       attrs:
-        disk:
-          help: the underlying disk for the device
-          type: String
+        devices:
+          help: the underlying devices for the brick
+          type: List
+        partitions:
+          help: the underlying partitions for the brick
+          type: List
         name:
           help: name of the brick
           type: String
