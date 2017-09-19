@@ -8,6 +8,7 @@ class Brick(objects.BaseObject):
         brick_dir,
         name=None,
         devices=None,
+        partitions=None,
         brick_path=None,
         mount_path=None,
         node_id=None,
@@ -37,6 +38,7 @@ class Brick(objects.BaseObject):
         super(Brick, self).__init__(*args, **kwargs)
 
         self.devices = devices
+        self.partitions = partitions
         self.name = name
         self.node_id = node_id
         self.fqdn = fqdn
