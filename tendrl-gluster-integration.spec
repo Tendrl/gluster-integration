@@ -64,11 +64,9 @@ rm -rf html/.{doctrees,buildinfo}
 
 %install
 %{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
-install -m  0755 --directory $RPM_BUILD_ROOT%{_var}/log/tendrl/gluster-integration
 install -m  0755  --directory $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration
 install -Dm 0644 tendrl-gluster-integration.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-gluster-integration.service
 install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
-install -Dm 0644 etc/tendrl/gluster-integration/logging.yaml.timedrotation.sample $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration/gluster-integration_logging.yaml
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 # Install SELinux interfaces and policy modules
@@ -137,13 +135,11 @@ py.test -v tendrl/gluster_integration/tests || :
 %attr(0644,root,root) %{_datadir}/selinux/packages/collectd.pp.bz2
 
 %files -f INSTALLED_FILES
-%dir %{_var}/log/tendrl/gluster-integration
 %dir %{_sysconfdir}/tendrl/gluster-integration
 %doc README.rst
 %license LICENSE
 %config %{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
 %{_unitdir}/tendrl-gluster-integration.service
-%config %{_sysconfdir}/tendrl/gluster-integration/gluster-integration_logging.yaml
 %{_datadir}/tendrl/gluster-integration
 
 
