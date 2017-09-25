@@ -32,9 +32,10 @@ class GlusterNativeMessageHandler(gevent.greenlet.Greenlet):
                     function = getattr(self.callback, callback_function_name)
                 except AttributeError:
                     # tendrl does not handle this perticular event hence ignore
-                    pass
+                    return "Event Ignored"
                 event_handler = gevent.spawn(function, gluster_event)
                 event_handler.join()
+                return "OK"
 
     def _setup_gluster_native_message_reciever(self):
         service = svc.Service("glustereventsd")

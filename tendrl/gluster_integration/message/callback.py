@@ -383,7 +383,7 @@ class Callback(object):
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
-            severity="warning",
+            severity="info",
             current_value="georep_checkpoint_completed",
             alert_notify=True
         )
