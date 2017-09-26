@@ -305,12 +305,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 (volume.name, action)
             ).run()
             if err or rc != 0:
+                if action == "start" and "already started" in err:
+                    volume.profiling_enabled = "True"
+                if action == "stop" and "not started" in err:
+                    volume.profiling_enabled = "False"
+                volume.save()
                 failed_vols.append(volume.name)
                 continue
-            volume.profiling_enabled = "True" if cluster.\
-                                       enable_volume_profiling ==\
-                                       "yes" else "False"
-            volume.save()
+            else:
+                volume.profiling_enabled = \
+                    "True" if cluster.enable_volume_profiling == \
+                    "yes" else "False"
+                volume.save()
         if len(failed_vols) > 0:
             Event(
                 Message(
