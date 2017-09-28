@@ -1,9 +1,10 @@
 etcd_port: 2379
 etcd_connection: 0.0.0.0
 
-# Enable etcd username/password based auth, disable if using CA Cert/Client cert based TLS auth options
-#etcd_username: root
-#etcd_password: replace_your_password_here
+# Enable etcd SSL TLS cert based auth options
+#etcd_ca_cert_file: /path/to/ca_cert_file.pem
+#etcd_cert_file: /path/to/client_cert_file.pem
+#etcd_key_file: /path/to/client_key_file.pem
 
 logging_socket_path: /var/run/tendrl/message.sock
 sync_interval: 180
