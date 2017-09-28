@@ -421,6 +421,21 @@ class Callback(object):
             }
         )
 
+        job_id = monitoring_utils.update_graphite(
+            event['message']['host'],
+            RESOURCE_TYPE_PEER,
+            NS.tendrl_context.integration_id,
+            "delete"
+        )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Update graphite job %s "
+                "created" % job_id
+            }
+        )
+
     def volume_create(self, event):
         job_id = monitoring_utils.update_dashboard(
             event['message']['name'],
@@ -449,6 +464,21 @@ class Callback(object):
             NS.publisher_id,
             {
                 "message": "Update dashboard job %s "
+                "created" % job_id
+            }
+        )
+
+        job_id = monitoring_utils.update_graphite(
+            event['message']['name'],
+            RESOURCE_TYPE_VOLUME,
+            NS.tendrl_context.integration_id,
+            "delete"
+        )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Update graphite job %s "
                 "created" % job_id
             }
         )
@@ -487,6 +517,21 @@ class Callback(object):
                 NS.publisher_id,
                 {
                     "message": "Update dashboard job %s "
+                    "created" % job_id
+                }
+            )
+
+            job_id = monitoring_utils.update_graphite(
+                "%s|%s" % (event['message']['volume'], brick),
+                RESOURCE_TYPE_BRICK,
+                NS.tendrl_context.integration_id,
+                "delete"
+            )
+            logger.log(
+                "debug",
+                NS.publisher_id,
+                {
+                    "message": "Update graphite job %s "
                     "created" % job_id
                 }
             )
