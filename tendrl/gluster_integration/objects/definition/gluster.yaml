@@ -129,6 +129,12 @@ namespace.gluster:
         update:
           help: "Last Peer update time"
           type: String
+        deleted:
+          help: if the entity is deleted
+          type: Boolean
+        deleted_at:
+          help: deletion time
+          type: String
       value: clusters/$TendrlContext.integration_id/Peers/$Peer.peer_uuid
       list: clusters/$TendrlContext.integration_id/Peers
       help: Gluster cluster peers
@@ -452,6 +458,12 @@ namespace.gluster:
         is_arbiter:
           help: Flag to mention if brick is arbiter
           type: int
+        deleted:
+          help: if the entity is deleted
+          type: Boolean
+        deleted_at:
+          help: deletion time
+          type: String
       enabled: true
       value: clusters/$TendrlContext.integration_id/Bricks/all/$Brick.fqdn/$Brick.brick_dir
       list:  clusters/$TendrlContext.integration_id/Bricks/all/$Brick.fqdn
@@ -848,9 +860,6 @@ namespace.gluster:
         fix_layout:
           help: "Whether the volume layout has to be fixed after rebalance"
           type: Boolean
-        deleted:
-          help: "Flag is volume is deleted"
-          type: Boolean
         disperse_count:
           help: "Disperse count of volume"
           type: Integer
@@ -928,6 +937,12 @@ namespace.gluster:
         rebal_estimated_time:
           help: Estimated time left for rebalance to complete
           type: int
+        deleted:
+          help: if the entity is deleted
+          type: Boolean
+        deleted_at:
+          help: deletion time
+          type: String
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
       list: clusters/$TendrlContext.integration_id/Volumes

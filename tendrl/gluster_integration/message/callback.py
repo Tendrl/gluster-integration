@@ -9,6 +9,7 @@
 
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
+from tendrl.commons.utils import time_utils
 
 
 import time
@@ -391,7 +392,7 @@ class Callback(object):
 
     def peer_connect(self, event):
         job_id = monitoring_utils.update_dashboard(
-            event['message']['host'],
+            event['message']['peer'],
             RESOURCE_TYPE_PEER,
             NS.tendrl_context.integration_id,
             "add"
@@ -407,7 +408,7 @@ class Callback(object):
 
     def peer_disconnect(self, event):
         job_id = monitoring_utils.update_dashboard(
-            event['message']['host'],
+            event['message']['peer'],
             RESOURCE_TYPE_PEER,
             NS.tendrl_context.integration_id,
             "delete"
@@ -417,21 +418,6 @@ class Callback(object):
             NS.publisher_id,
             {
                 "message": "Update dashboard job %s "
-                "created" % job_id
-            }
-        )
-
-        job_id = monitoring_utils.delete_resource_from_graphite(
-            event['message']['host'],
-            RESOURCE_TYPE_PEER,
-            NS.tendrl_context.integration_id,
-            "delete"
-        )
-        logger.log(
-            "debug",
-            NS.publisher_id,
-            {
-                "message": "Delete resource from graphite job %s "
                 "created" % job_id
             }
         )
@@ -453,6 +439,13 @@ class Callback(object):
         )
 
     def volume_delete(self, event):
+        fetched_volumes = NS.gluster.objects.Volume().load_all()
+        for fetched_volume in fetched_volumes:
+            if fetched_volume.name == event['message']['name']:
+                fetched_volume.deleted = True
+                fetched_volume.deleted_at = time_utils.now()
+                fetched_volume.save()
+
         job_id = monitoring_utils.update_dashboard(
             event['message']['name'],
             RESOURCE_TYPE_VOLUME,
@@ -506,6 +499,14 @@ class Callback(object):
         # Event returns bricks list as space separated single string
         bricks = event['message']['bricks'].split(" ")
         for brick in bricks:
+            fetched_brick = NS.gluster.objects.Brick(
+                fqdn=brick.split(":/")[0],
+                brick_dir=brick.split(":/")[1].replace('/', '_')
+            ).load()
+            fetched_brick.deleted = True
+            fetched_brick.deleted_at = time_utils.now()
+            fetched_brick.save()
+
             job_id = monitoring_utils.update_dashboard(
                 "%s|%s" % (event['message']['volume'], brick),
                 RESOURCE_TYPE_BRICK,

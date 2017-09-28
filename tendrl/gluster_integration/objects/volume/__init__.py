@@ -10,7 +10,6 @@ class Volume(objects.BaseObject):
         status=None,
         state=None,
         brick_count=None,
-        deleted=None,
         transport_type=None,
         snap_count=None,
         stripe_count=None,
@@ -29,6 +28,8 @@ class Volume(objects.BaseObject):
         profiling_enabled=None,
         client_count=None,
         rebal_estimated_time=None,
+        deleted=False,
+        deleted_at=None,
         *args,
         **kwargs
     ):
@@ -40,7 +41,6 @@ class Volume(objects.BaseObject):
         self.status = status
         self.state = state
         self.brick_count = brick_count
-        self.deleted = deleted
         self.transport_type = transport_type
         self.snap_count = snap_count
         self.stripe_count = stripe_count
@@ -59,6 +59,8 @@ class Volume(objects.BaseObject):
         self.profiling_enabled = profiling_enabled
         self.client_count = client_count
         self.rebal_estimated_time = rebal_estimated_time
+        self.deleted = deleted
+        self.deleted_at = deleted_at
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):
