@@ -421,7 +421,7 @@ class Callback(object):
             }
         )
 
-        job_id = monitoring_utils.update_graphite(
+        job_id = monitoring_utils.delete_resource_from_graphite(
             event['message']['host'],
             RESOURCE_TYPE_PEER,
             NS.tendrl_context.integration_id,
@@ -431,7 +431,7 @@ class Callback(object):
             "debug",
             NS.publisher_id,
             {
-                "message": "Update graphite job %s "
+                "message": "Delete resource from graphite job %s "
                 "created" % job_id
             }
         )
@@ -468,7 +468,7 @@ class Callback(object):
             }
         )
 
-        job_id = monitoring_utils.update_graphite(
+        job_id = monitoring_utils.delete_resource_from_graphite(
             event['message']['name'],
             RESOURCE_TYPE_VOLUME,
             NS.tendrl_context.integration_id,
@@ -478,7 +478,7 @@ class Callback(object):
             "debug",
             NS.publisher_id,
             {
-                "message": "Update graphite job %s "
+                "message": "Delete resource from graphite job %s "
                 "created" % job_id
             }
         )
@@ -521,7 +521,7 @@ class Callback(object):
                 }
             )
 
-            job_id = monitoring_utils.update_graphite(
+            job_id = monitoring_utils.delete_resource_from_graphite(
                 "%s|%s" % (event['message']['volume'], brick),
                 RESOURCE_TYPE_BRICK,
                 NS.tendrl_context.integration_id,
@@ -531,7 +531,7 @@ class Callback(object):
                 "debug",
                 NS.publisher_id,
                 {
-                    "message": "Update graphite job %s "
+                    "message": "Delete resource from graphite job %s "
                     "created" % job_id
                 }
             )
