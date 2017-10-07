@@ -76,7 +76,7 @@ class Brick(objects.BaseObject):
             _volume = NS.gluster.objects.Volume(vol_id=self.vol_id)
             _volume.invalidate_hash()
 
-        return super(Brick, self).save()
+        return super(Brick, self).save(update, ttl)
 
     def render(self):
         self.value = self.value.format(
