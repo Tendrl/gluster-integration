@@ -8,6 +8,8 @@ class Peer(objects.BaseObject):
         connected=None,
         hostname=None,
         peer_uuid=None,
+        deleted=False,
+        deleted_at=None,
         *args,
         **kwargs
     ):
@@ -17,6 +19,8 @@ class Peer(objects.BaseObject):
         self.connected = connected
         self.hostname = hostname
         self.peer_uuid = peer_uuid
+        self.deleted = deleted
+        self.deleted_at = deleted_at
         self.value = 'clusters/{0}/Peers/{1}'
 
     def render(self):

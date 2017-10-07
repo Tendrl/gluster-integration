@@ -32,6 +32,8 @@ class Brick(objects.BaseObject):
         stripe_size=None,
         client_count=None,
         is_arbiter=None,
+        deleted=False,
+        deleted_at=None,
         *args,
         **kwargs
     ):
@@ -65,6 +67,8 @@ class Brick(objects.BaseObject):
         self.used = used
         self.client_count = client_count
         self.is_arbiter = is_arbiter
+        self.deleted = deleted
+        self.deleted_at = deleted_at
         self.value = 'clusters/{0}/Bricks/all/{1}/{2}'
 
     def save(self, update=True, ttl=None):
