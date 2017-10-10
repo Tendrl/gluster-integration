@@ -16,6 +16,7 @@ app = Flask(__name__)
 class GlusterNativeMessageHandler(threading.Thread):
     def __init__(self):
         super(GlusterNativeMessageHandler, self).__init__()
+        self.daemon = True
         self.path = "/listen"
         self.host = "0.0.0.0"
         self.port = 8697
