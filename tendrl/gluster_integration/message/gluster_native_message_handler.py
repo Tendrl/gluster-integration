@@ -96,4 +96,5 @@ class GlusterNativeMessageHandler(threading.Thread):
                 {"message": "gluster native message reciever setup failed"}
             )
             return
+        # TODO (rohan) find better way to run/cleanup
         app.run(self.host, self.port, threaded=True)
