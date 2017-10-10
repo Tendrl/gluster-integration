@@ -1,5 +1,6 @@
+import time
+
 import etcd
-import gevent
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import Message
@@ -33,7 +34,7 @@ class CheckVolumeAvailable(objects.BaseAtom):
                         return True
 
             retry_count += 1
-            gevent.sleep(1)
+            time.sleep(1)
             if retry_count == 600:
                 Event(
                     Message(
