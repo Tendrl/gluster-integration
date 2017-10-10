@@ -102,7 +102,8 @@ setup(
     zip_safe=False,
     install_requires=[
         "tendrl-commons",
-        "blivet"
+        "blivet",
+        "flask"
         ],
     entry_points={
         'console_scripts': [
