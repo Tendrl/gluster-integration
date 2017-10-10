@@ -1,10 +1,11 @@
 import blivet
-import etcd
-import gevent
-import gevent.hub
 import json
 import re
 import subprocess
+import threading
+import time
+
+import etcd
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
@@ -25,7 +26,6 @@ from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
 from tendrl.gluster_integration.sds_sync import utilization
 
-gevent.hub.Hub.NOT_ERROR = (Exception,)
 
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
@@ -36,7 +36,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
     def __init__(self):
         super(GlusterIntegrationSdsSyncStateThread, self).__init__()
-        self._complete = gevent.event.Event()
+        self._complete = threading.Event()
 
     def _run(self):
         # To detect out of band deletes
@@ -88,7 +88,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         while not self._complete.is_set():
             try:
-                gevent.sleep(
+                time.sleep(
                     int(NS.config.data.get("sync_interval", 10))
                 )
                 try:
@@ -200,16 +200,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     index = 1
                     volumes = raw_data['Volumes']
                     while True:
-                        g = gevent.spawn(
-                            sync_volumes,
-                            volumes,
-                            index,
-                            raw_data_options.get('Volume Options')
+                        g = threading.Thread(
+                            target=sync_volumes,
+                            args=(volumes, index, raw_data_options.get('Volume Options'))
                         )
+                        g.daemon = True
+                        g.start()
                         g.join()
-                        if not g.successful() and \
-                            g.exception.__class__.__name__ == 'KeyError':
-                            break
                         index += 1
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
