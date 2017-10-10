@@ -1,9 +1,7 @@
+import threading
+
 from flask import Flask
 from flask import request
-import gevent
-import gevent.event
-import gevent.greenlet
-from gevent.wsgi import WSGIServer
 
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import log_utils as logger
@@ -15,7 +13,7 @@ from tendrl.gluster_integration.message import callback as cb
 app = Flask(__name__)
 
 
-class GlusterNativeMessageHandler(gevent.greenlet.Greenlet):
+class GlusterNativeMessageHandler(threading.Thread):
     def __init__(self):
         super(GlusterNativeMessageHandler, self).__init__()
         self.path = "/listen"
@@ -31,10 +29,9 @@ class GlusterNativeMessageHandler(gevent.greenlet.Greenlet):
                 try:
                     function = getattr(self.callback, callback_function_name)
                 except AttributeError:
-                    # tendrl does not handle this perticular event hence ignore
+                    # tendrl does not handle this particular event hence ignore
                     return "Event Ignored"
-                event_handler = gevent.spawn(function, gluster_event)
-                event_handler.join()
+                function(gluster_event)
                 return "OK"
 
     def _setup_gluster_native_message_reciever(self):
@@ -90,7 +87,7 @@ class GlusterNativeMessageHandler(gevent.greenlet.Greenlet):
                 {"message": "gluster native message reciever cleanup failed"}
             )
 
-    def _run(self):
+    def run(self):
         if not self._setup_gluster_native_message_reciever():
             logger.log(
                 "error",
@@ -98,5 +95,4 @@ class GlusterNativeMessageHandler(gevent.greenlet.Greenlet):
                 {"message": "gluster native message reciever setup failed"}
             )
             return
-        event_receiver = WSGIServer((self.host, self.port), app)
-        event_receiver.serve_forever()
+        app.run(self.host, self.port, threaded=True)
