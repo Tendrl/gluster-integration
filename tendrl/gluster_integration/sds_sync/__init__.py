@@ -38,7 +38,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         super(GlusterIntegrationSdsSyncStateThread, self).__init__()
         self._complete = threading.Event()
 
-    def _run(self):
+    def run(self):
         # To detect out of band deletes
         # refresh gluster object inventory at config['sync_interval']
         # Default is 260 seconds
