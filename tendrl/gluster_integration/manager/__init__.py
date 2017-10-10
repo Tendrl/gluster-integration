@@ -1,6 +1,7 @@
-import etcd
-import gevent.event
 import signal
+import threading
+
+import etcd
 
 from tendrl.commons.event import Event
 from tendrl.commons import manager as common_manager
@@ -79,9 +80,9 @@ def main():
     m = GlusterIntegrationManager()
     m.start()
 
-    complete = gevent.event.Event()
+    complete = threading.Event()
 
-    def shutdown():
+    def shutdown(signum, frame):
         Event(
             Message(
                 priority="debug",
@@ -92,8 +93,8 @@ def main():
         complete.set()
         m.stop()
 
-    gevent.signal(signal.SIGTERM, shutdown)
-    gevent.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
 
     while not complete.is_set():
         complete.wait(timeout=1)
