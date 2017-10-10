@@ -17,7 +17,7 @@ from tendrl.gluster_integration import sds_sync
 
 class GlusterIntegrationManager(common_manager.Manager):
     def __init__(self):
-        self._complete = gevent.event.Event()
+        self._complete = threading.Event()
         super(
             GlusterIntegrationManager,
             self
