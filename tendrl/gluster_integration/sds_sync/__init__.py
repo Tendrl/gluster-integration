@@ -374,7 +374,7 @@ def sync_volumes(volumes, index, vol_options, error_event=None):
                     else 'INFO'
                 )
         except (KeyError, etcd.EtcdKeyNotFound) as ex:
-            if isinstance(ex, KeyError)
+            if isinstance(ex, KeyError):
                 error_event.set()
                 return
             pass
