@@ -199,19 +199,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
-                    _error_evt = threading.Event()
                     while True:
-                        g = threading.Thread(
-                            target=sync_volumes,
-                            args=(volumes, index, raw_data_options.get('Volume Options'),
-                                  _error_evt)
-                        )
-                        g.daemon = True
-                        g.start()
-                        g.join()
-                        if _error_evt.is_set():
+                        try:
+                            sync_volumes(volumes, index, raw_data_options.get('Volume Options'))
+                            index += 1
+                        except KeyError:
                             break
-                        index += 1
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
                     options = {}
@@ -331,7 +324,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             )
 
 
-def sync_volumes(volumes, index, vol_options, error_event=None):
+def sync_volumes(volumes, index, vol_options):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
     b = blivet.Blivet()
@@ -375,8 +368,7 @@ def sync_volumes(volumes, index, vol_options, error_event=None):
                 )
         except (KeyError, etcd.EtcdKeyNotFound) as ex:
             if isinstance(ex, KeyError):
-                error_event.set()
-                return
+                raise ex
             pass
 
         volume = NS.gluster.objects.Volume(
