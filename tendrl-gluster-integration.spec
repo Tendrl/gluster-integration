@@ -5,7 +5,7 @@
 %global relabel_files() %{_sbindir}/restorecon -Rv /
 
 Name: tendrl-gluster-integration
-Version: 1.5.2
+Version: 1.5.3
 Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
@@ -144,6 +144,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Thu Oct 12 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.3-1
+- Release tendrl-gluster-integration v1.5.3
+
 * Fri Sep 15 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.2-1
 - Release tendrl-gluster-integration v1.5.2
 
