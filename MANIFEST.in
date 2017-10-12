@@ -9,5 +9,4 @@ exclude .gitreview
 graft docs
 graft etc
 graft tendrl
-graft selinux
 global-exclude *.pyc
