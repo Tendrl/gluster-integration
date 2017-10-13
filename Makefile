@@ -2,7 +2,7 @@ NAME=tendrl-gluster-integration
 VERSION := $(shell PYTHONPATH=. python -c \
              'import version; print version.__version__' \
              | sed 's/\.dev[0-9]*//')
-RELEASE=1
+RELEASE=2
 COMMIT := $(shell git rev-parse HEAD)
 SHORTCOMMIT := $(shell echo $(COMMIT) | cut -c1-7)
 
@@ -22,13 +22,6 @@ srpm: dist
 
 rpm: dist
 	mock -r epel-7-x86_64 rebuild $(NAME)-$(VERSION)-*.src.rpm --resultdir=. --define "dist .el7"
-
-bzip-selinux-policy:
-	@cd selinux; \
-	rm -f *.pp.bz2 tmp; \
-	make -f /usr/share/selinux/devel/Makefile; \
-	bzip2 -9 tendrl.pp; \
-	bzip2 -9 collectd.pp
 
 gitversion:
 	# Set version and release to the latest values from Git

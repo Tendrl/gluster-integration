@@ -1,12 +1,6 @@
-%global selinuxtype targeted
-%global moduletype  services
-
-# todo relable should be enhanced later to specific things
-%global relabel_files() %{_sbindir}/restorecon -Rv /
-
 Name: tendrl-gluster-integration
 Version: 1.5.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -27,28 +21,6 @@ Requires: python-flask
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.
 
-%package -n tendrl-node-selinux
-License: GPLv2
-Group: System Environment/Base
-Summary: SELinux Policies for Tendrl Node
-BuildArch: noarch
-Requires(post): selinux-policy-base, selinux-policy-targeted, policycoreutils, policycoreutils-python libselinux-utils
-BuildRequires: selinux-policy selinux-policy-devel
-
-%description -n tendrl-node-selinux
-SELinux Policies for Tendrl Node
-
-%package -n tendrl-collectd-selinux
-License: GPLv2
-Group: System Environment/Base
-Summary: SELinux Policies for Tendrl-Collectd
-BuildArch: noarch
-Requires(post): selinux-policy-base, selinux-policy-targeted, policycoreutils, policycoreutils-python libselinux-utils
-BuildRequires: selinux-policy selinux-policy-devel
-
-%description -n tendrl-collectd-selinux
-SELinux Policies for Tendrl Collectd
-
 %prep
 %setup
 
@@ -56,7 +28,6 @@ SELinux Policies for Tendrl Collectd
 rm -rf %{name}.egg-info
 
 %build
-make bzip-selinux-policy
 %{__python} setup.py build
 
 # remove the sphinx-build leftovers
@@ -69,32 +40,6 @@ install -Dm 0644 tendrl-gluster-integration.service $RPM_BUILD_ROOT%{_unitdir}/t
 install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
-# Install SELinux interfaces and policy modules
-install -d %{buildroot}%{_datadir}/selinux/devel/include/%{moduletype}
-install -d %{buildroot}%{_datadir}/selinux/packages
-
-# tendrl
-install -m 0644 selinux/tendrl.pp.bz2 \
-	%{buildroot}%{_datadir}/selinux/packages
-
-# collectd
-install -m 0644 selinux/collectd.pp.bz2 \
-	%{buildroot}%{_datadir}/selinux/packages
-
-%post -n tendrl-node-selinux
-%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/tendrl.pp.bz2
-if %{_sbindir}/selinuxenabled ; then
-    %{_sbindir}/load_policy
-    %relabel_files
-fi
-
-%post -n tendrl-collectd-selinux
-%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/collectd.pp.bz2
-if %{_sbindir}/selinuxenabled ; then
-    %{_sbindir}/load_policy
-    %relabel_files
-fi
-
 %post
 systemctl enable tendrl-gluster-integration
 %systemd_post tendrl-gluster-integration.service
@@ -102,37 +47,11 @@ systemctl enable tendrl-gluster-integration
 %preun
 %systemd_preun tendrl-gluster-integration.service
 
-%postun -n tendrl-node-selinux
-if [ $1 -eq 0 ]; then
-    %selinux_modules_uninstall -s %{selinuxtype} tendrl &> /dev/null || :
-    if %{_sbindir}/selinuxenabled ; then
-	%{_sbindir}/load_policy
-	%relabel_files
-    fi
-fi
-
-%postun -n tendrl-collectd-selinux
-if [ $1 -eq 0 ]; then
-    %selinux_modules_uninstall -s %{selinuxtype} collectd &> /dev/null || :
-    if %{_sbindir}/selinuxenabled ; then
-	%{_sbindir}/load_policy
-	%relabel_files
-    fi
-fi
-
 %postun
 %systemd_postun_with_restart tendrl-gluster-integration.service
 
 %check
 py.test -v tendrl/gluster_integration/tests || :
-
-%files -n tendrl-node-selinux
-%defattr(-,root,root,0755)
-%attr(0644,root,root) %{_datadir}/selinux/packages/tendrl.pp.bz2
-
-%files -n tendrl-collectd-selinux
-%defattr(-,root,root,0755)
-%attr(0644,root,root) %{_datadir}/selinux/packages/collectd.pp.bz2
 
 %files -f INSTALLED_FILES
 %dir %{_sysconfdir}/tendrl/gluster-integration
@@ -144,6 +63,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Fri Oct 13 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.3-2
+- BugFixes for tendrl-gluster-integration v1.5.3
+
 * Thu Oct 12 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.3-1
 - Release tendrl-gluster-integration v1.5.3
 
