@@ -165,6 +165,21 @@ namespace.gluster:
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/options
       help: gluster volume options
+    VolumeAlertCounters:
+      enabled: True
+      attrs:
+        warning_count:
+          help: "Count of warning alerts for the volume"
+          type: int
+        integration_id:
+          help: "Id of the cluster"
+          type: String
+        volume_id:
+          help: "Id of the volume"
+          type: String
+      value: /clusters/{0}/Volumes/{1}
+      list: /clusters/{0}/Volumes/{1}
+      help: "Volume Alert Counter"
     RebalanceDetails:
       attrs:
         vol_id:
