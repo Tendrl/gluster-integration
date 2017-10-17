@@ -254,9 +254,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     _cluster.save()
                     # Initialize alert count
                     try:
-                        clus_key = '/clusters/%s/alert_counters' % (
+                        alerts_count_key = '/clusters/%s/alert_counters' % (
                             NS.tendrl_context.integration_id)
-                        etcd_utils.read(clus_key)
+                        etcd_utils.read(alerts_count_key)
                     except(etcd.EtcdException)as ex:
                         if type(ex) == etcd.EtcdKeyNotFound:
                             ClusterAlertCounters(
@@ -406,11 +406,11 @@ def sync_volumes(volumes, index, vol_options):
 
         # Initialize volume alert count
         try:
-            vol_key = '/clusters/%s/Volumes/%s/alert_counters' % (
+            volume_alert_count_key = '/clusters/%s/Volumes/%s/alert_counters' % (
                 NS.tendrl_context.integration_id,
                 volumes['volume%s.id' % index]
             )
-            etcd_utils.read(vol_key)
+            etcd_utils.read(volume_alert_count_key)
         except(etcd.EtcdException)as ex:
             if type(ex) == etcd.EtcdKeyNotFound:
                 NS.gluster.objects.VolumeAlertCounters(

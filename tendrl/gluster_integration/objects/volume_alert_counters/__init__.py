@@ -5,8 +5,8 @@ class VolumeAlertCounters(objects.BaseObject):
     def __init__(
         self,
         warn_count=0,
-        integration_id='',
-        volume_id='',
+        integration_id=None,
+        volume_id=None,
         *args,
         **kwargs
     ):
@@ -18,5 +18,7 @@ class VolumeAlertCounters(objects.BaseObject):
 
     def render(self):
         self.value = self.value.format(
-            self.integration_id, self.volume_id)
+            (self.integration_id or NS.tendrl_context.integration_id),
+            self.volume_id
+        )
         return super(VolumeAlertCounters, self).render()
