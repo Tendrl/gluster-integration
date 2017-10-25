@@ -377,7 +377,10 @@ def sync_volumes(volumes, index, vol_options):
                     msg,
                     instance,
                     'WARNING' if current_status == 'Stopped'
-                    else 'INFO'
+                    else 'INFO',
+                    tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                          "volume_name": volumes['volume%s.name' % index]
+                          }
                 )
         except (KeyError, etcd.EtcdKeyNotFound) as ex:
             if isinstance(ex, KeyError):
@@ -536,7 +539,10 @@ def sync_volumes(volumes, index, vol_options):
                         msg,
                         instance,
                         'WARNING' if current_status == 'Stopped'
-                        else 'INFO'
+                        else 'INFO',
+                        tags={"entity_type": RESOURCE_TYPE_BRICK,
+                              "volume_name": volumes['volume%s.' 'name' % index]
+                              }
                     )
 
             except etcd.EtcdKeyNotFound:
