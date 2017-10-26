@@ -10,6 +10,8 @@ import etcd
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
 from tendrl.commons.message import Message
+from tendrl.commons.objects.cluster_alert_counters import \
+    ClusterAlertCounters
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
@@ -250,7 +252,16 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     _cluster.last_sync = str(tendrl_now())
                     _cluster.is_managed = "yes"
                     _cluster.save()
-
+                    # Initialize alert count
+                    try:
+                        alerts_count_key = '/clusters/%s/alert_counters' % (
+                            NS.tendrl_context.integration_id)
+                        etcd_utils.read(alerts_count_key)
+                    except(etcd.EtcdException)as ex:
+                        if type(ex) == etcd.EtcdKeyNotFound:
+                            ClusterAlertCounters(
+                                integration_id=NS.tendrl_context.integration_id
+                            ).save()
                 # check and enable volume profiling
                 if "provisioner/%s" % NS.tendrl_context.integration_id in \
                     NS.node_context.tags:
@@ -393,6 +404,19 @@ def sync_volumes(volumes, index, vol_options):
         )
         volume.save(ttl=SYNC_TTL)
 
+        # Initialize volume alert count
+        try:
+            volume_alert_count_key = '/clusters/%s/Volumes/%s/alert_counters' % (
+                NS.tendrl_context.integration_id,
+                volumes['volume%s.id' % index]
+            )
+            etcd_utils.read(volume_alert_count_key)
+        except(etcd.EtcdException)as ex:
+            if type(ex) == etcd.EtcdKeyNotFound:
+                NS.gluster.objects.VolumeAlertCounters(
+                    integration_id=NS.tendrl_context.integration_id,
+                    volume_id=volumes['volume%s.id' % index]
+                ).save()
         # Save the default values of volume options
         vol_opt_dict = {}
         for opt_count in \
