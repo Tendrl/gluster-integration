@@ -1,106 +1,50 @@
-import etcd
+import json
+import os
+import subprocess
+
+from tendrl.commons.utils import log_utils as logger
 
 
 def sync_utilization_details(volumes):
-    cluster_raw_capacity = 0
     cluster_used_capacity = 0
     cluster_usable_capacity = 0
     for volume in volumes:
-        subvol_count = 0
-        bricks = []
-        raw_capacity = 0
-        raw_used = 0
-        up_bricks = 0
-        subvols = []
-        while True:
-            try:
-                subvol = NS._int.client.read(
-                    "clusters/%s/Volumes/%s/Bricks/subvolume%s" % (
-                        NS.tendrl_context.integration_id,
-                        volume.vol_id,
-                        subvol_count
-                    )
-                )
-                subvol_bricks = []
-                for entry in subvol.leaves:
-                    brick_name = entry.key.split("/")[-1]
-                    fetched_brick = NS.gluster.objects.Brick(
-                        brick_name.split(":")[0],
-                        brick_name.split(":_")[-1]
-                    ).load()
-                    raw_capacity += fetched_brick.utilization['total']
-                    cluster_raw_capacity += \
-                        fetched_brick.utilization['total']
-                    raw_used += fetched_brick.utilization['used']
-                    cluster_used_capacity += \
-                        fetched_brick.utilization['used']
-                    bricks.append(fetched_brick)
-                    subvol_bricks.append(fetched_brick)
-                    if fetched_brick.status != "Started":
-                        up_bricks += 1
-                subvols.append(subvol_bricks)
-                subvol_count += 1
-            except etcd.EtcdKeyNotFound:
-                break
-        vol_usable_capacity = 0
-        vol_used_capacity = 0
-        vol_pcnt_used = 0
-        if up_bricks == len(bricks):
-            if int(volume.disperse_count) == 0:
-                # This is distribute or replicate volume
-                # In case of distribite volume the value of replica count
-                # is 1 so the below calculation works fine.
-                vol_usable_capacity = \
-                    raw_capacity / int(volume.replica_count)
-                vol_used_capacity = \
-                    raw_used / int(volume.replica_count)
-            else:
-                # this is a disperse volume, with all bricks online
-                # assumption : all bricks are the same size
-
-                # Calculate the disperse yield as ratio of a difference
-                # between disperse_count and redundancy count to actual
-                # disperse_count. This is no %tage of actual data bricks
-                # in the volume.
-                disperse_yield = \
-                    float(
-                        int(volume.disperse_count) -
-                        int(volume.redundancy_count)
-                    ) / int(volume.disperse_count)
-                vol_usable_capacity = raw_capacity * disperse_yield
-                vol_used_capacity = raw_used * disperse_yield
+        if volume.status != "Started":
+            logger.log(
+                "error",
+                NS.publisher_id,
+                {
+                    "message": "Volume: %s is stopped."
+                               "Cannot get utilization data" % volume.name
+                }
+            )
+            continue
+        cmd = subprocess.Popen(
+            "tendrl-gluster-vol-utilization %s" % volume.name,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=open(os.devnull, "r"),
+            close_fds=True
+        )
+        out, err = cmd.communicate()
+        if err == '':
+            util_det = json.loads(out)
+            volume.usable_capacity = int(util_det['total'])
+            volume.used_capacity = int(util_det['used'])
+            volume.pcnt_used = str(util_det['pcnt_used'])
+            volume.save()
+            cluster_used_capacity += volume.used_capacity
+            cluster_usable_capacity += volume.usable_capacity
         else:
-            # If volume type os replicated ot disperse, and few bricks only
-            # are started, we look subvolume wise and decide the utilization
-            # details. For replicate volume only one replica set is
-            # considered for calculation
-            # TODO(shtripat): There is assumption here that all the bricks are
-            # of same size. This logic needs to be refined later based on
-            # suggestions from gluster team
-            if int(volume.replica_count) > 1 or \
-                int(volume.disperse_count) > 0:
-                for subvol in subvols:
-                    for brick in subvol:
-                        if brick.status == "Started":
-                            vol_usable_capacity += \
-                                brick.utilization['total']
-                            vol_used_capacity += \
-                                brick.utilization['used']
-                        # For replicate volume use only one replica
-                        if int(volume.replica_count) > 1:
-                            break
-            else:
-                vol_usable_capacity = raw_capacity
-                vol_used_capacity = raw_used
-        if vol_usable_capacity > 0:
-            vol_pcnt_used = (
-                vol_used_capacity / float(vol_usable_capacity)
-            ) * 100
-        volume.usable_capacity = vol_usable_capacity
-        volume.used_capacity = vol_used_capacity
-        volume.pcnt_used = str(vol_pcnt_used)
-        volume.save()
-        cluster_usable_capacity += volume.usable_capacity
+            logger.log(
+                "error",
+                NS.publisher_id,
+                {
+                    "message": "Error getting utilization of "
+                    "volume: %s. Error: %s" % (volume.name, err)
+                }
+            )
     cluster_pcnt_used = 0
     if cluster_usable_capacity > 0:
         cluster_pcnt_used = (
@@ -108,8 +52,7 @@ def sync_utilization_details(volumes):
         ) * 100
 
     NS.gluster.objects.Utilization(
-        raw_capacity=cluster_raw_capacity,
-        used_capacity=cluster_used_capacity,
-        usable_capacity=cluster_usable_capacity,
+        used_capacity=int(cluster_used_capacity),
+        usable_capacity=int(cluster_usable_capacity),
         pcnt_used=str(cluster_pcnt_used)
     ).save()
