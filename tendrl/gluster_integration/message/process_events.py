@@ -1,3 +1,5 @@
+import json
+
 from tendrl.gluster_integration.sds_sync import event_utils
 
 
@@ -9,6 +11,11 @@ def process_events():
     events = NS.gluster.objects.NativeEvents().load_all()
     if events:
         for event in events:
+            try:
+                event.tags = json.loads(event.tags)
+            except(TypeError, ValueError):
+                # tags can be None
+                pass
             if event.severity == "recovery" and not event.recovery_processed:
                 # this perticular event is recovery event
                 # so process this event and delete it
@@ -17,7 +24,8 @@ def process_events():
                     event.current_value,
                     event.message,
                     event.context,
-                    "INFO"
+                    "INFO",
+                    tags=event.tags
                 )
                 processed_event = NS.gluster.objects.NativeEvents(
                     event.context,
@@ -33,7 +41,8 @@ def process_events():
                     event.message,
                     event.context,
                     event.severity.upper(),
-                    alert_notify=event.alert_notify
+                    alert_notify=event.alert_notify,
+                    tags=event.tags
                 )
                 processed_event = NS.gluster.objects.NativeEvents(
                     event.context,
@@ -48,7 +57,8 @@ def process_events():
                     event.current_value,
                     event.message,
                     event.context,
-                    "WARNING"
+                    "WARNING",
+                    tags=event.tags
                 )
                 processed_event = NS.gluster.objects.NativeEvents(
                     event.context,

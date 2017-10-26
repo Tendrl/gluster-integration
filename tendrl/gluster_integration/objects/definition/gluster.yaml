@@ -236,6 +236,9 @@ namespace.gluster:
         current_value:
           help: current_value for which event was raised
           type: String
+        tags:
+          help: optional parameters
+          type: Dict
       enabled: true
       value: clusters/$TendrlContext.integration_id/native_events/$NativeEvents.context
       list: clusters/$TendrlContext.integration_id/native_events
