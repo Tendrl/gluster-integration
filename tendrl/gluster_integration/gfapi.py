@@ -57,6 +57,10 @@ class StatVfsStruct(ctypes.Structure):
 
 def glfsInit(volumeId, host, port, protocol):
     fs = _glfs_new(volumeId)
+    if fs in None:
+        raise ge.GlfsInitException(
+            err=['glfs_new(%s) failed' % volumeId]
+        )
 
     rc = _glfs_set_volfile_server(fs,
                                   protocol,
