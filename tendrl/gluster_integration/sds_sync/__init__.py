@@ -44,8 +44,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         # To detect out of band deletes
         # refresh gluster object inventory at config['sync_interval']
         # Default is 260 seconds
-        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) +
-                   int(NS.config.data.get("ttl_delta", 600))
+        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
+
         Event(
             Message(
                 priority="info",
@@ -345,9 +345,9 @@ def sync_volumes(volumes, index, vol_options):
     # about storage devices in the machine
     b.reset()
     devicetree = b.devicetree
+    
+    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
 
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) +
-               int(NS.config.data.get("ttl_delta", 600))
     node_context = NS.node_context.load()
     tag_list = node_context.tags
     # Raise alerts for volume state change.
