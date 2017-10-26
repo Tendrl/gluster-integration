@@ -590,7 +590,7 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            brick.save(ttl=SYNC_TTL)
+            brick.save()
             # sync brick device details
             brick_device_details.\
                 update_brick_device_details(
