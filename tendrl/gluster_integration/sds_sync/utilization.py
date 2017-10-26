@@ -20,7 +20,7 @@ def sync_utilization_details(volumes):
             )
             continue
         cmd = subprocess.Popen(
-            "vol_utilization %s" % volume.name,
+            "tendrl-gluster-vol-utilization %s" % volume.name,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
