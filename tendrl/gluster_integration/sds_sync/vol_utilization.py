@@ -53,7 +53,12 @@ def parse_input():
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+
+def main():
     args = parse_input()
     showVolumeUtilization(args.volume)
     sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
