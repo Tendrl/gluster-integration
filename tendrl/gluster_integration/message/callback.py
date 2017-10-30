@@ -29,7 +29,10 @@ class Callback(object):
             context,
             message=message,
             severity="warning",
-            current_value="quorum_lost"
+            current_value="quorum_lost",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": event['message']['volume']
+                  }
         )
         native_event.save()
 
@@ -42,7 +45,10 @@ class Callback(object):
             context,
             message=message,
             severity="recovery",
-            current_value="quorum_gained"
+            current_value="quorum_gained",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": event['message']['volume']
+                  }
         )
         native_event.save()
 
@@ -86,11 +92,15 @@ class Callback(object):
                   ": {0}".format(
                       event['message']['subvol']
                   )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="warning",
-            current_value="ec_min_bricks_not_up"
+            current_value="ec_min_bricks_not_up",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -100,11 +110,15 @@ class Callback(object):
                   "in EC subvolume: {0}".format(
                       event['message']['subvol']
                   )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="recovery",
-            current_value="ec_min_bricks_up"
+            current_value="ec_min_bricks_up",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -113,11 +127,15 @@ class Callback(object):
         message = "Afr quorum is met for subvolume: {0}".format(
             event['message']['subvol']
         )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="recovery",
-            current_value="afr_quorum_met"
+            current_value="afr_quorum_met",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -126,11 +144,15 @@ class Callback(object):
         message = "Afr quorum has failed for subvolume: {0}".format(
             event['message']['subvol']
         )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="warning",
-            current_value="afr_quorum_failed"
+            current_value="afr_quorum_failed",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -139,11 +161,15 @@ class Callback(object):
         message = "Afr subvolume: {0} is back up".format(
             event['message']['subvol']
         )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="recovery",
-            current_value="afr_subvol_up"
+            current_value="afr_subvol_up",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -152,11 +178,15 @@ class Callback(object):
         message = "Afr subvolume: {0} is down".format(
             event['message']['subvol']
         )
+        volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
             severity="warning",
-            current_value="afr_subvol_down"
+            current_value="afr_subvol_down",
+            tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                  "volume_name": volume_name
+                  }
         )
         native_event.save()
 
@@ -539,3 +569,8 @@ class Callback(object):
 
     def volume_remove_brick_commit(self, event):
         self.volume_remove_brick_force(event)
+
+
+def parse_subvolume(subvol):
+    # volume1-replica-2 or volume_1-replica-2 or volume-1-replica-2
+    return subvol.split("-"+"-".join(subvol.split('-')[-2:]))[0]

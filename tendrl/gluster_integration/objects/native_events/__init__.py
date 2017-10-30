@@ -1,3 +1,5 @@
+import json
+
 from tendrl.commons import objects
 
 
@@ -11,6 +13,7 @@ class NativeEvents(objects.BaseObject):
         severity=None,
         alert_notify=None,
         current_value=None,
+        tags={},
         *args,
         **kwargs
     ):
@@ -23,9 +26,12 @@ class NativeEvents(objects.BaseObject):
         self.severity = severity
         self.alert_notify = alert_notify
         self.current_value = current_value
+        self.tags = tags
         self.value = 'clusters/{0}/native_events/{1}'
 
     def render(self):
+        if type(self.tags) != str:
+            self.tags = json.dumps(self.tags)
         context = None
         if self.context:
             context = self.context.replace(
