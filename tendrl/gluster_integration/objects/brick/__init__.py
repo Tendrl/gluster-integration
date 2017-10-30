@@ -5,7 +5,7 @@ class Brick(objects.BaseObject):
     def __init__(
         self,
         fqdn,
-        brick_dir,
+        brick_dir=None,
         name=None,
         devices=None,
         partitions=None,
