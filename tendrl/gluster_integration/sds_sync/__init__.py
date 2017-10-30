@@ -242,7 +242,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                     snapshots.sync_volume_snapshots(
                         raw_data['Volumes'],
-                        SYNC_TTL
+                        int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
                     )
 
                 _cluster = NS.tendrl.objects.Cluster(
@@ -346,7 +346,7 @@ def sync_volumes(volumes, index, vol_options):
     b.reset()
     devicetree = b.devicetree
     
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
+    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
 
     node_context = NS.node_context.load()
     tag_list = node_context.tags
