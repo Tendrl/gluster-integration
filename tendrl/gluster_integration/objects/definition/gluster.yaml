@@ -26,6 +26,20 @@ namespace.gluster:
       type: Create
       uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
       version: 1
+    UpdateBrickStatus:
+      tags:
+       - "tendrl/integration/$TendrlContext.integration_id"
+      help: "Update brick status as down"
+      enabled: true
+      inputs:
+        mandatory:
+          - TendrlContext.integration_id
+          - Node.fqdn
+          - Brick.status
+      run: gluster.flows.UpdateBrickStatus
+      type: Update
+      uuid: 8ff1c072-ee08-4afb-bbb3-106ee188b0af
+      version: 1
     CreateBrick:
       tags:
        - "provisioner/$TendrlContext.integration_id"
