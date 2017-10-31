@@ -63,12 +63,12 @@ def get_lvs():
         )
         return None
     out = out.split('\n')
-    l = map(lambda x: dict(x),
-            map(lambda x: [e.split('=') for e in x],
-                map(lambda x: x.strip().split('$'), out)))
+    lst = map(lambda x: dict(x),
+              map(lambda x: [e.split('=') for e in x],
+                  map(lambda x: x.strip().split('$'), out)))
 
     d = {}
-    for i in l:
+    for i in lst:
         if i['LVM2_LV_ATTR'][0] == 't':
             k = "%s/%s" % (i['LVM2_VG_NAME'], i['LVM2_LV_NAME'])
         else:

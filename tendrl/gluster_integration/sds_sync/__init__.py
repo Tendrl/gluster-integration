@@ -204,7 +204,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     volumes = raw_data['Volumes']
                     while True:
                         try:
-                            sync_volumes(volumes, index, raw_data_options.get('Volume Options'))
+                            sync_volumes(
+                                volumes, index,
+                                raw_data_options.get('Volume Options')
+                            )
                             index += 1
                         except KeyError:
                             break
@@ -242,7 +245,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                     snapshots.sync_volume_snapshots(
                         raw_data['Volumes'],
-                        int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
+                        int(NS.config.data.get(
+                            "sync_interval", 10
+                        )) + len(volumes) * 10
                     )
 
                 _cluster = NS.tendrl.objects.Cluster(
@@ -345,7 +350,7 @@ def sync_volumes(volumes, index, vol_options):
     # about storage devices in the machine
     b.reset()
     devicetree = b.devicetree
-    
+
     SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
 
     node_context = NS.node_context.load()
@@ -411,10 +416,11 @@ def sync_volumes(volumes, index, vol_options):
 
         # Initialize volume alert count
         try:
-            volume_alert_count_key = '/clusters/%s/Volumes/%s/alert_counters' % (
-                NS.tendrl_context.integration_id,
-                volumes['volume%s.id' % index]
-            )
+            volume_alert_count_key = '/clusters/%s/Volumes/%s/'\
+                                     'alert_counters' % (
+                                         NS.tendrl_context.integration_id,
+                                         volumes['volume%s.id' % index]
+                                     )
             etcd_utils.read(volume_alert_count_key)
         except(etcd.EtcdException)as ex:
             if type(ex) == etcd.EtcdKeyNotFound:
@@ -541,7 +547,8 @@ def sync_volumes(volumes, index, vol_options):
                         'WARNING' if current_status == 'Stopped'
                         else 'INFO',
                         tags={"entity_type": RESOURCE_TYPE_BRICK,
-                              "volume_name": volumes['volume%s.' 'name' % index]
+                              "volume_name": volumes[
+                                  'volume%s.' 'name' % index]
                               }
                     )
 
