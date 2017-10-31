@@ -573,4 +573,4 @@ class Callback(object):
 
 def parse_subvolume(subvol):
     # volume1-replica-2 or volume_1-replica-2 or volume-1-replica-2
-    return subvol.split("-"+"-".join(subvol.split('-')[-2:]))[0]
+    return subvol.split("-" + "-".join(subvol.split('-')[-2:]))[0]

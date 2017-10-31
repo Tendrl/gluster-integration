@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
+import argparse
 import json
 import sys
-import argparse
 
 from tendrl.gluster_integration import gfapi
 
@@ -34,14 +34,14 @@ def showVolumeUtilization(vname):
     # used size in KB
     used_size = volumeCapacity['sizeUsed'] / BYTES_IN_KB
     vol_utilization = (used_size / total_size) * 100
-    print json.dumps(
+    print (json.dumps(
         {
             'total': total_size,
             'free': free_size,
             'used': used_size,
             'pcnt_used': vol_utilization
         }
-    )
+    ))
 
 
 def parse_input():

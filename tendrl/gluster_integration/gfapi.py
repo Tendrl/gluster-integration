@@ -58,7 +58,7 @@ class StatVfsStruct(ctypes.Structure):
 def glfsInit(volumeId, host, port, protocol):
     fs = _glfs_new(volumeId)
     if fs is None:
-        raise ge.GlfsInitException(
+        raise GlfsInitException(
             err=['glfs_new(%s) failed' % volumeId]
         )
 
@@ -120,6 +120,7 @@ def getVolumeStatvfs(volumeId, host=GLUSTER_VOL_HOST,
                               statvfsdata.f_namemax))
 
 # C function prototypes for using the library gfapi
+
 
 _lib = ctypes.CDLL(find_library("gfapi"),
                    use_errno=True)
