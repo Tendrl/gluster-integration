@@ -7,6 +7,8 @@
 # that event in this file, If it finds then that callback function
 # will be invoked
 
+import etcd
+
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils import time_utils
@@ -475,6 +477,35 @@ class Callback(object):
                 fetched_volume.deleted = True
                 fetched_volume.deleted_at = time_utils.now()
                 fetched_volume.save()
+                try:
+                    sub_volumes = NS._int.client.read(
+                        "/clusters/{0}/Volumes/{1}/Bricks".format(
+                            NS.tendrl_context.integration_id,
+                            fetched_volume.vol_id
+                        )
+                    )
+
+                    for sub_volume in sub_volumes.leaves:
+                        bricks = NS._int.client.read(
+                            sub_volume.key
+                        )
+                        for brick in bricks.leaves:
+                            fqdn = brick.key.split('/')[-1].split(':')[0]
+                            path = brick.key.split('/')[-1].split(':')[-1][1:]
+
+                            brick_path = "clusters/{0}/Bricks/"\
+                                         "all/{1}/{2}".format(
+                                             NS.tendrl_context.integration_id,
+                                             fqdn,
+                                             path
+                                         )
+
+                            NS._int.wclient.delete(
+                                brick_path,
+                                recursive=True
+                            )
+                except etcd.EtcdKeyNotFound:
+                    pass
 
         job_id = monitoring_utils.update_dashboard(
             event['message']['name'],
@@ -533,9 +564,39 @@ class Callback(object):
                 fqdn=brick.split(":/")[0],
                 brick_dir=brick.split(":/")[1].replace('/', '_')
             ).load()
-            fetched_brick.deleted = True
-            fetched_brick.deleted_at = time_utils.now()
-            fetched_brick.save()
+
+            volume = NS.gluster.objects.Volume(
+                vol_id=fetched_brick.vol_id
+            ).load()
+
+            sub_vol_size = int(volume.brick_count) / int(volume.subvol_count)
+            sub_volume_num = str(
+                (int(fetched_brick.sequence_number) - 1) / sub_vol_size
+            )
+
+            brick_path = "clusters/{0}/Volumes/{1}/"\
+                         "Bricks/subvolume{2}/{3}".format(
+                             NS.tendrl_context.integration_id,
+                             fetched_brick.vol_id,
+                             sub_volume_num,
+                             fetched_brick.name
+                         )
+            try:
+                NS._int.wclient.delete(
+                    brick_path,
+                    recursive=True
+                )
+
+                NS._int.wclient.delete(
+                    "clusters/{0}/Bricks/all/{1}/{2}".format(
+                        NS.tendrl_context.integration_id,
+                        brick.split(":/")[0],
+                        brick.split(":/")[1].replace('/', '_')
+                    ),
+                    recursive=True,
+                )
+            except etcd.EtcdKeyNotFound:
+                pass
 
             job_id = monitoring_utils.update_dashboard(
                 "%s|%s" % (event['message']['volume'], brick),
