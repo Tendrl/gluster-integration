@@ -55,12 +55,16 @@ class GlusterNativeMessageHandler(threading.Thread):
         cmd = cmd_utils.Command('gluster-eventsapi webhook-add %s' % url)
         out, err, rc = cmd.run()
         if rc != 0:
+            severity = "info" if "Webhook already exists" in err else "error"
             logger.log(
-                "error",
+                severity,
                 NS.publisher_id,
                 {
                     "message": "could not add webhook"
-                    " for glustereventsd. Error: %s" % err
+                    " for glustereventsd. {0}: {1}".format(
+                        severity,
+                        err
+                    )
                 }
             )
         return True
@@ -70,12 +74,16 @@ class GlusterNativeMessageHandler(threading.Thread):
         cmd = cmd_utils.Command('gluster-eventsapi webhook-del %s' % url)
         out, err, rc = cmd.run()
         if rc != 0:
+            severity = "info" if "Webhook does not exists" in err else "error"
             logger.log(
-                "error",
+                severity,
                 NS.publisher_id,
                 {
                     "message": "could not delete webhook from"
-                    " glustereventsd. Error: %s" % err
+                    " glustereventsd. {0}: {1}".format(
+                        severity,
+                        err
+                    )
                 }
             )
         return True
