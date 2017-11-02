@@ -172,6 +172,10 @@ def aggregate_session_status():
                 )
             except etcd.EtcdKeyNotFound:
                 continue
+            volume = NS.gluster.objects.Volume(vol_id=vol_id).load()
+            if volume is None:
+                continue
+            pair_count = volume.brick_count
             for session in sessions.leaves:
                 session_status = None
                 session_id = session.key.split("GeoRepSessions/")[-1]
@@ -186,7 +190,6 @@ def aggregate_session_status():
                     )
                 except etcd.EtcdKeyNotFound:
                     continue
-                pair_count = 0
                 faulty_count = 0
                 stopped_count = 0
                 paused_count = 0
@@ -205,7 +208,6 @@ def aggregate_session_status():
                         stopped_count += 1
                     elif pair.status.lower() == "paused":
                         paused_count += 1
-                    pair_count += 1
                 if created_count == pair_count:
                     session_status = georep_status.CREATED
                 elif faulty_count == 0 and \
