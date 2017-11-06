@@ -369,7 +369,7 @@ def sync_volumes(volumes, index, vol_options):
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
-                msg = ("Status of volume: %s in cluster %d "
+                msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
                            volumes['volume%s.name' % index],
                            NS.tendrl_context.integration_id,
