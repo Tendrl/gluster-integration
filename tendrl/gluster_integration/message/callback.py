@@ -526,9 +526,43 @@ class Callback(object):
                                 brick_path,
                                 recursive=True
                             )
+                            # Delete brick dashboard from grafana
+                            job_id = monitoring_utils.update_dashboard(
+                                "%s|%s" % (event['message']['name'],
+                                           brick.key.split('/')[-1].replace("_","/")
+                                           ),
+                                RESOURCE_TYPE_BRICK,
+                                NS.tendrl_context.integration_id,
+                                "delete"
+                            )
+                            logger.log(
+                                "debug",
+                                NS.publisher_id,
+                                {
+                                    "message": "Update dashboard job %s "
+                                    "created" % job_id
+                                }
+                            )
+                            # Delete brick from graphite
+                            job_id = monitoring_utils.delete_resource_from_graphite(
+                                "%s|%s" % (event['message']['name'],
+                                           brick.key.split('/')[-1].replace("_","/")
+                                           ),
+                                RESOURCE_TYPE_BRICK,
+                                NS.tendrl_context.integration_id,
+                                "delete"
+                            )
+                            logger.log(
+                                "debug",
+                                NS.publisher_id,
+                                {
+                                    "message": "Delete resource from graphite job %s "
+                                    "created" % job_id
+                                }
+                            )
                 except etcd.EtcdKeyNotFound:
                     pass
-
+        # Delete volume dashboard from grafana
         job_id = monitoring_utils.update_dashboard(
             event['message']['name'],
             RESOURCE_TYPE_VOLUME,
@@ -543,7 +577,7 @@ class Callback(object):
                 "created" % job_id
             }
         )
-
+        # Delete volume details from graphite
         job_id = monitoring_utils.delete_resource_from_graphite(
             event['message']['name'],
             RESOURCE_TYPE_VOLUME,
