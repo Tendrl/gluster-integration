@@ -172,12 +172,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ]
                                 if stored_peer_status != "" and \
                                     current_status != stored_peer_status:
-                                    msg = ("Status of peer: %s "
+                                    msg = ("Status of peer: %s in cluster %s "
                                            "changed from %s to %s") % (
                                                peers[
                                                    'peer%s.primary_hostname' %
                                                    index
                                                ],
+                                               NS.tendrl_context.integration_id,
                                                stored_peer_status,
                                                current_status)
                                     instance = "peer_%s" % peers[
@@ -372,9 +373,10 @@ def sync_volumes(volumes, index, vol_options):
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
-                msg = ("Status of volume: %s "
+                msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
                            volumes['volume%s.name' % index],
+                           NS.tendrl_context.integration_id,
                            stored_volume_status,
                            current_status)
                 instance = "volume_%s" % volumes[
@@ -527,13 +529,14 @@ def sync_volumes(volumes, index, vol_options):
                 )
                 if current_status != sbs:
                     msg = ("Status of brick: %s "
-                           "under volume %s chan"
+                           "under volume %s in cluster %s chan"
                            "ged from %s to %s") % (
                                volumes['volume%s.brick%s' '.path' % (
                                    index,
                                    b_index
                                )],
                                volumes['volume%s.' 'name' % index],
+                               NS.tendrl_context.integration_id,
                                sbs,
                                current_status)
                     instance = "volume_%s|brick_%s" % (
