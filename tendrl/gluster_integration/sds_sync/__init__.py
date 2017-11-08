@@ -237,7 +237,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     all_volumes = NS.gluster.objects.Volume().load_all() or []
                     volumes = []
                     for volume in all_volumes:
-                        if not eval(volume.deleted):
+                        if not volume.deleted.lower() == "true":
                             volumes.append(volume)
                     cluster_status.sync_cluster_status(volumes)
                     utilization.sync_utilization_details(volumes)
