@@ -175,7 +175,7 @@ def aggregate_session_status():
             volume = NS.gluster.objects.Volume(vol_id=vol_id).load()
             if volume is None:
                 continue
-            pair_count = volume.brick_count
+            pair_count = int(volume.brick_count)
             for session in sessions.leaves:
                 session_status = None
                 session_id = session.key.split("GeoRepSessions/")[-1]
@@ -211,12 +211,12 @@ def aggregate_session_status():
                 if created_count == pair_count:
                     session_status = georep_status.CREATED
                 elif faulty_count == 0 and \
-                    (stopped_count == 0 or paused_count == 0 \
+                    (stopped_count == 0 or paused_count == 0
                     or created_count == 0):
                     session_status = georep_status.UP
                 elif pair_count == faulty_count and \
-                    (stopped_count == 0 or paused_count == 0 \
-                    created_count == 0):
+                    (stopped_count == 0 or paused_count == 0
+                    or created_count == 0):
                     session_status = georep_status.DOWN
                 elif stopped_count == pair_count:
                     session_status = georep_status.STOPPED
