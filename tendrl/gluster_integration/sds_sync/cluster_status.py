@@ -5,15 +5,14 @@ from tendrl.gluster_integration.sds_sync import event_utils
 
 
 def sync_cluster_status(volumes):
-    status = 'healthy'
-
     # Calculate status based on volumes status
     degraded_count = 0
+    is_healthy = True
     if len(volumes) > 0:
         volume_states = _derive_volume_states(volumes)
         for vol_id, state in volume_states.iteritems():
             if 'down' in state or 'partial' in state:
-                status = 'unhealthy'
+                is_healthy = False
             if 'degraded' in state:
                 degraded_count += 1
 
@@ -52,14 +51,12 @@ def sync_cluster_status(volumes):
             if len(node_status_det) > 2:
                 if node_status_det[2].strip() != 'Connected':
                     connected = connected and False
-        if connected:
-            status = 'healthy'
-        else:
-            status = 'unhealthy'
+        if not connected:
+            is_healthy = False
 
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
-        status=status,
+        status='healthy' if is_healthy else 'unhealthy',
         peer_count=peer_count,
         vol_count=len(volumes),
         volume_up_degraded=degraded_count
