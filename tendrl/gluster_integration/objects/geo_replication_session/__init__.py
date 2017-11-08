@@ -2,9 +2,12 @@ from tendrl.commons import objects
 
 
 class GeoReplicationSessionStatus(object):
-    ACTIVE = "active"
+    UP = "up"
     PARTIAL = "partial"
-    FAULTY = "faulty"
+    DOWN = "down"
+    CREATED = "created"
+    STOPPED = "stopped"
+    PAUSED = "paused"
 
 
 class GeoReplicationSession(objects.BaseObject):
