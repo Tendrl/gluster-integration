@@ -539,8 +539,12 @@ class Callback(object):
                                 "debug",
                                 NS.publisher_id,
                                 {
-                                    "message": "Update dashboard job %s "
-                                    "created" % job_id
+                                    "message": "Update dashboard job %s for brick %s "
+                                    "in cluster %s created" % (
+                                        job_id,
+                                        brick.key.split('/')[-1],
+                                        NS.tendrl_context.integration_id
+                                    )
                                 }
                             )
                             # Delete brick from graphite
@@ -557,7 +561,11 @@ class Callback(object):
                                 NS.publisher_id,
                                 {
                                     "message": "Delete resource from graphite job %s "
-                                    "created" % job_id
+                                    "for brick %s in cluster %s created" % (
+                                        job_id,
+                                        brick.key.split('/')[-1],
+                                        NS.tendrl_context.integration_id
+                                    )
                                 }
                             )
                 except etcd.EtcdKeyNotFound:
