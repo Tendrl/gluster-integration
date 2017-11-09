@@ -150,10 +150,11 @@ class Callback(object):
 
     def afr_quorum_fail(self, event):
         context = "afr_quorum_state|" + event['message']['subvol']
-        message = "Afr quorum has failed for subvolume: {0} in cluster {1}".format(
-            event['message']['subvol'],
-            NS.tendrl_context.integration_id
-        )
+        message = "Afr quorum has failed for subvolume:"\
+                  " {0} in cluster {1}".format(
+                      event['message']['subvol'],
+                      NS.tendrl_context.integration_id
+                  )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -277,7 +278,8 @@ class Callback(object):
     def afr_split_brain(self, event):
         context = "afr_split_brain|" + event['message']["subvol"]
         message = "Subvolume: {0} is affected by split-brain. Some of the" \
-                  "replicated files in the volume might be divergent in cluster {1}".format(
+                  "replicated files in the volume might"\
+                  " be divergent in cluster {1}".format(
                       event['message']['subvol'],
                       NS.tendrl_context.integration_id
                   )
@@ -293,10 +295,11 @@ class Callback(object):
     def snapshot_soft_limit_reached(self, event):
         context = "snapshot_soft_limit_reached|" + event[
             'message']['volume_name']
-        message = "Snapshot soft limit reached for volume: {0} in cluster {1}".format(
-            event['message']['volume_name'],
-            NS.tendrl_context.integration_id
-        )
+        message = "Snapshot soft limit reached for"\
+                  " volume: {0} in cluster {1}".format(
+                      event['message']['volume_name'],
+                      NS.tendrl_context.integration_id
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -309,10 +312,11 @@ class Callback(object):
     def snapshot_hard_limit_reached(self, event):
         context = "snapshot_hard_limit_reached|" + event[
             'message']['volume_name']
-        message = "Snapshot hard limit reached for volume: {0} in cluster {1}".format(
-            event['message']['volume_name'],
-            NS.tendrl_context.integration_id
-        )
+        message = "Snapshot hard limit reached for"\
+                  " volume: {0} in cluster {1}".format(
+                      event['message']['volume_name'],
+                      NS.tendrl_context.integration_id
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -324,10 +328,11 @@ class Callback(object):
 
     def compare_friend_volume_failed(self, event):
         context = "compare_friend_volume_failed|" + event['message']['volume']
-        message = "Compare friend volume failed for volume: {0} in cluster {1}".format(
-            event['message']['volume'],
-            NS.tendrl_context.integration_id
-        )
+        message = "Compare friend volume failed for volume:"\
+                  " {0} in cluster {1}".format(
+                      event['message']['volume'],
+                      NS.tendrl_context.integration_id
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -340,7 +345,8 @@ class Callback(object):
     def posix_health_check_failed(self, event):
         context = "posix_health_check_failed|" + event[
             'message']["brick"] + event['message']["path"]
-        message = "Posix health check failed for brick: {}. Path: {1} in cluster {2}" \
+        message = "Posix health check failed for brick: {}. Path:"\
+                  " {1} in cluster {2}" \
                   ". Error: {3}. op: {4}".format(
                       event['message']["brick"],
                       event['message']["path"],
@@ -375,10 +381,11 @@ class Callback(object):
     def rebalance_status_update_failed(self, event):
         context = "rebalance_status_update_failed|" + event[
             'message']["volume"]
-        message = "Rebalance status update failed for volume: {0} in cluster {1}".format(
-            event['message']["volume"],
-            NS.tendrl_context.integration_id
-        )
+        message = "Rebalance status update failed for"\
+                  " volume: {0} in cluster {1}".format(
+                      event['message']["volume"],
+                      NS.tendrl_context.integration_id
+                  )
         native_event = NS.gluster.objects.NativeEvents(
             context,
             message=message,
@@ -528,9 +535,10 @@ class Callback(object):
                             )
                             # Delete brick dashboard from grafana
                             job_id = monitoring_utils.update_dashboard(
-                                "%s|%s" % (event['message']['name'],
-                                           brick.key.split('/')[-1].replace("_","/")
-                                           ),
+                                "%s|%s" % (
+                                    event['message']['name'],
+                                    brick.key.split('/')[-1].replace("_", "/")
+                                ),
                                 RESOURCE_TYPE_BRICK,
                                 NS.tendrl_context.integration_id,
                                 "delete"
@@ -539,7 +547,8 @@ class Callback(object):
                                 "debug",
                                 NS.publisher_id,
                                 {
-                                    "message": "Update dashboard job %s for brick %s "
+                                    "message": "Update dashboard job %s"
+                                    " for brick %s "
                                     "in cluster %s created" % (
                                         job_id,
                                         brick.key.split('/')[-1],
@@ -548,19 +557,24 @@ class Callback(object):
                                 }
                             )
                             # Delete brick from graphite
-                            job_id = monitoring_utils.delete_resource_from_graphite(
-                                "%s|%s" % (event['message']['name'],
-                                           brick.key.split('/')[-1].replace("_","/")
-                                           ),
-                                RESOURCE_TYPE_BRICK,
-                                NS.tendrl_context.integration_id,
-                                "delete"
-                            )
+                            job_id = monitoring_utils.\
+                                delete_resource_from_graphite(
+                                    "%s|%s" % (
+                                        event['message']['name'],
+                                        brick.key.split(
+                                            '/'
+                                        )[-1].replace("_", "/")
+                                    ),
+                                    RESOURCE_TYPE_BRICK,
+                                    NS.tendrl_context.integration_id,
+                                    "delete"
+                                )
                             logger.log(
                                 "debug",
                                 NS.publisher_id,
                                 {
-                                    "message": "Delete resource from graphite job %s "
+                                    "message": "Delete resource "
+                                    "from graphite job %s "
                                     "for brick %s in cluster %s created" % (
                                         job_id,
                                         brick.key.split('/')[-1],

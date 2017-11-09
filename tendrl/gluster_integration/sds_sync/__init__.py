@@ -172,15 +172,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ]
                                 if stored_peer_status != "" and \
                                     current_status != stored_peer_status:
-                                    msg = ("Status of peer: %s in cluster %s "
-                                           "changed from %s to %s") % (
-                                               peers[
-                                                   'peer%s.primary_hostname' %
-                                                   index
-                                               ],
-                                               NS.tendrl_context.integration_id,
-                                               stored_peer_status,
-                                               current_status)
+                                    msg = (
+                                        "Status of peer: %s in cluster %s "
+                                        "changed from %s to %s"
+                                    ) % (
+                                        peers[
+                                            'peer%s.primary_hostname' %
+                                            index
+                                        ],
+                                        NS.tendrl_context.integration_id,
+                                        stored_peer_status,
+                                        current_status
+                                    )
                                     instance = "peer_%s" % peers[
                                         'peer%s.primary_hostname' % index
                                     ]
