@@ -91,9 +91,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         while not self._complete.is_set():
             try:
-                time.sleep(
-                    int(NS.config.data.get("sync_interval", 10))
-                )
                 try:
                     NS._int.wclient.write(
                         "clusters/%s/"
@@ -292,6 +289,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
                 raise ex
+            time.sleep(
+                    int(NS.config.data.get("sync_interval", 10))
+                )
 
         Event(
             Message(
