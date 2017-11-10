@@ -172,6 +172,10 @@ def aggregate_session_status():
                 )
             except etcd.EtcdKeyNotFound:
                 continue
+            volume = NS.gluster.objects.Volume(vol_id=vol_id).load()
+            if volume is None:
+                continue
+            pair_count = int(volume.brick_count)
             for session in sessions.leaves:
                 session_status = None
                 session_id = session.key.split("GeoRepSessions/")[-1]
@@ -186,21 +190,40 @@ def aggregate_session_status():
                     )
                 except etcd.EtcdKeyNotFound:
                     continue
-                pair_count = 0
                 faulty_count = 0
+                stopped_count = 0
+                paused_count = 0
+                created_count = 0
                 for element in pairs.leaves:
                     pair = GeoReplicationPair(
                         vol_id=vol_id,
                         session_id=session_id,
                         pair=element.key.split("pairs/")[-1]
                     ).load()
-                    if pair.status == "Faulty":
+                    if pair.status.lower() == "faulty":
                         faulty_count += 1
-                    pair_count += 1
-                if pair_count == faulty_count:
-                    session_status = georep_status.FAULTY
-                elif faulty_count == 0:
-                    session_status = georep_status.ACTIVE
+                    elif pair.status.lower() == "created":
+                        created_count += 1
+                    elif pair.status.lower() == "stopped":
+                        stopped_count += 1
+                    elif pair.status.lower() == "paused":
+                        paused_count += 1
+                if created_count == pair_count:
+                    session_status = georep_status.CREATED
+                elif faulty_count == 0 and (
+                        stopped_count == 0 or paused_count == 0 or
+                        created_count == 0
+                ):
+                    session_status = georep_status.UP
+                elif pair_count == faulty_count and (
+                        stopped_count == 0 or paused_count == 0 or
+                        created_count == 0
+                ):
+                    session_status = georep_status.DOWN
+                elif stopped_count == pair_count:
+                    session_status = georep_status.STOPPED
+                elif paused_count == pair_count:
+                    session_status = georep_status.PAUSED
                 else:
                     session_status = georep_status.PARTIAL
                 geo_replication_session = GeoReplicationSession(

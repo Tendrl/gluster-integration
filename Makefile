@@ -2,7 +2,7 @@ NAME=tendrl-gluster-integration
 VERSION := $(shell PYTHONPATH=. python -c \
              'import version; print version.__version__' \
              | sed 's/\.dev[0-9]*//')
-RELEASE=1
+RELEASE=2
 COMMIT := $(shell git rev-parse HEAD)
 SHORTCOMMIT := $(shell echo $(COMMIT) | cut -c1-7)
 

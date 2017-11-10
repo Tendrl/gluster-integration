@@ -88,12 +88,15 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
                 raise ex
-
+        
+        _sleep = 0
         while not self._complete.is_set():
+            if _sleep > 5:
+                _sleep = int(NS.config.data.get("sync_interval", 10))
+            else:
+                _sleep += 1
+                
             try:
-                time.sleep(
-                    int(NS.config.data.get("sync_interval", 10))
-                )
                 try:
                     NS._int.wclient.write(
                         "clusters/%s/"
@@ -172,14 +175,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 ]
                                 if stored_peer_status != "" and \
                                     current_status != stored_peer_status:
-                                    msg = ("Status of peer: %s "
-                                           "changed from %s to %s") % (
-                                               peers[
-                                                   'peer%s.primary_hostname' %
-                                                   index
-                                               ],
-                                               stored_peer_status,
-                                               current_status)
+                                    msg = (
+                                        "Status of peer: %s in cluster %s "
+                                        "changed from %s to %s"
+                                    ) % (
+                                        peers[
+                                            'peer%s.primary_hostname' %
+                                            index
+                                        ],
+                                        NS.tendrl_context.integration_id,
+                                        stored_peer_status,
+                                        current_status
+                                    )
                                     instance = "peer_%s" % peers[
                                         'peer%s.primary_hostname' % index
                                     ]
@@ -233,7 +240,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 # Sync cluster global details
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
                     in NS.node_context.tags:
-                    volumes = NS.gluster.objects.Volume().load_all() or []
+                    all_volumes = NS.gluster.objects.Volume().load_all() or []
+                    volumes = []
+                    for volume in all_volumes:
+                        if not str(volume.deleted).lower() == "true":
+                            volumes.append(volume)
                     cluster_status.sync_cluster_status(volumes)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
@@ -284,6 +295,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
                 raise ex
+            time.sleep(_sleep)
 
         Event(
             Message(
@@ -368,9 +380,10 @@ def sync_volumes(volumes, index, vol_options):
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
-                msg = ("Status of volume: %s "
+                msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
                            volumes['volume%s.name' % index],
+                           NS.tendrl_context.integration_id,
                            stored_volume_status,
                            current_status)
                 instance = "volume_%s" % volumes[
@@ -523,13 +536,14 @@ def sync_volumes(volumes, index, vol_options):
                 )
                 if current_status != sbs:
                     msg = ("Status of brick: %s "
-                           "under volume %s chan"
+                           "under volume %s in cluster %s chan"
                            "ged from %s to %s") % (
                                volumes['volume%s.brick%s' '.path' % (
                                    index,
                                    b_index
                                )],
                                volumes['volume%s.' 'name' % index],
+                               NS.tendrl_context.integration_id,
                                sbs,
                                current_status)
                     instance = "volume_%s|brick_%s" % (
