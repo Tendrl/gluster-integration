@@ -451,21 +451,6 @@ class Callback(object):
         )
         native_event.save()
 
-    def peer_connect(self, event):
-        job_id = monitoring_utils.update_dashboard(
-            event['message']['peer'],
-            RESOURCE_TYPE_PEER,
-            NS.tendrl_context.integration_id,
-            "add"
-        )
-        logger.log(
-            "debug",
-            NS.publisher_id,
-            {
-                "message": "Update dashboard job %s "
-                "created" % job_id
-            }
-        )
 
     def peer_disconnect(self, event):
         job_id = monitoring_utils.update_dashboard(
@@ -483,21 +468,6 @@ class Callback(object):
             }
         )
 
-    def volume_create(self, event):
-        job_id = monitoring_utils.update_dashboard(
-            event['message']['name'],
-            RESOURCE_TYPE_VOLUME,
-            NS.tendrl_context.integration_id,
-            "add"
-        )
-        logger.log(
-            "debug",
-            NS.publisher_id,
-            {
-                "message": "Update dashboard job %s "
-                "created" % job_id
-            }
-        )
 
     def volume_delete(self, event):
         fetched_volumes = NS.gluster.objects.Volume().load_all()
@@ -615,24 +585,6 @@ class Callback(object):
             }
         )
 
-    def volume_add_brick(self, event):
-        # Event returns bricks list as space separated single string
-        added_bricks = event['message']['bricks'].split(" ")
-        for brick in added_bricks:
-            job_id = monitoring_utils.update_dashboard(
-                "%s|%s" % (event['message']['volume'], brick),
-                RESOURCE_TYPE_BRICK,
-                NS.tendrl_context.integration_id,
-                "add"
-            )
-            logger.log(
-                "debug",
-                NS.publisher_id,
-                {
-                    "message": "Update dashboard job %s "
-                    "created" % job_id
-                }
-            )
 
     def volume_remove_brick_force(self, event):
         # Event returns bricks list as space separated single string
