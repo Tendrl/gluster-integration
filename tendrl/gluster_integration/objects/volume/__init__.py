@@ -25,6 +25,9 @@ class Volume(objects.BaseObject):
         usable_capacity=None,
         used_capacity=None,
         pcnt_used=None,
+        total_inode_capacity=None,
+        used_inode_capacity=None,
+        pcnt_inode_used=None,
         profiling_enabled=None,
         client_count=None,
         rebal_estimated_time=None,
@@ -56,6 +59,9 @@ class Volume(objects.BaseObject):
         self.usable_capacity = usable_capacity
         self.used_capacity = used_capacity
         self.pcnt_used = pcnt_used
+        self.total_inode_capacity = total_inode_capacity
+        self.used_inode_capacity = used_inode_capacity
+        self.pcnt_inode_used = pcnt_inode_used
         self.profiling_enabled = profiling_enabled
         self.client_count = client_count
         self.rebal_estimated_time = rebal_estimated_time
