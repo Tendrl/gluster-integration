@@ -88,14 +88,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
                 raise ex
-        
+
         _sleep = 0
         while not self._complete.is_set():
             if _sleep > 5:
                 _sleep = int(NS.config.data.get("sync_interval", 10))
             else:
                 _sleep += 1
-                
+
             try:
                 try:
                     NS._int.wclient.write(
