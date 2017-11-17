@@ -34,12 +34,18 @@ def showVolumeUtilization(vname):
     # used size in KB
     used_size = volumeCapacity['sizeUsed'] / BYTES_IN_KB
     vol_utilization = (used_size / total_size) * 100
+    used_inode = data.f_files - data.f_ffree
+    total_inode = data.f_files
+    pcnt_inode_used = (float(used_inode) / total_inode) * 100
     print (json.dumps(
         {
             'total': total_size,
             'free': free_size,
             'used': used_size,
-            'pcnt_used': vol_utilization
+            'pcnt_used': vol_utilization,
+            'total_inode': total_inode,
+            'used_inode': used_inode,
+            'pcnt_inode_used': pcnt_inode_used
         }
     ))
 
