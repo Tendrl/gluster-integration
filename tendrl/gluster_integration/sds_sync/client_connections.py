@@ -14,15 +14,17 @@ def sync_volume_connections(volumes):
                         subvol_count
                     )
                 )
-                for entry in subvol.leaves:
-                    brick_name = entry.key.split("/")[-1]
-                    fetched_brick = NS.gluster.objects.Brick(
-                        brick_name.split(":")[0],
-                        brick_name.split(":_")[-1]
-                    ).load()
-                    vol_connections += 0 if fetched_brick.client_count == '' \
-                        else int(fetched_brick.client_count)
-                subvol_count += 1
+                if subvol:
+                    for entry in subvol.leaves:
+                        brick_name = entry.key.split("/")[-1]
+                        fetched_brick = NS.gluster.objects.Brick(
+                            brick_name.split(":")[0],
+                            brick_name.split(":_")[-1]
+                        ).load()
+                        if fetched_brick and fetched_brick.client_count:
+                            vol_connections += 0 if fetched_brick.client_count == '' \
+                                else int(fetched_brick.client_count)
+                    subvol_count += 1
             except etcd.EtcdKeyNotFound:
                 break
         volume.client_count = vol_connections
