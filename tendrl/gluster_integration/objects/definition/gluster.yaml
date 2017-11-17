@@ -961,6 +961,24 @@ namespace.gluster:
         quorum_status:
           help: "Quorum status"
           type: String
+        usable_capacity:
+          help: "total capacity of the volume"
+          type: int
+        used_capacity:
+          help: "used capacity of the volume"
+          type: int
+        pcnt_used:
+          help: "percentage of space used in volume"
+          type: int
+        total_inode_capacity:
+          help: "total inode"
+          type: int
+        used_inode_capacity:
+          help: "inode used"
+          type: int
+        pcnt_inode_used:
+          help: "inode used percentage"
+          type: int
         profiling_enabled:
           help: Whether profiling is enabled
           type: String
