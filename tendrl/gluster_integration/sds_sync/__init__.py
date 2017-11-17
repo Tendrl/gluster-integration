@@ -97,12 +97,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 _sleep += 1
 
             try:
-                _cluster = NS.tendrl.objects.Cluster(
-                    integration_id=NS.tendrl_context.integration_id
-                ).load()
-                if _cluster.import_status != "done":
-                    continue
-
                 try:
                     NS._int.wclient.write(
                         "clusters/%s/"
