@@ -87,7 +87,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         }
                     )
                 )
-                raise ex
 
         _sleep = 0
         while not self._complete.is_set():
@@ -302,7 +301,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
-                raise ex
             time.sleep(_sleep)
 
         Event(
