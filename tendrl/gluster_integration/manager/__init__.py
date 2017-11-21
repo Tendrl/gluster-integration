@@ -93,8 +93,19 @@ def main():
         complete.set()
         m.stop()
 
+    def reload_config(signum, frame):
+        Event(
+            Message(
+                priority="debug",
+                publisher=NS.publisher_id,
+                payload={"message": "Signal handler: SIGHUP, reload service config"}
+            )
+        )
+        NS.config = NS.config.__class__()
+
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGHUP, reload_config)
 
     while not complete.is_set():
         complete.wait(timeout=1)
