@@ -102,6 +102,7 @@ def main():
             )
         )
         NS.config = NS.config.__class__()
+        NS.config.save()
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
