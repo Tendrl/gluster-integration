@@ -24,10 +24,30 @@ def sync_volume_rebalance_status(volumes):
             ).load_all()
             for entry in vol_rebal_details:
                 rebal_status_list.append(entry.rebal_status)
-            if "in_progress" in rebal_status_list:
-                new_rebal_status = "in_progress"
+            if not rebal_status_list:
+                continue
+
+            new_rebal_status = "unknown"
+            if "failed" in rebal_status_list:
+                new_rebal_status = "failed"
+            elif "layout_fix_failed" in rebal_status_list:
+                new_rebal_status = "layout_fix_failed"
+            elif "layout_fix_started" in rebal_status_list:
+                new_rebal_status = "layout_fix_started"
+            elif "started" in rebal_status_list:
+                new_rebal_status = "started"
             elif all(item == "completed" for item in rebal_status_list):
                 new_rebal_status = "completed"
+            elif all(item == "stopped" for item in rebal_status_list):
+                new_rebal_status = "stopped"
+            elif all(
+                    item == "layout_fix_complete" for item in rebal_status_list
+            ):
+                new_rebal_status = "layout_fix_complete"
+            elif all(
+                    item == "layout_fix_stopped" for item in rebal_status_list
+            ):
+                new_rebal_status = "layout_fix_stopped"
             elif all(item == "not_started" for item in rebal_status_list):
                 new_rebal_status = "not_started"
 
