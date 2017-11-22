@@ -22,6 +22,9 @@ RESOURCE_TYPE_VOLUME = "volume"
 
 
 class Callback(object):
+    def __init__(self):
+        self.sync_interval = NS.config.data.get("sync_interval", 10)
+
     def quorum_lost(self, event):
         context = "quorum|" + event['message']['volume']
         message = "Quorum of volume: {0} is lost in cluster {1}".format(
@@ -451,7 +454,6 @@ class Callback(object):
         )
         native_event.save()
 
-
     def peer_disconnect(self, event):
         job_id = monitoring_utils.update_dashboard(
             event['message']['peer'],
@@ -468,8 +470,8 @@ class Callback(object):
             }
         )
 
-
     def volume_delete(self, event):
+        time.sleep(self.sync_interval)
         fetched_volumes = NS.gluster.objects.Volume().load_all()
         for fetched_volume in fetched_volumes:
             if fetched_volume.name == event['message']['name']:
@@ -585,8 +587,8 @@ class Callback(object):
             }
         )
 
-
     def volume_remove_brick_force(self, event):
+        time.sleep(self.sync_interval)
         # Event returns bricks list as space separated single string
         bricks = event['message']['bricks'].split(" ")
         for brick in bricks:
@@ -595,28 +597,7 @@ class Callback(object):
                 brick_dir=brick.split(":/")[1].replace('/', '_')
             ).load()
 
-            volume = NS.gluster.objects.Volume(
-                vol_id=fetched_brick.vol_id
-            ).load()
-
-            sub_vol_size = int(volume.brick_count) / int(volume.subvol_count)
-            sub_volume_num = str(
-                (int(fetched_brick.sequence_number) - 1) / sub_vol_size
-            )
-
-            brick_path = "clusters/{0}/Volumes/{1}/"\
-                         "Bricks/subvolume{2}/{3}".format(
-                             NS.tendrl_context.integration_id,
-                             fetched_brick.vol_id,
-                             sub_volume_num,
-                             fetched_brick.name
-                         )
             try:
-                NS._int.wclient.delete(
-                    brick_path,
-                    recursive=True
-                )
-
                 NS._int.wclient.delete(
                     "clusters/{0}/Bricks/all/{1}/{2}".format(
                         NS.tendrl_context.integration_id,
@@ -657,6 +638,23 @@ class Callback(object):
                     "created" % job_id
                 }
             )
+
+        volume_brick_path = "clusters/{0}/Volumes/{1}/"\
+                            "Bricks".format(
+                                NS.tendrl_context.integration_id,
+                                fetched_brick.vol_id,
+                            )
+
+        # remove all the brick infromation under volume as the
+        # subvolume might have changed, let the next sync handle
+        # the updation of brick info
+        try:
+            NS._int.wclient.delete(
+                volume_brick_path,
+                recursive=True
+            )
+        except etcd.EtcdKeyNotFound:
+            pass
 
     def volume_remove_brick_commit(self, event):
         self.volume_remove_brick_force(event)
