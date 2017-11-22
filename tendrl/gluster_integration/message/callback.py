@@ -9,6 +9,7 @@
 
 import etcd
 
+from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils import time_utils
@@ -655,6 +656,10 @@ class Callback(object):
             )
         except etcd.EtcdKeyNotFound:
             pass
+        
+        _trigger_sync_key = 'clusters/%s/_sync_now' % NS.tendrl_context.integration_id
+        etcd_utils.write(_trigger_sync_key, 'true')
+        etcd_utils.refresh(_trigger_sync_key, self.sync_interval)
 
     def volume_remove_brick_commit(self, event):
         self.volume_remove_brick_force(event)
