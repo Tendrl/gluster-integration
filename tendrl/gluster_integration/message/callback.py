@@ -501,7 +501,10 @@ class Callback(object):
                                              fqdn,
                                              path
                                          )
-
+                            # fetch brick_path to remove dashboard
+                            path = NS._int.wclient.read(
+                                "%s/brick_path" % brick_path
+                            ).value
                             NS._int.wclient.delete(
                                 brick_path,
                                 recursive=True
@@ -510,7 +513,7 @@ class Callback(object):
                             job_id = monitoring_utils.update_dashboard(
                                 "%s|%s" % (
                                     event['message']['name'],
-                                    brick.key.split('/')[-1].replace("_", "/")
+                                    path
                                 ),
                                 RESOURCE_TYPE_BRICK,
                                 NS.tendrl_context.integration_id,
@@ -534,9 +537,7 @@ class Callback(object):
                                 delete_resource_from_graphite(
                                     "%s|%s" % (
                                         event['message']['name'],
-                                        brick.key.split(
-                                            '/'
-                                        )[-1].replace("_", "/")
+                                        path
                                     ),
                                     RESOURCE_TYPE_BRICK,
                                     NS.tendrl_context.integration_id,
