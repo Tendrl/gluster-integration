@@ -301,6 +301,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                  }
                     )
                 )
+            try:
+                etcd_utils.read('/clusters/%s/_sync_now' % NS.tendrl_context.integration_id)
+                continue
+            except etcd.EtcdKeyNotFound:
+                pass
+                
             time.sleep(_sleep)
 
         Event(
