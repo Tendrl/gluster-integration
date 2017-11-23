@@ -666,6 +666,17 @@ class Callback(object):
         self.volume_remove_brick_force(event)
 
 
+    def brick_replace(self, event):
+        message = event["message"]
+        # Remove source brick
+        # changing dict keys based on brick function
+        brick_details = {}
+        brick_details["volume"] = message["Volume"]
+        brick_details["bricks"] = message["source-brick"]
+        event["message"] = brick_details
+        self.volume_remove_brick_force(event)
+
+
 def parse_subvolume(subvol):
     # volume1-replica-2 or volume_1-replica-2 or volume-1-replica-2
     return subvol.split("-" + "-".join(subvol.split('-')[-2:]))[0]
