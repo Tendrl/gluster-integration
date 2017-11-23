@@ -63,7 +63,7 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
-* Fri Nov 24 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-6
+* Fri Nov 24 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-5
 - Bugfixes
 
 * Tue Nov 21 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-4
