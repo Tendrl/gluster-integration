@@ -41,7 +41,7 @@ install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sa
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
-systemctl enable tendrl-gluster-integration
+systemctl enable tendrl-gluster-integration >/dev/null 2>&1 || :
 %systemd_post tendrl-gluster-integration.service
 
 %preun
