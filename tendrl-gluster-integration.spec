@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
 Version: 1.5.4
-Release: 5%{?dist}
+Release: 6%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -41,7 +41,7 @@ install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sa
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
-systemctl enable tendrl-gluster-integration
+systemctl enable tendrl-gluster-integration >/dev/null 2>&1 || :
 %systemd_post tendrl-gluster-integration.service
 
 %preun
@@ -63,6 +63,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Mon Nov 27 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-6
+- Bugfixes
+
 * Fri Nov 24 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-5
 - Bugfixes
 

@@ -55,7 +55,7 @@ class GlusterNativeMessageHandler(threading.Thread):
         cmd = cmd_utils.Command('gluster-eventsapi webhook-add %s' % url)
         out, err, rc = cmd.run()
         if rc != 0:
-            severity = "info" if "Webhook already exists" in err else "error"
+            severity = "debug" if "Webhook already exists" in err else "error"
             logger.log(
                 severity,
                 NS.publisher_id,
@@ -74,7 +74,7 @@ class GlusterNativeMessageHandler(threading.Thread):
         cmd = cmd_utils.Command('gluster-eventsapi webhook-del %s' % url)
         out, err, rc = cmd.run()
         if rc != 0:
-            severity = "info" if "Webhook does not exists" in err else "error"
+            severity = "debug" if "Webhook does not exists" in err else "error"
             logger.log(
                 severity,
                 NS.publisher_id,

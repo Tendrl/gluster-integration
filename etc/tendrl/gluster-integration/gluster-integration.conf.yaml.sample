@@ -9,7 +9,7 @@ etcd_connection: 0.0.0.0
 logging_socket_path: /var/run/tendrl/message.sock
 
 # Interval at which Cluster level object sync/alerts are processed. Warning, lower interval will result in more resource consumption
-sync_interval: 180
+sync_interval: 60
 
 # Directory to store tendrl managed brick mounts
 gluster_bricks_dir: /tendrl_gluster_bricks
