@@ -349,7 +349,7 @@ class Callback(object):
     def posix_health_check_failed(self, event):
         context = "posix_health_check_failed|" + event[
             'message']["brick"] + event['message']["path"]
-        message = "Posix health check failed for brick: {}. Path:"\
+        message = "Posix health check failed for brick: {0}. Path:"\
                   " {1} in cluster {2}" \
                   ". Error: {3}. op: {4}".format(
                       event['message']["brick"],
