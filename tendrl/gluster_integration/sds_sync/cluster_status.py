@@ -22,7 +22,7 @@ def sync_cluster_status(volumes):
             ).load()
             if volume.state != "" and \
                 state != volume.state:
-                msg = "State of volume: %s " + \
+                msg = "State of volume: %s " \
                       "changed from %s to %s" % (
                           volume.name,
                           volume.state,
@@ -33,8 +33,12 @@ def sync_cluster_status(volumes):
                     "volume_state",
                     state,
                     msg,
-                    instance
+                    instance,
+                    'INFO' if state == 'up' else 'WARNING'
                 )
+            # Save the volume status
+            volume.state = state
+            volume.save()
 
     # Change status basd on node status
     cmd = cmd_utils.Command(
@@ -132,7 +136,4 @@ def _derive_volume_states(volumes):
                     # availability state
                     if up_bricks != total_bricks:
                         out_dict[volume.vol_id] = '(partial)'
-        # Save the volume status
-        volume.state = out_dict[volume.vol_id]
-        volume.save()
     return out_dict
