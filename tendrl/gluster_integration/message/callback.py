@@ -208,9 +208,9 @@ class Callback(object):
         native_event.save()
 
     def unknown_peer(self, event):
-        context = "unknown_peer|" + event['message']['peer']
+        context = "unknown_peer|" + event['message']['peer'].split(":")[0]
         message = "Peer {0} has moved to unknown state in cluster {1}".format(
-            event['message']['peer'],
+            event['message']['peer'].split(":")[0],
             NS.tendrl_context.integration_id
         )
         native_event = NS.gluster.objects.NativeEvents(
@@ -368,9 +368,9 @@ class Callback(object):
         native_event.save()
 
     def peer_reject(self, event):
-        context = "peer_reject|" + event['message']['peer']
+        context = "peer_reject|" + event['message']['peer'].split(":")[0]
         message = "Peer: {0} is rejected in cluster {1}".format(
-            event['message']['peer'],
+            event['message']['peer'].split(":")[0],
             NS.tendrl_context.integration_id
         )
         native_event = NS.gluster.objects.NativeEvents(
