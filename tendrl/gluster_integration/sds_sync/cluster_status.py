@@ -58,6 +58,25 @@ def sync_cluster_status(volumes):
         if not connected:
             is_healthy = False
 
+    cluster_gd = NS.gluster.objects.GlobalDetails().load()
+    old_status = cluster_gd.status
+    curr_status = 'healthy' if is_healthy else 'unhealthy'
+    if curr_status != old_status:
+        msg = ("Health status of cluster: %s "
+               "changed from %s to %s") % (
+                   NS.tendrl_context.cluster_name,
+                   old_status,
+                   curr_status)
+        instance = "cluster_%s" % NS.tendrl_context.integration_id
+        event_utils.emit_event(
+            "cluster_health_status",
+            curr_status,
+            msg,
+            instance,
+            'WARNING' if curr_status == 'unhealthy'
+            else 'INFO'
+        )
+
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
         status='healthy' if is_healthy else 'unhealthy',
