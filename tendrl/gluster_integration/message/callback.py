@@ -455,9 +455,10 @@ class Callback(object):
         )
         native_event.save()
 
-    def peer_disconnect(self, event):
+    def peer_detach(self, event):
+        time.sleep(self.sync_interval)
         job_id = monitoring_utils.update_dashboard(
-            event['message']['peer'],
+            event['message']['host'],
             RESOURCE_TYPE_PEER,
             NS.tendrl_context.integration_id,
             "delete"
