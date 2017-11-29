@@ -101,9 +101,8 @@ def main():
                 payload={"message": "Signal handler: SIGHUP, reload service config"}
             )
         )
-        NS.config = NS.config.__class__()
-        NS.config.save()
-
+        NS.gluster.ns.setup_common_objects()
+        
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGHUP, reload_config)
