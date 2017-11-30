@@ -8,14 +8,17 @@
 # will be invoked
 
 import etcd
+import subprocess
 
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils import monitoring_utils
 from tendrl.commons.utils import time_utils
+from tendrl.gluster_integration import ini2json
 
 
 import time
+import uuid
 
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
@@ -208,9 +211,9 @@ class Callback(object):
         native_event.save()
 
     def unknown_peer(self, event):
-        context = "unknown_peer|" + event['message']['peer']
+        context = "unknown_peer|" + event['message']['peer'].split(":")[0]
         message = "Peer {0} has moved to unknown state in cluster {1}".format(
-            event['message']['peer'],
+            event['message']['peer'].split(":")[0],
             NS.tendrl_context.integration_id
         )
         native_event = NS.gluster.objects.NativeEvents(
@@ -368,9 +371,9 @@ class Callback(object):
         native_event.save()
 
     def peer_reject(self, event):
-        context = "peer_reject|" + event['message']['peer']
+        context = "peer_reject|" + event['message']['peer'].split(":")[0]
         message = "Peer: {0} is rejected in cluster {1}".format(
-            event['message']['peer'],
+            event['message']['peer'].split(":")[0],
             NS.tendrl_context.integration_id
         )
         native_event = NS.gluster.objects.NativeEvents(
@@ -455,9 +458,10 @@ class Callback(object):
         )
         native_event.save()
 
-    def peer_disconnect(self, event):
+    def peer_detach(self, event):
+        time.sleep(self.sync_interval)
         job_id = monitoring_utils.update_dashboard(
-            event['message']['peer'],
+            event['message']['host'],
             RESOURCE_TYPE_PEER,
             NS.tendrl_context.integration_id,
             "delete"
@@ -657,14 +661,13 @@ class Callback(object):
             )
         except etcd.EtcdKeyNotFound:
             pass
-        
+
         _trigger_sync_key = 'clusters/%s/_sync_now' % NS.tendrl_context.integration_id
         etcd_utils.write(_trigger_sync_key, 'true')
         etcd_utils.refresh(_trigger_sync_key, self.sync_interval)
 
     def volume_remove_brick_commit(self, event):
         self.volume_remove_brick_force(event)
-
 
     def brick_replace(self, event):
         message = event["message"]
@@ -673,6 +676,90 @@ class Callback(object):
         brick_details = {}
         brick_details["volume"] = message["Volume"]
         brick_details["bricks"] = message["source-brick"]
+        event["message"] = brick_details
+        self.volume_remove_brick_force(event)
+
+    def snapshot_restored(self, event):
+        time.sleep(self.sync_interval)
+        message = event["message"]
+        volume = message['volume_name']
+        volume_id = ""
+        bricks_to_remove = []
+
+        # get the list of current bricks by running get-state
+        output_dir = '/var/run/'
+        output_file = 'glusterd-state-snapshot-%s' % str(uuid.uuid4())
+        subprocess.call(
+            [
+                'gluster',
+                'get-state',
+                'glusterd',
+                'odir',
+                output_dir,
+                'file',
+                output_file,
+                'detail'
+            ]
+        )
+        raw_data = ini2json.ini_to_dict(
+            output_dir + output_file
+        )
+        subprocess.call(['rm', '-rf', output_dir + output_file])
+        index = 1
+        while True:
+            try:
+                current_vol = 'volume%s.name' % index
+                if raw_data['Volumes'][current_vol] == volume:
+                    current_vol_id = 'volume%s.id' % index
+                    volume_id = raw_data['Volumes'][current_vol_id]
+                    break
+            except KeyError:
+                return
+            index += 1
+        latest_bricks = []
+        b_index = 1
+        while True:
+            try:
+                curr_brick = 'volume%s.brick%s.path' % (
+                    index, b_index
+                )
+                brick = raw_data['Volumes'][curr_brick]
+                b_index += 1
+            except KeyError:
+                break
+            latest_bricks.append(brick)
+
+        # get the list of bricks in etcd for this volume
+
+        sub_volumes = etcd_utils.read(
+            "/clusters/{0}/Volumes/{1}/Bricks".format(
+                NS.tendrl_context.integration_id,
+                volume_id
+            )
+        )
+        for sub_volume in sub_volumes.leaves:
+            bricks = etcd_utils.read(
+                sub_volume.key
+            )
+            for brick in bricks.leaves:
+                fqdn = brick.key.split('/')[-1].split(':')[0]
+                path = brick.key.split('/')[-1].split(':')[-1][1:]
+
+                brick_path = "clusters/{0}/Bricks/"\
+                             "all/{1}/{2}".format(
+                                 NS.tendrl_context.integration_id,
+                                 fqdn,
+                                 path
+                             )
+                brick_full_path = etcd_utils.read(
+                    "%s/brick_path" % brick_path
+                ).value
+                if brick_full_path not in latest_bricks:
+                    bricks_to_remove.append(brick_full_path)
+
+        brick_details = {}
+        brick_details["volume"] = volume
+        brick_details["bricks"] = " ".join(bricks_to_remove)
         event["message"] = brick_details
         self.volume_remove_brick_force(event)
 

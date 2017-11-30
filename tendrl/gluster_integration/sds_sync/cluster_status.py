@@ -22,7 +22,7 @@ def sync_cluster_status(volumes):
             ).load()
             if volume.state != "" and \
                 state != volume.state:
-                msg = "State of volume: %s " + \
+                msg = "State of volume: %s " \
                       "changed from %s to %s" % (
                           volume.name,
                           volume.state,
@@ -33,8 +33,12 @@ def sync_cluster_status(volumes):
                     "volume_state",
                     state,
                     msg,
-                    instance
+                    instance,
+                    'INFO' if state == 'up' else 'WARNING'
                 )
+            # Save the volume status
+            volume.state = state
+            volume.save()
 
     # Change status basd on node status
     cmd = cmd_utils.Command(
@@ -53,6 +57,25 @@ def sync_cluster_status(volumes):
                     connected = connected and False
         if not connected:
             is_healthy = False
+
+    cluster_gd = NS.gluster.objects.GlobalDetails().load()
+    old_status = cluster_gd.status
+    curr_status = 'healthy' if is_healthy else 'unhealthy'
+    if curr_status != old_status:
+        msg = ("Health status of cluster: %s "
+               "changed from %s to %s") % (
+                   NS.tendrl_context.cluster_name,
+                   old_status,
+                   curr_status)
+        instance = "cluster_%s" % NS.tendrl_context.integration_id
+        event_utils.emit_event(
+            "cluster_health_status",
+            curr_status,
+            msg,
+            instance,
+            'WARNING' if curr_status == 'unhealthy'
+            else 'INFO'
+        )
 
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
@@ -132,7 +155,4 @@ def _derive_volume_states(volumes):
                     # availability state
                     if up_bricks != total_bricks:
                         out_dict[volume.vol_id] = '(partial)'
-        # Save the volume status
-        volume.state = out_dict[volume.vol_id]
-        volume.save()
     return out_dict

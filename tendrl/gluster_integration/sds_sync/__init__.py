@@ -496,7 +496,8 @@ def sync_volumes(volumes, index, vol_options):
             network = NS.tendrl.objects.NodeNetwork(
                 interface=key
             ).load()
-            network_ip.extend(network.ipv4)
+            if network.ipv4:
+                network_ip.extend(network.ipv4)
     except etcd.EtcdKeyNotFound as ex:
         Event(
             ExceptionMessage(
