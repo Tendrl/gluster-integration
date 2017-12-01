@@ -26,7 +26,7 @@ def get_brick_source_and_mount(brick_path):
     return out.split("\n")[-1].split()
 
 
-def update_brick_device_details(brick_name, brick_path, devicetree):
+def update_brick_device_details(brick_name, brick_path, devicetree, sync_ttl):
     mount_source, mount_point = get_brick_source_and_mount(brick_path)
     if not mount_source or not mount_point:
         logger.log(
@@ -74,4 +74,4 @@ def update_brick_device_details(brick_name, brick_path, devicetree):
         size=size
     )
 
-    brick.save()
+    brick.save(ttl=sync_ttl)

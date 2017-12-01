@@ -630,7 +630,7 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            brick.save()
+            brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\
                 update_brick_device_details(
@@ -639,7 +639,8 @@ def sync_volumes(volumes, index, vol_options):
                         'volume%s.brick%s.path' % (
                             index, b_index)
                     ],
-                    devicetree
+                    devicetree,
+                    SYNC_TTL
                 )
 
             # Sync the brick client details
