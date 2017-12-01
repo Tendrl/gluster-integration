@@ -16,30 +16,6 @@ def sync_cluster_status(volumes):
             if 'degraded' in state:
                 degraded_count += 1
 
-            # Raise the alert if volume state changes
-            volume = NS.gluster.objects.Volume(
-                vol_id=vol_id
-            ).load()
-            if volume.state != "" and \
-                state != volume.state:
-                msg = "State of volume: %s " \
-                      "changed from %s to %s" % (
-                          volume.name,
-                          volume.state,
-                          state
-                      )
-                instance = "volume_%s" % volume.name
-                event_utils.emit_event(
-                    "volume_state",
-                    state,
-                    msg,
-                    instance,
-                    'INFO' if state == 'up' else 'WARNING'
-                )
-            # Save the volume status
-            volume.state = state
-            volume.save()
-
     # Change status basd on node status
     cmd = cmd_utils.Command(
         'gluster pool list', True
@@ -155,4 +131,25 @@ def _derive_volume_states(volumes):
                     # availability state
                     if up_bricks != total_bricks:
                         out_dict[volume.vol_id] = '(partial)'
+        # Raise the alert if volume state changes
+        if volume.state != "" and \
+            out_dict[volume.vol_id] != volume.state:
+            msg = "State of volume: %s " \
+                  "changed from %s to %s" % (
+                      volume.name,
+                      volume.state,
+                      out_dict[volume.vol_id]
+                  )
+            instance = "volume_%s" % volume.name
+            event_utils.emit_event(
+                "volume_state",
+                out_dict[volume.vol_id],
+                msg,
+                instance,
+                'INFO' if out_dict[volume.vol_id] == 'up' else 'WARNING'
+            )
+        # Save the volume status
+        volume.state = out_dict[volume.vol_id]
+        volume.save()
+
     return out_dict
