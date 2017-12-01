@@ -18,7 +18,10 @@ def sync_volume_rebalance_estimated_time(volumes):
 def sync_volume_rebalance_status(volumes):
     for volume in volumes:
         rebal_status_list = []
-        if "Distribute" in volume.vol_type:
+        if "Distribute" in volume.vol_type or (
+                "arbiter" in volume.vol_type and
+                volume.brick_count > volume.replica_count
+        ):
             vol_rebal_details = NS.gluster.objects.RebalanceDetails(
                 vol_id=volume.vol_id
             ).load_all()
@@ -28,28 +31,37 @@ def sync_volume_rebalance_status(volumes):
                 continue
 
             new_rebal_status = "unknown"
-            if "failed" in rebal_status_list:
-                new_rebal_status = "failed"
-            elif "layout_fix_failed" in rebal_status_list:
-                new_rebal_status = "layout_fix_failed"
-            elif "layout_fix_started" in rebal_status_list:
-                new_rebal_status = "layout_fix_started"
-            elif "started" in rebal_status_list:
-                new_rebal_status = "started"
-            elif all(item == "completed" for item in rebal_status_list):
-                new_rebal_status = "completed"
-            elif all(item == "stopped" for item in rebal_status_list):
-                new_rebal_status = "stopped"
-            elif all(
-                    item == "layout_fix_complete" for item in rebal_status_list
-            ):
-                new_rebal_status = "layout_fix_complete"
-            elif all(
-                    item == "layout_fix_stopped" for item in rebal_status_list
-            ):
-                new_rebal_status = "layout_fix_stopped"
-            elif all(item == "not_started" for item in rebal_status_list):
+
+            if all(item == "not_started" for item in rebal_status_list):
                 new_rebal_status = "not_started"
+            else:
+                # remove not_stated states from the list as these are
+                # from nodes that are not involved in rebalance
+                rebal_status_list = filter(
+                    lambda state: state != 'not_started', rebal_status_list
+                )
+                if "failed" in rebal_status_list:
+                    new_rebal_status = "failed"
+                elif "layout_fix_failed" in rebal_status_list:
+                    new_rebal_status = "layout_fix_failed"
+                elif "layout_fix_started" in rebal_status_list:
+                    new_rebal_status = "layout_fix_started"
+                elif "started" in rebal_status_list:
+                    new_rebal_status = "started"
+                elif all(item == "completed" for item in rebal_status_list):
+                    new_rebal_status = "completed"
+                elif all(item == "stopped" for item in rebal_status_list):
+                    new_rebal_status = "stopped"
+                elif all(
+                        item == "layout_fix_"
+                        "complete" for item in rebal_status_list
+                ):
+                    new_rebal_status = "layout_fix_complete"
+                elif all(
+                        item == "layout_fix_"
+                        "stopped" for item in rebal_status_list
+                ):
+                    new_rebal_status = "layout_fix_stopped"
 
             if volume.rebal_status != "" and \
                 new_rebal_status != volume.rebal_status:
