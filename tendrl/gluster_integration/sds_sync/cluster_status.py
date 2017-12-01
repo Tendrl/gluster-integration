@@ -4,7 +4,7 @@ from tendrl.commons.utils import cmd_utils
 from tendrl.gluster_integration.sds_sync import event_utils
 
 
-def sync_cluster_status(volumes):
+def sync_cluster_status(volumes, sync_ttl):
     # Calculate status based on volumes status
     degraded_count = 0
     is_healthy = True
@@ -35,7 +35,7 @@ def sync_cluster_status(volumes):
             is_healthy = False
 
     cluster_gd = NS.gluster.objects.GlobalDetails().load()
-    old_status = cluster_gd.status
+    old_status = cluster_gd.status or 'unhealthy'
     curr_status = 'healthy' if is_healthy else 'unhealthy'
     if curr_status != old_status:
         msg = ("Health status of cluster: %s "
@@ -59,7 +59,7 @@ def sync_cluster_status(volumes):
         peer_count=peer_count,
         vol_count=len(volumes),
         volume_up_degraded=degraded_count
-    ).save()
+    ).save(ttl=sync_ttl)
 
 
 def _derive_volume_states(volumes):
@@ -87,6 +87,8 @@ def _derive_volume_states(volumes):
                             brick_name.split(":")[0],
                             brick_name.split(":_")[-1]
                         ).load()
+                        if not fetched_brick.status:
+                            fetched_brick.status = "Stopped"
                         bricks.append(fetched_brick)
                         if fetched_brick.status != "Started":
                             state += 1
