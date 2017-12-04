@@ -90,6 +90,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         _sleep = 0
         while not self._complete.is_set():
+            NS.node_context = NS.node_context.load()
+            NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
                 _sleep = int(NS.config.data.get("sync_interval", 10))
             else:
