@@ -1,4 +1,5 @@
 from tendrl.commons import objects
+from tendrl.commons.utils import etcd_utils
 
 
 class Brick(objects.BaseObject):
@@ -76,7 +77,12 @@ class Brick(objects.BaseObject):
             _volume = NS.gluster.objects.Volume(vol_id=self.vol_id)
             _volume.invalidate_hash()
 
-        return super(Brick, self).save(update, ttl)
+        super(Brick, self).save(update)
+        status = self.value + "/status"
+        if ttl:
+            etcd_utils.refresh(status, ttl)
+
+        return
 
     def render(self):
         self.value = self.value.format(
