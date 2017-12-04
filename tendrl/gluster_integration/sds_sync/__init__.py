@@ -90,6 +90,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         _sleep = 0
         while not self._complete.is_set():
+            NS.node_context = NS.node_context.load()
+            NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
                 _sleep = int(NS.config.data.get("sync_interval", 10))
             else:
@@ -251,7 +253,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for volume in all_volumes:
                         if not str(volume.deleted).lower() == "true":
                             volumes.append(volume)
-                    cluster_status.sync_cluster_status(volumes)
+                    cluster_status.sync_cluster_status(volumes, SYNC_TTL)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
@@ -630,7 +632,7 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            brick.save()
+            brick.save(ttl=SYNC_TTL)
             # sync brick device details
             brick_device_details.\
                 update_brick_device_details(
@@ -639,7 +641,8 @@ def sync_volumes(volumes, index, vol_options):
                         'volume%s.brick%s.path' % (
                             index, b_index)
                     ],
-                    devicetree
+                    devicetree,
+                    SYNC_TTL
                 )
 
             # Sync the brick client details

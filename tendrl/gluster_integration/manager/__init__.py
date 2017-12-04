@@ -38,36 +38,30 @@ def main():
 
     NS.message_handler_thread = GlusterNativeMessageHandler()
 
-    NS.node_context.save()
-    try:
+    while NS.tendrl_context.integration_id is None or NS.tendrl_context.integration_id == "":
+        Event(
+        Message(
+            priority="debug",
+            publisher=NS.publisher_id,
+            payload={"message": "Waiting for tendrl-node-agent %s to detect sds cluster (integration_id not found)..." %
+                                NS.node_context.node_id
+                     }
+        )
+    )
         NS.tendrl_context = NS.tendrl_context.load()
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Integration %s is part of sds cluster"
-                                    % NS.tendrl_context.integration_id
-                         }
-            )
-        )
-    except etcd.EtcdKeyNotFound:
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Node %s is not part of any sds cluster" %
-                                    NS.node_context.node_id
-                         }
-            )
-        )
-        raise Exception(
-            "Integration cannot be started,"
-            " please Import or Create sds cluster"
-            " in Tendrl and include Node %s" %
-            NS.node_context.node_id
-        )
 
-    NS.tendrl_context.save()
+
+    Event(
+        Message(
+            priority="debug",
+            publisher=NS.publisher_id,
+            payload={"message": "Integration %s is part of sds cluster"
+                                % NS.tendrl_context.integration_id
+                     }
+        )
+    )
+          
+
     NS.gluster.definitions.save()
     NS.gluster.config.save()
 

@@ -1,6 +1,7 @@
 [Unit]
 Description=Tendrl Gluster Daemon to Manage gluster tasks
-Requires=tendrl-node-agent.service
+After=tendrl-node-agent.service
+BindsTo=tendrl-node-agent.service
 
 [Service]
 Type=simple
