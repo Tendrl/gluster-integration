@@ -251,7 +251,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for volume in all_volumes:
                         if not str(volume.deleted).lower() == "true":
                             volumes.append(volume)
-                    cluster_status.sync_cluster_status(volumes)
+                    cluster_status.sync_cluster_status(volumes, SYNC_TTL)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()

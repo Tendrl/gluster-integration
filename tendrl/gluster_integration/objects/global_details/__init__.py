@@ -1,4 +1,5 @@
 from tendrl.commons import objects
+from tendrl.commons.utils import etcd_utils
 
 
 class GlobalDetails(objects.BaseObject):
@@ -19,3 +20,9 @@ class GlobalDetails(objects.BaseObject):
     def render(self):
         self.value = self.value.format(NS.tendrl_context.integration_id)
         return super(GlobalDetails, self).render()
+
+    def save(self, update=True, ttl=None):
+        super(GlobalDetails, self).save(update)
+        status = self.value + "/status"
+        if ttl:
+            etcd_utils.refresh(status, ttl)
