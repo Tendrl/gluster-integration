@@ -41,6 +41,23 @@ def main():
     NS.node_context.save()
     try:
         NS.tendrl_context = NS.tendrl_context.load()
+        if NS.tendrl_context.integration_id is None or NS.tendrl_context.integration_id == "":
+            Event(
+            Message(
+                priority="debug",
+                publisher=NS.publisher_id,
+                payload={"message": "Node %s is not part of any sds cluster" %
+                                    NS.node_context.node_id
+                         }
+            )
+        )
+            raise Exception(
+            "Integration cannot be started,"
+            " please Import or Create sds cluster"
+            " in Tendrl and include Node %s" %
+            NS.node_context.node_id
+        )
+
         Event(
             Message(
                 priority="debug",
@@ -50,6 +67,7 @@ def main():
                          }
             )
         )
+          
     except etcd.EtcdKeyNotFound:
         Event(
             Message(
