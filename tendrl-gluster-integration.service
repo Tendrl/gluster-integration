@@ -1,5 +1,6 @@
 [Unit]
 Description=Tendrl Gluster Daemon to Manage gluster tasks
+After=tendrl-node-agent.service
 Requires=tendrl-node-agent.service
 
 [Service]
