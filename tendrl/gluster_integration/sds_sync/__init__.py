@@ -41,10 +41,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
-        # To detect out of band deletes
-        # refresh gluster object inventory at config['sync_interval']
-        # Default is 260 seconds
-        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
+
 
         Event(
             Message(
@@ -90,6 +87,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
         _sleep = 0
         while not self._complete.is_set():
+            # To detect out of band deletes
+            # refresh gluster object inventory at config['sync_interval']
+            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 20           
             NS.node_context = NS.node_context.load()
             NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
@@ -209,11 +209,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
-
+                            SYNC_TTL += 3
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
                             break
+                            
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
@@ -224,6 +225,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 raw_data_options.get('Volume Options')
                             )
                             index += 1
+                            SYNC_TTL += 3
                         except KeyError:
                             break
                     # populate the volume specific options
@@ -266,7 +268,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         raw_data['Volumes'],
                         int(NS.config.data.get(
                             "sync_interval", 10
-                        )) + len(volumes) * 10
+                        )) + len(volumes) * 4
                     )
 
                 _cluster = NS.tendrl.objects.Cluster(
@@ -377,7 +379,7 @@ def sync_volumes(volumes, index, vol_options):
     b.reset()
     devicetree = b.devicetree
 
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
+    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 4
 
     node_context = NS.node_context.load()
     tag_list = node_context.tags
@@ -679,7 +681,9 @@ def sync_volumes(volumes, index, vol_options):
                         ).save(ttl=SYNC_TTL)
                     except KeyError:
                         break
+                    SYNC_TTL += 2
                     c_index += 1
+            SYNC_TTL += 2
             b_index += 1
         except KeyError:
             break
