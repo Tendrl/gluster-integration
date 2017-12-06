@@ -22,6 +22,7 @@ class GlobalDetails(objects.BaseObject):
         return super(GlobalDetails, self).render()
 
     def save(self, update=True, ttl=None):
+        self.invalidate_hash()
         super(GlobalDetails, self).save(update)
         status = self.value + "/status"
         if ttl:
