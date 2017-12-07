@@ -89,7 +89,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             # To detect out of band deletes
             # refresh gluster object inventory at config['sync_interval']
-            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 20           
+            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 10           
             NS.node_context = NS.node_context.load()
             NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
@@ -209,7 +209,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
-                            SYNC_TTL += 2
+                            SYNC_TTL += 1
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
@@ -222,10 +222,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         try:
                             sync_volumes(
                                 volumes, index,
-                                raw_data_options.get('Volume Options')
+                                raw_data_options.get('Volume Options'),
+                                SYNC_TTL
                             )
                             index += 1
-                            SYNC_TTL += 2
+                            SYNC_TTL += 1
                         except KeyError:
                             break
                     # populate the volume specific options
@@ -369,7 +370,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             )
 
 
-def sync_volumes(volumes, index, vol_options):
+def sync_volumes(volumes, index, vol_options, sync_ttl):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
     b = blivet.Blivet()
@@ -378,9 +379,6 @@ def sync_volumes(volumes, index, vol_options):
     # about storage devices in the machine
     b.reset()
     devicetree = b.devicetree
-
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + (len(volumes) * 2)
-
     node_context = NS.node_context.load()
     tag_list = node_context.tags
     # Raise alerts for volume state change.
@@ -441,7 +439,7 @@ def sync_volumes(volumes, index, vol_options):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
-        volume.save(ttl=SYNC_TTL)
+        volume.save(ttl=sync_ttl)
 
         # Initialize volume alert count
         try:
@@ -471,7 +469,7 @@ def sync_volumes(volumes, index, vol_options):
         NS.gluster.objects.VolumeOptions(
             vol_id=volume.vol_id,
             options=vol_opt_dict
-        ).save(ttl=SYNC_TTL)
+        ).save(ttl=sync_ttl)
 
     rebal_det = NS.gluster.objects.RebalanceDetails(
         vol_id=volumes['volume%s.id' % index],
@@ -484,7 +482,7 @@ def sync_volumes(volumes, index, vol_options):
         rebal_data=volumes['volume%s.rebalance.data' % index],
         time_left=volumes.get('volume%s.rebalance.time_left' % index),
     )
-    rebal_det.save(ttl=SYNC_TTL)
+    rebal_det.save(ttl=sync_ttl)
     georep_details.save_georep_details(volumes, index)
 
     b_index = 1
@@ -634,7 +632,7 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            brick.save(ttl=SYNC_TTL)
+            brick.save(ttl=sync_ttl)
             # sync brick device details
             brick_device_details.\
                 update_brick_device_details(
@@ -644,7 +642,7 @@ def sync_volumes(volumes, index, vol_options):
                             index, b_index)
                     ],
                     devicetree,
-                    SYNC_TTL
+                    sync_ttl
                 )
 
             # Sync the brick client details
@@ -678,11 +676,11 @@ def sync_volumes(volumes, index, vol_options):
                                     index, b_index, c_index
                                 )
                             ]
-                        ).save(ttl=SYNC_TTL)
+                        ).save(ttl=sync_ttl)
                     except KeyError:
                         break
                     c_index += 1
-            SYNC_TTL += 1.5
+            sync_ttl += 2
             b_index += 1
         except KeyError:
             break
