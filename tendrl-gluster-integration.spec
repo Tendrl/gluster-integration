@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
 Version: 1.5.4
-Release: 12%{?dist}
+Release: 13%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -63,6 +63,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Fri Dec 08 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-13
+- Bugfixes
+
 * Thu Dec 07 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-12
 - Bugfixes
 
