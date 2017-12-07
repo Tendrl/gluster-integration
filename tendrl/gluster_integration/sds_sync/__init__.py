@@ -89,7 +89,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             # To detect out of band deletes
             # refresh gluster object inventory at config['sync_interval']
-            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 10           
+            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 100           
             NS.node_context = NS.node_context.load()
             NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
@@ -209,7 +209,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
-                            SYNC_TTL += 1
+                            SYNC_TTL += 5
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
@@ -223,7 +223,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             sync_volumes(
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
-                                SYNC_TTL
+                                SYNC_TTL + 350 # sync_interval + 100 + no of peers + 350
                             )
                             index += 1
                             SYNC_TTL += 1
@@ -256,7 +256,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for volume in all_volumes:
                         if not str(volume.deleted).lower() == "true":
                             volumes.append(volume)
-                    cluster_status.sync_cluster_status(volumes, SYNC_TTL)
+                    cluster_status.sync_cluster_status(volumes, SYNC_TTL + 350)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
@@ -680,7 +680,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                     except KeyError:
                         break
                     c_index += 1
-            sync_ttl += 2
+            sync_ttl += 4
             b_index += 1
         except KeyError:
             break
