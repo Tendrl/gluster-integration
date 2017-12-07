@@ -209,7 +209,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     )
                             except etcd.EtcdKeyNotFound:
                                 pass
-                            SYNC_TTL += 3
+                            SYNC_TTL += 2
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
@@ -225,7 +225,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 raw_data_options.get('Volume Options')
                             )
                             index += 1
-                            SYNC_TTL += 3
+                            SYNC_TTL += 2
                         except KeyError:
                             break
                     # populate the volume specific options
@@ -379,7 +379,7 @@ def sync_volumes(volumes, index, vol_options):
     b.reset()
     devicetree = b.devicetree
 
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 4
+    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + (len(volumes) * 2)
 
     node_context = NS.node_context.load()
     tag_list = node_context.tags
@@ -681,9 +681,8 @@ def sync_volumes(volumes, index, vol_options):
                         ).save(ttl=SYNC_TTL)
                     except KeyError:
                         break
-                    SYNC_TTL += 2
                     c_index += 1
-            SYNC_TTL += 2
+            SYNC_TTL += 1.5
             b_index += 1
         except KeyError:
             break
