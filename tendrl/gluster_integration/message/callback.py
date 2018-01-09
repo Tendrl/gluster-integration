@@ -64,7 +64,7 @@ class Callback(object):
         native_event.save()
 
     def svc_connected(self, event):
-        context = "svc_connecion|" + event['message']['svc_name']
+        context = "svc_connection|" + event['message']['svc_name']
         volname = event['message'].get('volume', '')
         if volname:
             context += volname
