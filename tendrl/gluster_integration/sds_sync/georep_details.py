@@ -9,6 +9,9 @@ from tendrl.gluster_integration.objects.geo_replication_session\
 from tendrl.gluster_integration.sds_sync import event_utils
 
 
+RESOURCE_TYPE_VOLUME = "volume"
+
+
 def save_georep_details(volumes, index):
     pair_index = 1
     while True:
@@ -67,7 +70,10 @@ def save_georep_details(volumes, index):
                         pair_status,
                         msg,
                         instance,
-                        'WARNING'
+                        'WARNING',
+                        tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                              "volume_name": volumes['volume%s.name' % index]
+                              }
                     )
                 if fetched_pair_status.lower() == 'faulty' and \
                     pair_status.lower() in ['active', 'passive']:
@@ -85,7 +91,10 @@ def save_georep_details(volumes, index):
                         pair_status,
                         msg,
                         instance,
-                        'INFO'
+                        'INFO',
+                        tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                              "volume_name": volumes['volume%s.name' % index]
+                              }
                     )
             except etcd.EtcdKeyNotFound:
                 pass
