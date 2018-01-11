@@ -32,7 +32,7 @@ from tendrl.gluster_integration.sds_sync import utilization
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
-
+BRICK_STATUS = ["Started", "Stopped"]
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
@@ -157,6 +157,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if "Peers" in raw_data:
                     index = 1
                     peers = raw_data["Peers"]
+                    disconnected_hosts = []
                     while True:
                         try:
                             peer = NS.gluster.\
@@ -204,6 +205,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         'Connected'
                                         else 'INFO'
                                     )
+                                    # Disconnected host name to raise brick alert
+                                    if current_status == "Disconnected":
+                                        disconnected_hosts.append(
+                                            peers[
+                                                'peer%s.primary_hostname' %
+                                                index
+                                            ]
+                                        )
                             except etcd.EtcdKeyNotFound:
                                 pass
                             SYNC_TTL += 5
@@ -211,7 +220,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             index += 1
                         except KeyError:
                             break
-
+                    # Raise an alert for bricks when peer disconnected
+                    # or node goes down
+                    for disconnected_host in disconnected_hosts:
+                        brick_status_alert(
+                            disconnected_host
+                        ) 
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
@@ -686,3 +700,80 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             b_index += 1
         except KeyError:
             break
+
+
+def brick_status_alert(hostname):
+    # fetching brick details of disconnected node
+    bricks = NS._int.client.read(
+        "clusters/%s/Bricks/all/%s" % (
+            NS.tendrl_context.integration_id,
+            hostname
+        )
+    )
+    for brick_info in bricks.leaves:
+        try:
+            brick_path = brick_info.key
+            lock = None
+            lock = etcd.Lock(
+                NS._int.client,
+                brick_path[1:]
+            )
+            lock.acquire(
+                blocking=True,
+                lock_ttl=60
+            )
+            if lock.is_acquired:
+                brick = NS.gluster.objects.Brick(
+                    fqdn=hostname,
+                    brick_dir=brick_path.split("/")[-1]
+                ).load()
+                if brick.status == BRICK_STATUS[0]:
+                    # raise an alert for brick
+                    msg = ("Status of brick: %s "
+                           "under volume %s in cluster %s chan"
+                           "ged from %s to %s") % (
+                               brick.brick_path,
+                               brick.vol_name,
+                               NS.tendrl_context.integration_id,
+                               BRICK_STATUS[0],
+                               BRICK_STATUS[1]
+                           )
+                    instance = "volume_%s|brick_%s" % (
+                        brick.vol_name,
+                        brick.brick_path,
+                    )
+                    event_utils.emit_event(
+                        "brick_status",
+                        BRICK_STATUS[1],
+                        msg,
+                        instance,
+                        'WARNING',
+                        tags={"entity_type": RESOURCE_TYPE_BRICK,
+                              "volume_name": brick.vol_name,
+                              "node_id": brick.node_id,
+                              "fqdn": brick.hostname
+                              }
+                    )
+                    # Update brick status as stopped
+                    brick.status = BRICK_STATUS[1]
+                    brick.save()
+                    lock.release()
+        except (
+            etcd.EtcdException,
+            KeyError,
+            ValueError,
+            AttributeError
+        )as ex:
+            Event(
+                ExceptionMessage(
+                    priority="error",
+                    publisher=NS.publisher_id,
+                    payload={
+                        "message": "Unable to raise an brick status "
+                        "alert for host %s" % hostname
+                    }
+                )
+            )
+        finally:
+            if isinstance(lock, etcd.lock.Lock) and lock.is_acquired:
+                lock.release()
