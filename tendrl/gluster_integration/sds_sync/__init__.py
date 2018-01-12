@@ -32,8 +32,8 @@ from tendrl.gluster_integration.sds_sync import utilization
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
-BRICK_STOPPED = "Stopped"
-BRICK_STARTED = "Started"
+BRICK_STOPPED = "stopped"
+BRICK_STARTED = "started"
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -208,7 +208,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         else 'INFO'
                                     )
                                     # Disconnected host name to raise brick alert
-                                    if current_status == "Disconnected":
+                                    if current_status.lower() == "disconnected":
                                         disconnected_hosts.append(
                                             peers[
                                                 'peer%s.primary_hostname' %
@@ -705,31 +705,27 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
 
 
 def brick_status_alert(hostname):
-    # fetching brick details of disconnected node
-    bricks = NS._int.client.read(
-        "clusters/%s/Bricks/all/%s" % (
+    try:
+        # fetching brick details of disconnected node
+        lock = None
+        path = "clusters/%s/Bricks/all/%s" % (
             NS.tendrl_context.integration_id,
             hostname
         )
-    )
-    for brick_info in bricks.leaves:
-        try:
-            brick_path = brick_info.key
-            lock = None
-            lock = etcd.Lock(
-                NS._int.client,
-                brick_path[1:]
-            )
-            lock.acquire(
-                blocking=True,
-                lock_ttl=60
-            )
-            if lock.is_acquired:
-                brick = NS.gluster.objects.Brick(
-                    fqdn=hostname,
-                    brick_dir=brick_path.split("/")[-1]
-                ).load()
-                if brick.status == BRICK_STARTED:
+        lock = etcd.Lock(
+            NS._int.client,
+            path
+        )
+        lock.acquire(
+            blocking=True,
+            lock_ttl=60
+        )
+        if lock.is_acquired:
+            bricks = NS.gluster.objects.Brick(
+                fqdn=hostname
+            ).load_all()
+            for brick in bricks:
+                if brick.status.lower() == BRICK_STARTED:
                     # raise an alert for brick
                     msg = ("Status of brick: %s "
                            "under volume %s in cluster %s chan"
@@ -737,8 +733,8 @@ def brick_status_alert(hostname):
                                brick.brick_path,
                                brick.vol_name,
                                NS.tendrl_context.integration_id,
-                               BRICK_STARTED,
-                               BRICK_STOPPED
+                               BRICK_STARTED.title(),
+                               BRICK_STOPPED.title()
                            )
                     instance = "volume_%s|brick_%s" % (
                         brick.vol_name,
@@ -746,7 +742,7 @@ def brick_status_alert(hostname):
                     )
                     event_utils.emit_event(
                         "brick_status",
-                        BRICK_STOPPED,
+                        BRICK_STOPPED.title(),
                         msg,
                         instance,
                         'WARNING',
@@ -757,25 +753,25 @@ def brick_status_alert(hostname):
                               }
                     )
                     # Update brick status as stopped
-                    brick.status = BRICK_STOPPED
+                    brick.status = BRICK_STOPPED.title()
                     brick.save()
                     lock.release()
-        except (
-            etcd.EtcdException,
-            KeyError,
-            ValueError,
-            AttributeError
-        )as ex:
-            Event(
-                ExceptionMessage(
-                    priority="error",
-                    publisher=NS.publisher_id,
-                    payload={
-                        "message": "Unable to raise an brick status "
-                        "alert for host %s" % hostname
-                    }
-                )
+    except (
+        etcd.EtcdException,
+        KeyError,
+        ValueError,
+        AttributeError
+    )as ex:
+        Event(
+            ExceptionMessage(
+                priority="error",
+                publisher=NS.publisher_id,
+                payload={
+                    "message": "Unable to raise an brick status "
+                    "alert for host %s" % hostname
+                }
             )
-        finally:
-            if isinstance(lock, etcd.lock.Lock) and lock.is_acquired:
-                lock.release()
+        )
+    finally:
+        if isinstance(lock, etcd.lock.Lock) and lock.is_acquired:
+            lock.release()
