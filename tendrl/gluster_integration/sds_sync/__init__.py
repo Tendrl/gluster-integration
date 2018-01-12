@@ -32,7 +32,9 @@ from tendrl.gluster_integration.sds_sync import utilization
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
-BRICK_STATUS = ["Started", "Stopped"]
+BRICK_STOPPED = "Stopped"
+BRICK_STARTED = "Started"
+
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
@@ -727,7 +729,7 @@ def brick_status_alert(hostname):
                     fqdn=hostname,
                     brick_dir=brick_path.split("/")[-1]
                 ).load()
-                if brick.status == BRICK_STATUS[0]:
+                if brick.status == BRICK_STARTED:
                     # raise an alert for brick
                     msg = ("Status of brick: %s "
                            "under volume %s in cluster %s chan"
@@ -735,8 +737,8 @@ def brick_status_alert(hostname):
                                brick.brick_path,
                                brick.vol_name,
                                NS.tendrl_context.integration_id,
-                               BRICK_STATUS[0],
-                               BRICK_STATUS[1]
+                               BRICK_STARTED,
+                               BRICK_STOPPED
                            )
                     instance = "volume_%s|brick_%s" % (
                         brick.vol_name,
@@ -744,7 +746,7 @@ def brick_status_alert(hostname):
                     )
                     event_utils.emit_event(
                         "brick_status",
-                        BRICK_STATUS[1],
+                        BRICK_STOPPED,
                         msg,
                         instance,
                         'WARNING',
@@ -755,7 +757,7 @@ def brick_status_alert(hostname):
                               }
                     )
                     # Update brick status as stopped
-                    brick.status = BRICK_STATUS[1]
+                    brick.status = BRICK_STOPPED
                     brick.save()
                     lock.release()
         except (
