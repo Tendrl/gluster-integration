@@ -1,7 +1,7 @@
 import etcd
 
 from tendrl.commons.utils import cmd_utils
-from tendrl.gluster_integration.sds_sync import event_utils
+from tendrl.commons.utils import event_utils
 
 
 def sync_cluster_status(volumes, sync_ttl):

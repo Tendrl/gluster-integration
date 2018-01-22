@@ -15,6 +15,7 @@ from tendrl.commons.objects.cluster_alert_counters import \
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
+from tendrl.commons.utils import event_utils
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.message import process_events as evt
@@ -22,7 +23,6 @@ from tendrl.gluster_integration.sds_sync import brick_device_details
 from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import client_connections
 from tendrl.gluster_integration.sds_sync import cluster_status
-from tendrl.gluster_integration.sds_sync import event_utils
 from tendrl.gluster_integration.sds_sync import georep_details
 from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots

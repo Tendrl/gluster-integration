@@ -1,12 +1,12 @@
 import etcd
 
+from tendrl.commons.utils import event_utils
 from tendrl.gluster_integration.objects.geo_replication_pair\
     import GeoReplicationPair
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSession
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSessionStatus
-from tendrl.gluster_integration.sds_sync import event_utils
 
 
 def save_georep_details(volumes, index):
