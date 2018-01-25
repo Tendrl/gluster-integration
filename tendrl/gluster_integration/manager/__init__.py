@@ -1,12 +1,9 @@
 import signal
 import threading
 
-import etcd
-
-from tendrl.commons.event import Event
 from tendrl.commons import manager as common_manager
-from tendrl.commons.message import Message
 from tendrl.commons import TendrlNS
+from tendrl.commons.utils import log_utils as logger
 from tendrl import gluster_integration
 from tendrl.gluster_integration.gdeploy_wrapper.manager import \
     ProvisioningManager
@@ -38,29 +35,27 @@ def main():
 
     NS.message_handler_thread = GlusterNativeMessageHandler()
 
-    while NS.tendrl_context.integration_id is None or NS.tendrl_context.integration_id == "":
-        Event(
-        Message(
-            priority="debug",
-            publisher=NS.publisher_id,
-            payload={"message": "Waiting for tendrl-node-agent %s to detect sds cluster (integration_id not found)..." %
-                                NS.node_context.node_id
-                     }
+    while NS.tendrl_context.integration_id is None or \
+        NS.tendrl_context.integration_id == "":
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Waiting for tendrl-node-agent %s to "
+                "detect sds cluster (integration_id not found)" %
+                NS.node_context.node_id
+            }
         )
-    )
         NS.tendrl_context = NS.tendrl_context.load()
 
-
-    Event(
-        Message(
-            priority="debug",
-            publisher=NS.publisher_id,
-            payload={"message": "Integration %s is part of sds cluster"
-                                % NS.tendrl_context.integration_id
-                     }
-        )
+    logger.log(
+        "debug",
+        NS.publisher_id,
+        {
+            "message": "Integration %s is part of sds cluster" %
+            NS.tendrl_context.integration_id
+        }
     )
-          
 
     NS.gluster.definitions.save()
     NS.gluster.config.save()
@@ -77,26 +72,25 @@ def main():
     complete = threading.Event()
 
     def shutdown(signum, frame):
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Signal handler: stopping"}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {"message": "Signal handler: stopping"}
         )
         complete.set()
         m.stop()
 
     def reload_config(signum, frame):
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Signal handler: SIGHUP, reload service config"}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Signal handler: SIGHUP,"
+                " reload service config"
+            }
         )
         NS.gluster.ns.setup_common_objects()
-        
+
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGHUP, reload_config)
