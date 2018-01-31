@@ -1,12 +1,15 @@
 import etcd
 
+from tendrl.commons.utils import event_utils
 from tendrl.gluster_integration.objects.geo_replication_pair\
     import GeoReplicationPair
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSession
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSessionStatus
-from tendrl.gluster_integration.sds_sync import event_utils
+
+
+RESOURCE_TYPE_VOLUME = "volume"
 
 
 def save_georep_details(volumes, index):
@@ -39,6 +42,17 @@ def save_georep_details(volumes, index):
                 ].replace("/", "_")
             )
 
+            readable_pair_name = "{0}:{1}".format(
+                volumes[
+                    'volume%s.pair%s.master_node' % (
+                        index, pair_index)
+                ],
+                volumes[
+                    'volume%s.pair%s.master_brick' % (
+                        index, pair_index)
+                ]
+            )
+
             try:
                 fetched_pair_status = NS._int.client.read(
                     "clusters/%s/Volumes/%s/GeoRepSessions/"
@@ -56,7 +70,7 @@ def save_georep_details(volumes, index):
                     pair_status.lower() == 'faulty':
                     msg = ("georep status of pair: %s "
                            "of volume %s is faulty") % (
-                               pair_name,
+                               readable_pair_name,
                                volumes['volume%s.name' % index])
                     instance = "volume_%s|georep_%s" % (
                         volumes['volume%s.name' % index],
@@ -67,13 +81,16 @@ def save_georep_details(volumes, index):
                         pair_status,
                         msg,
                         instance,
-                        'WARNING'
+                        'WARNING',
+                        tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                              "volume_name": volumes['volume%s.name' % index]
+                              }
                     )
                 if fetched_pair_status.lower() == 'faulty' and \
                     pair_status.lower() in ['active', 'passive']:
                     msg = ("georep status of pair: %s "
                            "of volume %s is %s now") % (
-                               pair_name,
+                               readable_pair_name,
                                volumes['volume%s.name' % index],
                                pair_status)
                     instance = "volume_%s|georep_%s" % (
@@ -85,7 +102,10 @@ def save_georep_details(volumes, index):
                         pair_status,
                         msg,
                         instance,
-                        'INFO'
+                        'INFO',
+                        tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                              "volume_name": volumes['volume%s.name' % index]
+                              }
                     )
             except etcd.EtcdKeyNotFound:
                 pass
