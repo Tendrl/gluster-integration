@@ -4,6 +4,9 @@ from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import event_utils
 
 
+RESOURCE_TYPE_VOLUME = "volume"
+
+
 def sync_cluster_status(volumes, sync_ttl):
     # Calculate status based on volumes status
     degraded_count = 0
@@ -148,7 +151,10 @@ def _derive_volume_states(volumes):
                 out_dict[volume.vol_id],
                 msg,
                 instance,
-                'INFO' if out_dict[volume.vol_id] == 'up' else 'WARNING'
+                'INFO' if out_dict[volume.vol_id] == 'up' else 'WARNING',
+                tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                      "volume_name": volume.name
+                      }
             )
         # Save the volume status
         volume.state = out_dict[volume.vol_id]
