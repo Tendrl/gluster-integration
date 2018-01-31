@@ -1,7 +1,6 @@
 import json
 
-from tendrl.gluster_integration.sds_sync import event_utils
-
+from tendrl.commons.utils import event_utils
 
 POST_RECOVERY_TTL = 200
 NOTIFICATION_TTL = 86400   # one day
