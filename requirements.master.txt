@@ -2,4 +2,5 @@
 git+https://github.com/Tendrl/commons.git@master
 # use latest gstatus from master branch on github
 git+https://github.com/gluster/gstatus.git@master
+git+https://github.com/storaged-project/blivet.git
 -e .

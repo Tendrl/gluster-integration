@@ -41,8 +41,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
-
-
         Event(
             Message(
                 priority="info",
@@ -89,7 +87,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         while not self._complete.is_set():
             # To detect out of band deletes
             # refresh gluster object inventory at config['sync_interval']
-            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 100           
+            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 100
             NS.node_context = NS.node_context.load()
             NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
@@ -103,7 +101,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 ).load()
                 if _cluster.import_status == "failed":
                     continue
-
 
                 try:
                     NS._int.wclient.write(
@@ -214,7 +211,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             index += 1
                         except KeyError:
                             break
-                            
+
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
@@ -223,7 +220,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             sync_volumes(
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
-                                SYNC_TTL + 350 # sync_interval + 100 + no of peers + 350
+                                # sync_interval + 100 + no of peers + 350
+                                SYNC_TTL + 350
                             )
                             index += 1
                             SYNC_TTL += 1
@@ -307,18 +305,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
             try:
-                etcd_utils.read('/clusters/%s/_sync_now' % NS.tendrl_context.integration_id)
+                etcd_utils.read(
+                    '/clusters/%s/_sync_now' %
+                    NS.tendrl_context.integration_id
+                )
                 continue
             except etcd.EtcdKeyNotFound:
                 pass
-                
+
             time.sleep(_sleep)
 
         Event(
             Message(
                 priority="debug",
                 publisher=NS.publisher_id,
-                payload={"message": "%s complete" % self.__class__.__name__}
+                payload={"message": "%s complete" %
+                         self.__class__.__name__}
             )
         )
 
