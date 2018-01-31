@@ -1,4 +1,4 @@
-from tendrl.gluster_integration.sds_sync import event_utils
+from tendrl.commons.utils import event_utils
 
 
 def sync_volume_rebalance_estimated_time(volumes):
