@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
-Version: 1.5.4
-Release: 14%{?dist}
+Version: 1.5.5
+Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -63,6 +63,12 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Fri Feb 02 2018 Rohan Kanade <rkanade@redhat.com> - 1.5.5-1
+- Add georep related alert also for volume alert count increment
+- Add volume status related alert also for volume alert count increment
+- Raising brick alert when peer is disconnected or node goes down
+- Move gluster.event_utils to commons
+
 * Mon Dec 11 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-14
 - Bugfixes
 
