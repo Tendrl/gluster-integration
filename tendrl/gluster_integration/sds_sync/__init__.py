@@ -207,8 +207,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         'Connected'
                                         else 'INFO'
                                     )
-                                    # Disconnected host name to raise brick alert
-                                    if current_status.lower() == "disconnected":
+                                    # Disconnected host name to
+                                    # raise brick alert
+                                    if current_status.lower() == \
+                                            "disconnected":
                                         disconnected_hosts.append(
                                             peers[
                                                 'peer%s.primary_hostname' %
@@ -227,7 +229,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for disconnected_host in disconnected_hosts:
                         brick_status_alert(
                             disconnected_host
-                        ) 
+                        )
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
@@ -734,8 +736,7 @@ def brick_status_alert(hostname):
                                brick.vol_name,
                                NS.tendrl_context.integration_id,
                                BRICK_STARTED.title(),
-                               BRICK_STOPPED.title()
-                           )
+                               BRICK_STOPPED.title())
                     instance = "volume_%s|brick_%s" % (
                         brick.vol_name,
                         brick.brick_path,
@@ -768,7 +769,8 @@ def brick_status_alert(hostname):
                 publisher=NS.publisher_id,
                 payload={
                     "message": "Unable to raise an brick status "
-                    "alert for host %s" % hostname
+                               "alert for host %s" % hostname,
+                    "exception": ex
                 }
             )
         )
