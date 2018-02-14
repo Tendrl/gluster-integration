@@ -33,6 +33,8 @@ class Volume(objects.BaseObject):
         rebal_estimated_time=None,
         deleted=False,
         deleted_at=None,
+        current_job=dict(),
+        locked_by=dict(),
         *args,
         **kwargs
     ):
@@ -67,6 +69,8 @@ class Volume(objects.BaseObject):
         self.rebal_estimated_time = rebal_estimated_time
         self.deleted = deleted
         self.deleted_at = deleted_at
+        self.current_job = current_job
+        self.locked_by = locked_by
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):
