@@ -9,13 +9,13 @@ import etcd
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
-from tendrl.commons.message import Message
 from tendrl.commons.objects.cluster_alert_counters import \
     ClusterAlertCounters
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import event_utils
+from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.message import process_events as evt
@@ -43,12 +43,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
-        Event(
-            Message(
-                priority="info",
-                publisher=NS.publisher_id,
-                payload={"message": "%s running" % self.__class__.__name__}
-            )
+        logger.log(
+            "info",
+            NS.publisher_id,
+            {"message": "%s running" % self.__class__.__name__}
         )
 
         gluster_brick_dir = NS.gluster.objects.GlusterBrickDir()
@@ -75,14 +73,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 cluster.cluster_network = node_network.subnet
                 cluster.save()
             except etcd.EtcdKeyNotFound as ex:
-                Event(
-                    Message(
-                        priority="error",
-                        publisher=NS.publisher_id,
-                        payload={
-                            "message": "Failed to sync cluster network details"
-                        }
-                    )
+                logger.log(
+                    "error",
+                    NS.publisher_id,
+                    {"message": "Failed to sync cluster network details"}
                 )
 
         _sleep = 0
@@ -327,13 +321,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
             time.sleep(_sleep)
 
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "%s complete" %
-                         self.__class__.__name__}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {"message": "%s complete" % self.__class__.__name__}
         )
 
     def _enable_disable_volume_profiling(self):
@@ -372,15 +363,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     "yes" else "False"
                 volume.save()
         if len(failed_vols) > 0:
-            Event(
-                Message(
-                    priority="warning",
-                    publisher=NS.publisher_id,
-                    payload={
-                        "message": "%sing profiling failed for volumes: %s" %
-                        (action, str(failed_vols))
-                    }
-                )
+            logger.log(
+                "warning",
+                NS.publisher_id,
+                {"message": "%sing profiling failed for volumes: %s" %
+                 (action, str(failed_vols))}
             )
 
 
