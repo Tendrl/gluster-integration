@@ -101,18 +101,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
                 ).load()
-                if _cluster.import_status == "failed":
+                if _cluster.status == "importing" and \
+                    _cluster.current_job['status'] == 'failed':
                     continue
 
-                try:
-                    NS._int.wclient.write(
-                        "clusters/%s/"
-                        "sync_status" % NS.tendrl_context.integration_id,
-                        "in_progress",
-                        prevExist=False
-                    )
-                except (etcd.EtcdAlreadyExist, etcd.EtcdCompareFailed) as ex:
-                    pass
+                _cluster.status = "syncing"
+                _cluster.save()
 
                 subprocess.call(
                     [
@@ -210,7 +204,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     # Disconnected host name to
                                     # raise brick alert
                                     if current_status.lower() == \
-                                            "disconnected":
+                                        "disconnected":
                                         disconnected_hosts.append(
                                             peers[
                                                 'peer%s.primary_hostname' %
@@ -293,7 +287,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 if _cluster.exists():
                     _cluster = _cluster.load()
-                    _cluster.sync_status = "done"
+                    _cluster.status = ""
                     _cluster.last_sync = str(tendrl_now())
                     _cluster.is_managed = "yes"
                     _cluster.save()
@@ -729,14 +723,16 @@ def brick_status_alert(hostname):
             for brick in bricks:
                 if brick.status.lower() == BRICK_STARTED:
                     # raise an alert for brick
-                    msg = ("Status of brick: %s "
-                           "under volume %s in cluster %s chan"
-                           "ged from %s to %s") % (
-                               brick.brick_path,
-                               brick.vol_name,
-                               NS.tendrl_context.integration_id,
-                               BRICK_STARTED.title(),
-                               BRICK_STOPPED.title())
+                    msg = (
+                        "Status of brick: %s "
+                        "under volume %s in cluster %s chan"
+                        "ged from %s to %s") % (
+                            brick.brick_path,
+                            brick.vol_name,
+                            NS.tendrl_context.integration_id,
+                            BRICK_STARTED.title(),
+                            BRICK_STOPPED.title()
+                        )
                     instance = "volume_%s|brick_%s" % (
                         brick.vol_name,
                         brick.brick_path,
@@ -762,7 +758,7 @@ def brick_status_alert(hostname):
         KeyError,
         ValueError,
         AttributeError
-    )as ex:
+    ) as ex:
         Event(
             ExceptionMessage(
                 priority="error",
