@@ -283,7 +283,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     _cluster = _cluster.load()
                     _cluster.status = ""
                     _cluster.last_sync = str(tendrl_now())
-                    _cluster.is_managed = "yes"
+                    # Mark the first sync done flag
+                    _cnc = NS.tendrl.objects.ClusterNodeContext(
+                        node_id=NS.node_context.node_id
+                    ).load()
+                    if _cnc.first_sync_done in [None, "no"]:
+                        _cnc.first_sync_done = "yes"
+                        _cnc.save()
                     _cluster.save()
                     # Initialize alert count
                     try:
