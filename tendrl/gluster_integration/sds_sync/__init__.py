@@ -95,8 +95,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
                 ).load()
-                if _cluster.status == "importing" and \
-                    _cluster.current_job['status'] == 'failed':
+                if (_cluster.status == "importing" and
+                    _cluster.current_job['status'] == 'failed') or \
+                    _cluster.status == "unmanaging":
                     continue
 
                 _cluster.status = "syncing"
@@ -339,42 +340,62 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         ).load()
         volumes = NS.gluster.objects.Volume().load_all() or []
         failed_vols = []
-        for volume in volumes:
-            if cluster.enable_volume_profiling == "yes":
-                if volume.profiling_enabled == 'False' or \
-                    volume.profiling_enabled == '':
-                    action = "start"
-                else:
+        if cluster.volume_profiling_flag == "enable":
+            for volume in volumes:
+                if volume.profiling_enabled == "True":
                     continue
-            else:
-                if volume.profiling_enabled == 'True':
-                    action = "stop"
-                else:
+                out, err, rc = cmd_utils.Command(
+                    "gluster volume profile %s start" %
+                    volume.name
+                ).run()
+                if (err or rc != 0) and \
+                    "already started" in err:
+                    failed_vols.append(volume.name)
+            if len(failed_vols) > 0:
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Profiling already "
+                        "enabled for volumes: %s" %
+                        str(failed_vols)
+                    }
+                )
+            cluster.volume_profiling_state = "enabled"
+        if cluster.volume_profiling_flag == "disable":
+            for volume in volumes:
+                if volume.profiling_enabled == "False":
                     continue
-            out, err, rc = cmd_utils.Command(
-                "gluster volume profile %s %s" %
-                (volume.name, action)
-            ).run()
-            if err or rc != 0:
-                if action == "start" and "already started" in err:
-                    volume.profiling_enabled = "True"
-                if action == "stop" and "not started" in err:
-                    volume.profiling_enabled = "False"
-                volume.save()
-                failed_vols.append(volume.name)
-                continue
-            else:
-                volume.profiling_enabled = \
-                    "True" if cluster.enable_volume_profiling == \
-                    "yes" else "False"
-                volume.save()
-        if len(failed_vols) > 0:
-            logger.log(
-                "warning",
-                NS.publisher_id,
-                {"message": "%sing profiling failed for volumes: %s" %
-                 (action, str(failed_vols))}
-            )
+                out, err, rc = cmd_utils.Command(
+                    "gluster volume profile %s stop" %
+                    volume.name
+                ).run()
+                if (err or rc != 0) and \
+                    "not started" in err:
+                    failed_vols.append(volume.name)
+            if len(failed_vols) > 0:
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Profiling not "
+                        "enabled for volumes: %s" %
+                        str(failed_vols)
+                    }
+                )
+            cluster.volume_profiling_state = "disabled"
+        if cluster.volume_profiling_flag == "leave-as-is":
+            profiling_enabled_count = 0
+            for volume in volumes:
+                if volume.profiling_enabled == "True":
+                    profiling_enabled_count += 1
+            if profiling_enabled_count == 0:
+                cluster.volume_profiling_state = "disabled"
+            elif profiling_enabled_count == len(volumes):
+                cluster.volume_profiling_state = "enabled"
+            elif profiling_enabled_count < len(volumes):
+                cluster.volume_profiling_state = "mixed"
+        cluster.save()
 
 
 def sync_volumes(volumes, index, vol_options, sync_ttl):
@@ -392,12 +413,14 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
     cluster_provisioner = "provisioner/%s" % NS.tendrl_context.integration_id
     if cluster_provisioner in tag_list:
         try:
-            stored_volume_status = NS._int.client.read(
-                "clusters/%s/Volumes/%s/status" % (
-                    NS.tendrl_context.integration_id,
-                    volumes['volume%s.id' % index]
-                )
-            ).value
+            _volume = NS.gluster.objects.Volume(
+                vol_id=volumes['volume%s.id' % index]
+            ).load()
+            if _volume.locked_by and 'job_id' in _volume.locked_by and \
+                _volume.current_job.get('status', '') == 'in_progress':
+                # There is a job active on volume. skip the sync
+                return
+            stored_volume_status = _volume.status
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
@@ -446,6 +469,41 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
+        volume_profiling_old_value = volume.profiling_enabled
+        if ('volume%s.profile_enabled' % index) in volumes:
+            value = int(volumes['volume%s.profile_enabled' % index])
+            if value == 1:
+                volume_profiling_new_value = "True"
+            else:
+                volume_profiling_new_value = "False"
+        else:
+            volume_profiling_new_value = None
+        if volume_profiling_old_value != volume_profiling_new_value:
+            volume.profiling_enabled = volume_profiling_new_value
+            # Raise alert for the same value change
+            msg = ("Value of volume profiling for volume: %s "
+                   "of cluster %s changed from %s to %s" % (
+                       volumes['volume%s.name' % index],
+                       NS.tendrl_context.integration_id,
+                       volume_profiling_old_value,
+                       volume_profiling_new_value))
+            instance = "volume_%s" % \
+                volumes['volume%s.name' % index]
+            event_utils.emit_event(
+                "volume_profiling_status",
+                volume_profiling_new_value,
+                msg,
+                instance,
+                'INFO',
+                tags={
+                    "entity_type": RESOURCE_TYPE_BRICK,
+                    "volume_name": volumes[
+                        'volume%s.name' % index
+                    ]
+                }
+            )
+        volume.current_job = {}
+        volume.locked_by = {}
         volume.save(ttl=sync_ttl)
 
         # Initialize volume alert count
