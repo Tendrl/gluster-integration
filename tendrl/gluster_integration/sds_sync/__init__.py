@@ -102,7 +102,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
 
                 _cluster.status = "syncing"
                 _cluster.save()
-                
                 _cnc = NS.tendrl.objects.ClusterNodeContext(
                     node_id=NS.node_context.node_id
                 ).load()
