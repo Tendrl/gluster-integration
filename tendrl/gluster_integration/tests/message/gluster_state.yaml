@@ -1,0 +1,82 @@
+[Global]
+MYUUID: 01e98c65-e2ce-4bdc-a2b6-203c8e077613
+op-version: 30901
+
+[Global options]
+
+[Peers]
+Peer1.primary_hostname: dhcp43-211.lab.eng.blr.redhat.com
+Peer1.uuid: b94d9f41-499e-4b3a-8830-f6b90df0e06d
+Peer1.state: Peer in Cluster
+Peer1.connected: Connected
+Peer1.othernames: 
+Peer2.primary_hostname: 10.70.41.169
+Peer2.uuid: aff105e6-453f-47c4-804c-15e3ffaab225
+Peer2.state: Peer in Cluster
+Peer2.connected: Disconnected
+Peer2.othernames: 
+Peer3.primary_hostname: 10.70.42.251
+Peer3.uuid: 18b5142d-f0e9-49f9-a091-d4dc1bf0ab9a
+Peer3.state: Peer in Cluster
+Peer3.connected: Disconnected
+Peer3.othernames: 
+
+[Volumes]
+Volume1.name: GlusterVolume
+Volume1.id: de586c0e-7bd6-46ab-b8e6-3cd302eb734f
+Volume1.type: Replicate
+Volume1.transport_type: tcp
+Volume1.status: Started
+Volume1.brickcount: 2
+Volume1.Brick1.path: 10.70.41.169:/tendrl_gluster_bricks/MyBrick2_mount/MyBrick2
+Volume1.Brick1.hostname: 10.70.41.169
+Volume1.Brick2.path: 10.70.43.214:/tendrl_gluster_bricks/MyBrick2_mount/MyBrick2
+Volume1.Brick2.hostname: 10.70.43.214
+Volume1.Brick2.port: 49152
+Volume1.Brick2.rdma_port: 0
+Volume1.Brick2.status: Started
+Volume1.Brick2.signedin: True
+Volume1.snap_count: 0
+Volume1.stripe_count: 1
+Volume1.replica_count: 2
+Volume1.subvol_count: 1
+Volume1.arbiter_count: 0
+Volume1.disperse_count: 0
+Volume1.redundancy_count: 0
+Volume1.quorum_status: not_applicable
+Volume1.snapd_svc.online_status: Offline
+Volume1.snapd_svc.inited: False
+Volume1.rebalance.id: 00000000-0000-0000-0000-000000000000
+Volume1.rebalance.status: not_started
+Volume1.rebalance.failures: 0
+Volume1.rebalance.skipped: 0
+Volume1.rebalance.lookedup: 0
+Volume1.rebalance.files: 0
+Volume1.rebalance.data: 0Bytes
+Volume1.options.transport.address-family: inet
+Volume1.options.performance.readdir-ahead: on
+Volume1.options.nfs.disable: on
+Volume1.options.diagnostics.latency-measurement: on
+Volume1.options.diagnostics.count-fop-hits: on
+
+
+[Services]
+svc1.name: glustershd
+svc1.online_status: Online
+
+svc2.name: nfs
+svc2.online_status: Offline
+
+svc3.name: bitd
+svc3.online_status: Offline
+
+svc4.name: scrub
+svc4.online_status: Offline
+
+svc5.name: quotad
+svc5.online_status: Offline
+
+
+[Misc]
+Base port: 49152
+Last allocated port: 49153

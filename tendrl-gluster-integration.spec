@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
-Version: 1.5.4
-Release: 5%{?dist}
+Version: 1.6.0
+Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -41,7 +41,7 @@ install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sa
 install -Dm 644 etc/tendrl/gluster-integration/*.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/
 
 %post
-systemctl enable tendrl-gluster-integration
+systemctl enable tendrl-gluster-integration >/dev/null 2>&1 || :
 %systemd_post tendrl-gluster-integration.service
 
 %preun
@@ -63,6 +63,42 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Sat Feb 17 2018 Rohan Kanade <rkanade@redhat.com> - 1.6.0-1
+- API to un-manage clusters managed by Tendrl
+
+* Fri Feb 02 2018 Rohan Kanade <rkanade@redhat.com> - 1.5.5-1
+- Add georep related alert also for volume alert count increment
+- Add volume status related alert also for volume alert count increment
+- Raising brick alert when peer is disconnected or node goes down
+- Move gluster.event_utils to commons
+
+* Mon Dec 11 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-14
+- Bugfixes
+
+* Fri Dec 08 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-13
+- Bugfixes
+
+* Thu Dec 07 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-12
+- Bugfixes
+
+* Thu Dec 07 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-11
+- Bugfixes
+
+* Wed Dec 06 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-10
+- Bugfixes
+
+* Tue Dec 05 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-9
+- Bugfixes
+
+* Fri Dec 1 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-8
+- Bugfixes
+
+* Thu Nov 30 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-7
+- Bugfixes
+
+* Mon Nov 27 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-6
+- Bugfixes
+
 * Fri Nov 24 2017 Rohan Kanade <rkanade@redhat.com> - 1.5.4-5
 - Bugfixes
 

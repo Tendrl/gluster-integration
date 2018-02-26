@@ -1,12 +1,12 @@
+import etcd
+import json
 import signal
 import threading
 
-import etcd
-
-from tendrl.commons.event import Event
 from tendrl.commons import manager as common_manager
-from tendrl.commons.message import Message
 from tendrl.commons import TendrlNS
+from tendrl.commons.utils import etcd_utils
+from tendrl.commons.utils import log_utils as logger
 from tendrl import gluster_integration
 from tendrl.gluster_integration.gdeploy_wrapper.manager import \
     ProvisioningManager
@@ -38,36 +38,28 @@ def main():
 
     NS.message_handler_thread = GlusterNativeMessageHandler()
 
-    NS.node_context.save()
-    try:
+    while NS.tendrl_context.integration_id is None or \
+        NS.tendrl_context.integration_id == "":
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Waiting for tendrl-node-agent %s to "
+                "detect sds cluster (integration_id not found)" %
+                NS.node_context.node_id
+            }
+        )
         NS.tendrl_context = NS.tendrl_context.load()
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Integration %s is part of sds cluster"
-                                    % NS.tendrl_context.integration_id
-                         }
-            )
-        )
-    except etcd.EtcdKeyNotFound:
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Node %s is not part of any sds cluster" %
-                                    NS.node_context.node_id
-                         }
-            )
-        )
-        raise Exception(
-            "Integration cannot be started,"
-            " please Import or Create sds cluster"
-            " in Tendrl and include Node %s" %
-            NS.node_context.node_id
-        )
 
-    NS.tendrl_context.save()
+    logger.log(
+        "debug",
+        NS.publisher_id,
+        {
+            "message": "Integration %s is part of sds cluster" %
+            NS.tendrl_context.integration_id
+        }
+    )
+
     NS.gluster.definitions.save()
     NS.gluster.config.save()
 
@@ -83,26 +75,70 @@ def main():
     complete = threading.Event()
 
     def shutdown(signum, frame):
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Signal handler: stopping"}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {"message": "Signal handler: stopping"}
         )
+        # Remove the node's name from gluster server tag
+        try:
+            gl_srvr_list = etcd_utils.read(
+                "/indexes/tags/gluster/server"
+            ).value
+            gl_srvr_list = json.loads(gl_srvr_list)
+            if NS.node_context.node_id in gl_srvr_list:
+                gl_srvr_list.remove(NS.node_context.node_id)
+            etcd_utils.write(
+                "/indexes/tags/gluster/server",
+                json.dumps(gl_srvr_list)
+            )
+            node_tags = json.loads(NS.node_context.tags)
+            if 'provisioner/%s' % NS.tendrl_context.integration_id \
+                in node_tags:
+                etcd_utils.delete(
+                    "/indexes/tags/provisioner/%s" %
+                    NS.tendrl_context.integration_id,
+                    recursive=True
+                )
+            int_srvr_list = etcd_utils.read(
+                "/indexes/tags/tendrl/integration/gluster"
+            ).value
+            int_srvr_list = json.loads(int_srvr_list)
+            if NS.node_context.node_id in int_srvr_list:
+                int_srvr_list.remove(NS.node_context.node_id)
+            etcd_utils.write(
+                "/indexes/tags/tendrl/integration/gluster",
+                json.dumps(int_srvr_list)
+            )
+        except etcd.EtcdKeyNotFound:
+            logger.log(
+                "debug",
+                NS.publisher_id,
+                {
+                    "message": "Couldnt remove node from "
+                    "gluster servers list tag."
+                    "integration_id: %s, node_id: %s" %
+                    (
+                        NS.tendrl_context.integration_id,
+                        NS.node_context.node_id
+                    )
+                }
+            )
+            pass
+
         complete.set()
         m.stop()
 
     def reload_config(signum, frame):
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "Signal handler: SIGHUP, reload service config"}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {
+                "message": "Signal handler: SIGHUP,"
+                " reload service config"
+            }
         )
-        NS.config = NS.config.__class__()
-        NS.config.save()
+        NS.gluster.ns.setup_common_objects()
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)

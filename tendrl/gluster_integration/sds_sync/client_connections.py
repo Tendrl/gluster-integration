@@ -22,7 +22,8 @@ def sync_volume_connections(volumes):
                             brick_name.split(":_")[-1]
                         ).load()
                         if fetched_brick and fetched_brick.client_count:
-                            vol_connections += 0 if fetched_brick.client_count == '' \
+                            vol_connections += 0 \
+                                if fetched_brick.client_count == '' \
                                 else int(fetched_brick.client_count)
                     subvol_count += 1
             except etcd.EtcdKeyNotFound:

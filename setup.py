@@ -103,7 +103,8 @@ setup(
     install_requires=[
         "tendrl-commons",
         "blivet",
-        "flask"
+        "flask",
+        "netifaces"
         ],
     entry_points={
         'console_scripts': [

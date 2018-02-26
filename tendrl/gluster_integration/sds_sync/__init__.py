@@ -9,12 +9,13 @@ import etcd
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
-from tendrl.commons.message import Message
 from tendrl.commons.objects.cluster_alert_counters import \
     ClusterAlertCounters
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
+from tendrl.commons.utils import event_utils
+from tendrl.commons.utils import log_utils as logger
 from tendrl.commons.utils.time_utils import now as tendrl_now
 from tendrl.gluster_integration import ini2json
 from tendrl.gluster_integration.message import process_events as evt
@@ -22,7 +23,6 @@ from tendrl.gluster_integration.sds_sync import brick_device_details
 from tendrl.gluster_integration.sds_sync import brick_utilization
 from tendrl.gluster_integration.sds_sync import client_connections
 from tendrl.gluster_integration.sds_sync import cluster_status
-from tendrl.gluster_integration.sds_sync import event_utils
 from tendrl.gluster_integration.sds_sync import georep_details
 from tendrl.gluster_integration.sds_sync import rebalance_status
 from tendrl.gluster_integration.sds_sync import snapshots
@@ -32,6 +32,8 @@ from tendrl.gluster_integration.sds_sync import utilization
 RESOURCE_TYPE_BRICK = "brick"
 RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
+BRICK_STOPPED = "stopped"
+BRICK_STARTED = "started"
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -41,17 +43,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
-        # To detect out of band deletes
-        # refresh gluster object inventory at config['sync_interval']
-        # Default is 260 seconds
-        SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 250
-
-        Event(
-            Message(
-                priority="info",
-                publisher=NS.publisher_id,
-                payload={"message": "%s running" % self.__class__.__name__}
-            )
+        logger.log(
+            "info",
+            NS.publisher_id,
+            {"message": "%s running" % self.__class__.__name__}
         )
 
         gluster_brick_dir = NS.gluster.objects.GlusterBrickDir()
@@ -78,18 +73,19 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 cluster.cluster_network = node_network.subnet
                 cluster.save()
             except etcd.EtcdKeyNotFound as ex:
-                Event(
-                    Message(
-                        priority="error",
-                        publisher=NS.publisher_id,
-                        payload={
-                            "message": "Failed to sync cluster network details"
-                        }
-                    )
+                logger.log(
+                    "error",
+                    NS.publisher_id,
+                    {"message": "Failed to sync cluster network details"}
                 )
 
         _sleep = 0
         while not self._complete.is_set():
+            # To detect out of band deletes
+            # refresh gluster object inventory at config['sync_interval']
+            SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + 100
+            NS.node_context = NS.node_context.load()
+            NS.tendrl_context = NS.tendrl_context.load()
             if _sleep > 5:
                 _sleep = int(NS.config.data.get("sync_interval", 10))
             else:
@@ -99,19 +95,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 _cluster = NS.tendrl.objects.Cluster(
                     integration_id=NS.tendrl_context.integration_id
                 ).load()
-                if _cluster.import_status == "failed":
+                if (_cluster.status == "importing" and
+                    _cluster.current_job['status'] == 'failed') or \
+                    _cluster.status == "unmanaging":
                     continue
 
-
-                try:
-                    NS._int.wclient.write(
-                        "clusters/%s/"
-                        "sync_status" % NS.tendrl_context.integration_id,
-                        "in_progress",
-                        prevExist=False
-                    )
-                except (etcd.EtcdAlreadyExist, etcd.EtcdCompareFailed) as ex:
-                    pass
+                _cluster.status = "syncing"
+                _cluster.save()
 
                 subprocess.call(
                     [
@@ -158,6 +148,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if "Peers" in raw_data:
                     index = 1
                     peers = raw_data["Peers"]
+                    disconnected_hosts = []
                     while True:
                         try:
                             peer = NS.gluster.\
@@ -205,13 +196,29 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         'Connected'
                                         else 'INFO'
                                     )
+                                    # Disconnected host name to
+                                    # raise brick alert
+                                    if current_status.lower() == \
+                                        "disconnected":
+                                        disconnected_hosts.append(
+                                            peers[
+                                                'peer%s.primary_hostname' %
+                                                index
+                                            ]
+                                        )
                             except etcd.EtcdKeyNotFound:
                                 pass
-
+                            SYNC_TTL += 5
                             peer.save(ttl=SYNC_TTL)
                             index += 1
                         except KeyError:
                             break
+                    # Raise an alert for bricks when peer disconnected
+                    # or node goes down
+                    for disconnected_host in disconnected_hosts:
+                        brick_status_alert(
+                            disconnected_host
+                        )
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
@@ -219,9 +226,12 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         try:
                             sync_volumes(
                                 volumes, index,
-                                raw_data_options.get('Volume Options')
+                                raw_data_options.get('Volume Options'),
+                                # sync_interval + 100 + no of peers + 350
+                                SYNC_TTL + 350
                             )
                             index += 1
+                            SYNC_TTL += 1
                         except KeyError:
                             break
                     # populate the volume specific options
@@ -251,7 +261,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     for volume in all_volumes:
                         if not str(volume.deleted).lower() == "true":
                             volumes.append(volume)
-                    cluster_status.sync_cluster_status(volumes)
+                    cluster_status.sync_cluster_status(volumes, SYNC_TTL + 350)
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
@@ -264,7 +274,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         raw_data['Volumes'],
                         int(NS.config.data.get(
                             "sync_interval", 10
-                        )) + len(volumes) * 10
+                        )) + len(volumes) * 4
                     )
 
                 _cluster = NS.tendrl.objects.Cluster(
@@ -272,9 +282,15 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 if _cluster.exists():
                     _cluster = _cluster.load()
-                    _cluster.sync_status = "done"
+                    _cluster.status = ""
                     _cluster.last_sync = str(tendrl_now())
-                    _cluster.is_managed = "yes"
+                    # Mark the first sync done flag
+                    _cnc = NS.tendrl.objects.ClusterNodeContext(
+                        node_id=NS.node_context.node_id
+                    ).load()
+                    if _cnc.first_sync_done in [None, "no"]:
+                        _cnc.first_sync_done = "yes"
+                        _cnc.save()
                     _cluster.save()
                     # Initialize alert count
                     try:
@@ -302,19 +318,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 )
             try:
-                etcd_utils.read('/clusters/%s/_sync_now' % NS.tendrl_context.integration_id)
+                etcd_utils.read(
+                    '/clusters/%s/_sync_now' %
+                    NS.tendrl_context.integration_id
+                )
                 continue
             except etcd.EtcdKeyNotFound:
                 pass
-                
+
             time.sleep(_sleep)
 
-        Event(
-            Message(
-                priority="debug",
-                publisher=NS.publisher_id,
-                payload={"message": "%s complete" % self.__class__.__name__}
-            )
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {"message": "%s complete" % self.__class__.__name__}
         )
 
     def _enable_disable_volume_profiling(self):
@@ -323,49 +340,65 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         ).load()
         volumes = NS.gluster.objects.Volume().load_all() or []
         failed_vols = []
-        for volume in volumes:
-            if cluster.enable_volume_profiling == "yes":
-                if volume.profiling_enabled == 'False' or \
-                    volume.profiling_enabled == '':
-                    action = "start"
-                else:
+        if cluster.volume_profiling_flag == "enable":
+            for volume in volumes:
+                if volume.profiling_enabled == "True":
                     continue
-            else:
-                if volume.profiling_enabled == 'True':
-                    action = "stop"
-                else:
-                    continue
-            out, err, rc = cmd_utils.Command(
-                "gluster volume profile %s %s" %
-                (volume.name, action)
-            ).run()
-            if err or rc != 0:
-                if action == "start" and "already started" in err:
-                    volume.profiling_enabled = "True"
-                if action == "stop" and "not started" in err:
-                    volume.profiling_enabled = "False"
-                volume.save()
-                failed_vols.append(volume.name)
-                continue
-            else:
-                volume.profiling_enabled = \
-                    "True" if cluster.enable_volume_profiling == \
-                    "yes" else "False"
-                volume.save()
-        if len(failed_vols) > 0:
-            Event(
-                Message(
-                    priority="warning",
-                    publisher=NS.publisher_id,
-                    payload={
-                        "message": "%sing profiling failed for volumes: %s" %
-                        (action, str(failed_vols))
+                out, err, rc = cmd_utils.Command(
+                    "gluster volume profile %s start" %
+                    volume.name
+                ).run()
+                if (err or rc != 0) and \
+                    "already started" in err:
+                    failed_vols.append(volume.name)
+            if len(failed_vols) > 0:
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Profiling already "
+                        "enabled for volumes: %s" %
+                        str(failed_vols)
                     }
                 )
-            )
+            cluster.volume_profiling_state = "enabled"
+        if cluster.volume_profiling_flag == "disable":
+            for volume in volumes:
+                if volume.profiling_enabled == "False":
+                    continue
+                out, err, rc = cmd_utils.Command(
+                    "gluster volume profile %s stop" %
+                    volume.name
+                ).run()
+                if (err or rc != 0) and \
+                    "not started" in err:
+                    failed_vols.append(volume.name)
+            if len(failed_vols) > 0:
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Profiling not "
+                        "enabled for volumes: %s" %
+                        str(failed_vols)
+                    }
+                )
+            cluster.volume_profiling_state = "disabled"
+        if cluster.volume_profiling_flag == "leave-as-is":
+            profiling_enabled_count = 0
+            for volume in volumes:
+                if volume.profiling_enabled == "True":
+                    profiling_enabled_count += 1
+            if profiling_enabled_count == 0:
+                cluster.volume_profiling_state = "disabled"
+            elif profiling_enabled_count == len(volumes):
+                cluster.volume_profiling_state = "enabled"
+            elif profiling_enabled_count < len(volumes):
+                cluster.volume_profiling_state = "mixed"
+        cluster.save()
 
 
-def sync_volumes(volumes, index, vol_options):
+def sync_volumes(volumes, index, vol_options, sync_ttl):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
     b = blivet.Blivet()
@@ -374,21 +407,20 @@ def sync_volumes(volumes, index, vol_options):
     # about storage devices in the machine
     b.reset()
     devicetree = b.devicetree
-
-    SYNC_TTL = int(NS.config.data.get("sync_interval", 10)) + len(volumes) * 10
-
     node_context = NS.node_context.load()
     tag_list = node_context.tags
     # Raise alerts for volume state change.
     cluster_provisioner = "provisioner/%s" % NS.tendrl_context.integration_id
     if cluster_provisioner in tag_list:
         try:
-            stored_volume_status = NS._int.client.read(
-                "clusters/%s/Volumes/%s/status" % (
-                    NS.tendrl_context.integration_id,
-                    volumes['volume%s.id' % index]
-                )
-            ).value
+            _volume = NS.gluster.objects.Volume(
+                vol_id=volumes['volume%s.id' % index]
+            ).load()
+            if _volume.locked_by and 'job_id' in _volume.locked_by and \
+                _volume.current_job.get('status', '') == 'in_progress':
+                # There is a job active on volume. skip the sync
+                return
+            stored_volume_status = _volume.status
             current_status = volumes['volume%s.status' % index]
             if stored_volume_status != "" and \
                 current_status != stored_volume_status:
@@ -437,7 +469,42 @@ def sync_volumes(volumes, index, vol_options):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
-        volume.save(ttl=SYNC_TTL)
+        volume_profiling_old_value = volume.profiling_enabled
+        if ('volume%s.profile_enabled' % index) in volumes:
+            value = int(volumes['volume%s.profile_enabled' % index])
+            if value == 1:
+                volume_profiling_new_value = "True"
+            else:
+                volume_profiling_new_value = "False"
+        else:
+            volume_profiling_new_value = None
+        if volume_profiling_old_value != volume_profiling_new_value:
+            volume.profiling_enabled = volume_profiling_new_value
+            # Raise alert for the same value change
+            msg = ("Value of volume profiling for volume: %s "
+                   "of cluster %s changed from %s to %s" % (
+                       volumes['volume%s.name' % index],
+                       NS.tendrl_context.integration_id,
+                       volume_profiling_old_value,
+                       volume_profiling_new_value))
+            instance = "volume_%s" % \
+                volumes['volume%s.name' % index]
+            event_utils.emit_event(
+                "volume_profiling_status",
+                volume_profiling_new_value,
+                msg,
+                instance,
+                'INFO',
+                tags={
+                    "entity_type": RESOURCE_TYPE_BRICK,
+                    "volume_name": volumes[
+                        'volume%s.name' % index
+                    ]
+                }
+            )
+        volume.current_job = {}
+        volume.locked_by = {}
+        volume.save(ttl=sync_ttl)
 
         # Initialize volume alert count
         try:
@@ -467,7 +534,7 @@ def sync_volumes(volumes, index, vol_options):
         NS.gluster.objects.VolumeOptions(
             vol_id=volume.vol_id,
             options=vol_opt_dict
-        ).save(ttl=SYNC_TTL)
+        ).save(ttl=sync_ttl)
 
     rebal_det = NS.gluster.objects.RebalanceDetails(
         vol_id=volumes['volume%s.id' % index],
@@ -480,7 +547,7 @@ def sync_volumes(volumes, index, vol_options):
         rebal_data=volumes['volume%s.rebalance.data' % index],
         time_left=volumes.get('volume%s.rebalance.time_left' % index),
     )
-    rebal_det.save(ttl=SYNC_TTL)
+    rebal_det.save(ttl=sync_ttl)
     georep_details.save_georep_details(volumes, index)
 
     b_index = 1
@@ -496,7 +563,8 @@ def sync_volumes(volumes, index, vol_options):
             network = NS.tendrl.objects.NodeNetwork(
                 interface=key
             ).load()
-            network_ip.extend(network.ipv4)
+            if network.ipv4:
+                network_ip.extend(network.ipv4)
     except etcd.EtcdKeyNotFound as ex:
         Event(
             ExceptionMessage(
@@ -629,7 +697,7 @@ def sync_volumes(volumes, index, vol_options):
                     'volume%s.brick%s.is_arbiter' % (index, b_index)
                 ),
             )
-            brick.save()
+            brick.save(ttl=sync_ttl)
             # sync brick device details
             brick_device_details.\
                 update_brick_device_details(
@@ -638,7 +706,8 @@ def sync_volumes(volumes, index, vol_options):
                         'volume%s.brick%s.path' % (
                             index, b_index)
                     ],
-                    devicetree
+                    devicetree,
+                    sync_ttl
                 )
 
             # Sync the brick client details
@@ -672,10 +741,86 @@ def sync_volumes(volumes, index, vol_options):
                                     index, b_index, c_index
                                 )
                             ]
-                        ).save(ttl=SYNC_TTL)
+                        ).save(ttl=sync_ttl)
                     except KeyError:
                         break
                     c_index += 1
+            sync_ttl += 4
             b_index += 1
         except KeyError:
             break
+
+
+def brick_status_alert(hostname):
+    try:
+        # fetching brick details of disconnected node
+        lock = None
+        path = "clusters/%s/Bricks/all/%s" % (
+            NS.tendrl_context.integration_id,
+            hostname
+        )
+        lock = etcd.Lock(
+            NS._int.client,
+            path
+        )
+        lock.acquire(
+            blocking=True,
+            lock_ttl=60
+        )
+        if lock.is_acquired:
+            bricks = NS.gluster.objects.Brick(
+                fqdn=hostname
+            ).load_all()
+            for brick in bricks:
+                if brick.status.lower() == BRICK_STARTED:
+                    # raise an alert for brick
+                    msg = (
+                        "Status of brick: %s "
+                        "under volume %s in cluster %s chan"
+                        "ged from %s to %s") % (
+                            brick.brick_path,
+                            brick.vol_name,
+                            NS.tendrl_context.integration_id,
+                            BRICK_STARTED.title(),
+                            BRICK_STOPPED.title()
+                        )
+                    instance = "volume_%s|brick_%s" % (
+                        brick.vol_name,
+                        brick.brick_path,
+                    )
+                    event_utils.emit_event(
+                        "brick_status",
+                        BRICK_STOPPED.title(),
+                        msg,
+                        instance,
+                        'WARNING',
+                        tags={"entity_type": RESOURCE_TYPE_BRICK,
+                              "volume_name": brick.vol_name,
+                              "node_id": brick.node_id,
+                              "fqdn": brick.hostname
+                              }
+                    )
+                    # Update brick status as stopped
+                    brick.status = BRICK_STOPPED.title()
+                    brick.save()
+                    lock.release()
+    except (
+        etcd.EtcdException,
+        KeyError,
+        ValueError,
+        AttributeError
+    ) as ex:
+        Event(
+            ExceptionMessage(
+                priority="error",
+                publisher=NS.publisher_id,
+                payload={
+                    "message": "Unable to raise an brick status "
+                               "alert for host %s" % hostname,
+                    "exception": ex
+                }
+            )
+        )
+    finally:
+        if isinstance(lock, etcd.lock.Lock) and lock.is_acquired:
+            lock.release()

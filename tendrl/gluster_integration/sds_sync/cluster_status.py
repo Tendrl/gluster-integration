@@ -1,10 +1,13 @@
 import etcd
 
 from tendrl.commons.utils import cmd_utils
-from tendrl.gluster_integration.sds_sync import event_utils
+from tendrl.commons.utils import event_utils
 
 
-def sync_cluster_status(volumes):
+RESOURCE_TYPE_VOLUME = "volume"
+
+
+def sync_cluster_status(volumes, sync_ttl):
     # Calculate status based on volumes status
     degraded_count = 0
     is_healthy = True
@@ -15,26 +18,6 @@ def sync_cluster_status(volumes):
                 is_healthy = False
             if 'degraded' in state:
                 degraded_count += 1
-
-            # Raise the alert if volume state changes
-            volume = NS.gluster.objects.Volume(
-                vol_id=vol_id
-            ).load()
-            if volume.state != "" and \
-                state != volume.state:
-                msg = "State of volume: %s " + \
-                      "changed from %s to %s" % (
-                          volume.name,
-                          volume.state,
-                          state
-                      )
-                instance = "volume_%s" % volume.name
-                event_utils.emit_event(
-                    "volume_state",
-                    state,
-                    msg,
-                    instance
-                )
 
     # Change status basd on node status
     cmd = cmd_utils.Command(
@@ -54,13 +37,32 @@ def sync_cluster_status(volumes):
         if not connected:
             is_healthy = False
 
+    cluster_gd = NS.gluster.objects.GlobalDetails().load()
+    old_status = cluster_gd.status or 'unhealthy'
+    curr_status = 'healthy' if is_healthy else 'unhealthy'
+    if curr_status != old_status:
+        msg = ("Health status of cluster: %s "
+               "changed from %s to %s") % (
+                   NS.tendrl_context.integration_id,
+                   old_status,
+                   curr_status)
+        instance = "cluster_%s" % NS.tendrl_context.integration_id
+        event_utils.emit_event(
+            "cluster_health_status",
+            curr_status,
+            msg,
+            instance,
+            'WARNING' if curr_status == 'unhealthy'
+            else 'INFO'
+        )
+
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
         status='healthy' if is_healthy else 'unhealthy',
         peer_count=peer_count,
         vol_count=len(volumes),
         volume_up_degraded=degraded_count
-    ).save()
+    ).save(ttl=sync_ttl)
 
 
 def _derive_volume_states(volumes):
@@ -88,6 +90,8 @@ def _derive_volume_states(volumes):
                             brick_name.split(":")[0],
                             brick_name.split(":_")[-1]
                         ).load()
+                        if not fetched_brick.status:
+                            fetched_brick.status = "Stopped"
                         bricks.append(fetched_brick)
                         if fetched_brick.status != "Started":
                             state += 1
@@ -132,7 +136,28 @@ def _derive_volume_states(volumes):
                     # availability state
                     if up_bricks != total_bricks:
                         out_dict[volume.vol_id] = '(partial)'
+        # Raise the alert if volume state changes
+        if volume.state != "" and \
+            out_dict[volume.vol_id] != volume.state:
+            msg = "State of volume: %s " \
+                  "changed from %s to %s" % (
+                      volume.name,
+                      volume.state,
+                      out_dict[volume.vol_id]
+                  )
+            instance = "volume_%s" % volume.name
+            event_utils.emit_event(
+                "volume_state",
+                out_dict[volume.vol_id],
+                msg,
+                instance,
+                'INFO' if out_dict[volume.vol_id] == 'up' else 'WARNING',
+                tags={"entity_type": RESOURCE_TYPE_VOLUME,
+                      "volume_name": volume.name
+                      }
+            )
         # Save the volume status
         volume.state = out_dict[volume.vol_id]
         volume.save()
+
     return out_dict

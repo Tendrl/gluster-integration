@@ -737,7 +737,61 @@ namespace.gluster:
           run: gluster.objects.Volume.atoms.CheckVolumeAvailable
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d96765
+        StartProfiling:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.vol_id
+              - Volume.volname
+          name: start volume profiling
+          run: gluster.objects.Volume.atoms.StartProfiling
+          type: Start
+          uuid: 242f6190-9b37-11e6-950d-a24fc0d96c05
+          help: Start volume profling
+        StopProfiling:
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.vol_id
+              - Volume.volname
+          name: stop volume profiling
+          run: gluster.objects.Volume.atoms.StopProfiling
+          type: Stop
+          uuid: 6190242f-9b37-11e6-950d-a24fc0d9650c
+          help: Stop volume profiling
       flows:
+        StartProfiling:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
+          atoms:
+            - gluster.objects.Volume.atoms.StartProfiling
+          help: "Start profiling on volume"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.vol_id
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+          run: gluster.objects.Volume.flows.StartProfiling
+          type: Start
+          uuid: 1951e821-7aa9-4a91-8183-e73bc8275e9b
+          version: 1
+        StopProfiling:
+          tags:
+            - "provisioner/$TendrlContext.integration_id"
+          atoms:
+            - gluster.objects.Volume.atoms.StopProfiling
+          help: "Delete Volume"
+          enabled: true
+          inputs:
+            mandatory:
+              - Volume.vol_id
+          pre_run:
+            - gluster.objects.Volume.atoms.VolumeExists
+          run: gluster.objects.Volume.flows.StopProfiling
+          type: Stop
+          uuid: 1951e821-7aa9-4a91-8183-e73bc827e9b5
+          version: 1
         DeleteVolume:
           tags:
             - "provisioner/$TendrlContext.integration_id"
@@ -993,6 +1047,12 @@ namespace.gluster:
         deleted_at:
           help: deletion time
           type: String
+        current_job:
+          help: Current job on the volume
+          type: json
+        locked_by:
+          help: job details which locks the volume
+          type: json
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/
       list: clusters/$TendrlContext.integration_id/Volumes
