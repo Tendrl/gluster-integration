@@ -1,5 +1,3 @@
 # use latest version from master branch on github
 git+https://github.com/Tendrl/commons.git@master
-# use latest gstatus from master branch on github
-git+https://github.com/gluster/gstatus.git@master
 -e .
