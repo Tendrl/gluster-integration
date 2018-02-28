@@ -48,15 +48,23 @@ class StopProfiling(flows.BaseFlow):
             volume = NS.gluster.objects.Volume(
                 vol_id=self.parameters['Volume.vol_id']
             ).load()
+            volume.current_job = {
+                'job_id': self.job_id,
+                'job_name': self.__class__.__name__,
+                'status': "failed"
+            }
             volume.locked_by = {}
-            volume.current_job['status'] = "failed"
-            volume.save()
+            volume.save(update=False)
             raise ex
 
         volume = NS.gluster.objects.Volume(
             vol_id=self.parameters['Volume.vol_id']
         ).load()
+        volume.current_job = {
+            'job_id': self.job_id,
+            'job_name': self.__class__.__name__,
+            'status': "finished"
+        }
         volume.locked_by = {}
-        volume.current_job['status'] = 'finished'
-        volume.save()
+        volume.save(update=False)
         return True

@@ -346,7 +346,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         failed_vols = []
         if cluster.volume_profiling_flag == "enable":
             for volume in volumes:
-                if volume.profiling_enabled == "True":
+                if volume.profiling_enabled == "yes":
                     continue
                 out, err, rc = cmd_utils.Command(
                     "gluster volume profile %s start" %
@@ -368,7 +368,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             cluster.volume_profiling_state = "enabled"
         if cluster.volume_profiling_flag == "disable":
             for volume in volumes:
-                if volume.profiling_enabled == "False":
+                if volume.profiling_enabled == "no":
                     continue
                 out, err, rc = cmd_utils.Command(
                     "gluster volume profile %s stop" %
@@ -391,7 +391,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         if cluster.volume_profiling_flag == "leave-as-is":
             profiling_enabled_count = 0
             for volume in volumes:
-                if volume.profiling_enabled == "True":
+                if volume.profiling_enabled == "yes":
                     profiling_enabled_count += 1
             if profiling_enabled_count == 0:
                 cluster.volume_profiling_state = "disabled"
@@ -477,9 +477,9 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
         if ('volume%s.profile_enabled' % index) in volumes:
             value = int(volumes['volume%s.profile_enabled' % index])
             if value == 1:
-                volume_profiling_new_value = "True"
+                volume_profiling_new_value = "yes"
             else:
-                volume_profiling_new_value = "False"
+                volume_profiling_new_value = "no"
         else:
             volume_profiling_new_value = None
         if volume_profiling_old_value != volume_profiling_new_value:
@@ -506,8 +506,6 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                     ]
                 }
             )
-        volume.current_job = {}
-        volume.locked_by = {}
         volume.save(ttl=sync_ttl)
 
         # Initialize volume alert count

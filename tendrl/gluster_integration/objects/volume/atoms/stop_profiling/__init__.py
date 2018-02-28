@@ -1,3 +1,5 @@
+import time
+
 from tendrl.commons import objects
 from tendrl.commons.objects import AtomExecutionFailedError
 from tendrl.commons.utils import cmd_utils
@@ -25,5 +27,12 @@ class StopProfiling(objects.BaseAtom):
                     err
                 )
             )
+        while True:
+            volume = NS.gluster.objects.Volume(
+                vol_id=vol_id
+            ).load()
+            if volume.profiling_enabled == "no":
+                break
+            time.sleep(5)
 
         return True
