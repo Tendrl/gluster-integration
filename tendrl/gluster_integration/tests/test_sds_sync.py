@@ -43,7 +43,8 @@ def test_sync_volumes(refresh, emit_event, compare, save, load, blivet):
     obj = node_context.NodeContext(
         node_id="eeebe9f5-6e43-4cf8-b321-37d648eb0510",
         fqdn="dhcp12-12.lab.abc.com",
-        tags=["provisioner/%s" % NS.tendrl_context.integration_id]
+        tags=["provisioner/%s" % NS.tendrl_context.integration_id],
+        ipv4_addr="127.0.0.1"
     )
     NS.node_context = obj
     load.return_value = obj

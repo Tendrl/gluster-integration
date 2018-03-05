@@ -1,82 +1,10 @@
 namespace.gluster:
-  flows:
-    CreateVolume:
-      tags:
-       - "provisioner/$TendrlContext.integration_id"
-      atoms:
-        - gluster.objects.Volume.atoms.Create
-      help: "Create Volume with bricks"
-      enabled: true
-      inputs:
-        mandatory:
-          - Volume.volname
-          - Volume.bricks
-        optional:
-          - Volume.replica_count
-          - Volume.disperse_count
-          - Volume.redundancy_count
-          - Volume.transport
-          - Volume.force
-          - Volume.tuned_profile
-      pre_run:
-        - gluster.objects.Volume.atoms.NamedVolumeNotExists
-      post_run:
-        - gluster.objects.Volume.atoms.CheckVolumeAvailable
-      run: gluster.flows.CreateVolume
-      type: Create
-      uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8e
-      version: 1
-    UpdateBrickStatus:
-      tags:
-       - "tendrl/integration/$TendrlContext.integration_id"
-      help: "Update brick status as down"
-      enabled: true
-      inputs:
-        mandatory:
-          - TendrlContext.integration_id
-          - Node.fqdn
-          - Brick.status
-      run: gluster.flows.UpdateBrickStatus
-      type: Update
-      uuid: 8ff1c072-ee08-4afb-bbb3-106ee188b0af
-      version: 1
-    CreateBrick:
-      tags:
-       - "provisioner/$TendrlContext.integration_id"
-      atoms:
-        - gluster.objects.Brick.atoms.Create
-      help: "Create gluster bricks that can be used by volumes"
-      enabled: true
-      inputs:
-        mandatory:
-          - Cluster.node_configuration
-        optional:
-          - Brick.disk_type
-          - Brick.disk_count
-          - Brick.stripe_size
-      run: gluster.flows.CreateBrick
-      type: Create
-      uuid: 1951e821-7aa9-4a91-8183-e73bc8275b8d
-      version: 1
-    GenerateBrickMapping:
-      tags:
-       - "provisioner/$TendrlContext.integration_id"
-      atoms:
-        - gluster.objects.Volume.atoms.GenerateBrickMapping
-      help: "Get brick mapping for a gluster volume"
-      enabled: true
-      inputs:
-        mandatory:
-          - Cluster.node_configuration
-          - Volume.brick_count
-          - Volume.subvol_size
-      run: gluster.flows.GenerateBrickMapping
-      type: Create
-      uuid: b8dd2b4a-96de-4ded-b17d-374d26ec7593
-      version: 1
   objects:
     GlobalDetails:
       attrs:
+        integration_id:
+          help: Uuid of the cluster
+          type: String
         status:
           help: status of the cluster
           type: String
@@ -99,6 +27,8 @@ namespace.gluster:
       list: clusters/$TendrlContext.integration_id/GlobalDetails
       value: clusters/$TendrlContext.integration_id/GlobalDetails
       help: Clustr global details
+      watch_attrs:
+        - status
     GlusterBrickDir:
       attrs:
         default_brick_dir:
@@ -392,7 +322,7 @@ namespace.gluster:
     Brick:
       atoms:
         Create:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Cluster.node_configuration
@@ -503,7 +433,7 @@ namespace.gluster:
     Volume:
       atoms:
         Create:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -521,7 +451,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9649c
           help: Create gluster volume
         GenerateBrickMapping:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Cluster.node_configuration
@@ -533,7 +463,7 @@ namespace.gluster:
           uuid: aa355f87-fd02-488c-bab8-2f755e2c1dfc
           help: Get brick mapping for gluster volume
         Delete:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -544,7 +474,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9650c
           help: Delete gluster volume
         Expand:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -560,7 +490,7 @@ namespace.gluster:
           uuid: b4733069-052f-48b3-8d18-9a9b08373ae2
           help: Expand gluster volume
         ValidateExpandVolumeInputs:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -576,7 +506,7 @@ namespace.gluster:
           uuid: c7a2b247-2065-49a3-af62-247ec59ab3b2
           help: Validate expand gluster volume inputs
         ValidateShrinkVolumeInputs:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -592,7 +522,7 @@ namespace.gluster:
           uuid: 984b5748-c5f1-42d4-b9e6-b3927d04cb0a
           help: Validate shrink gluster volume inputs
         Shrink:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -609,7 +539,7 @@ namespace.gluster:
           uuid: 9eadf1e3-a2be-4a3e-9f8b-584b44c66e9d
           help: Shrink gluster volume
         Start:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -619,7 +549,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9651c
           help: Start gluster volume
         Stop:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -629,7 +559,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9652c
           help: Stop gluster volume
         NamedVolumeNotExists:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -639,7 +569,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9653d
           help: check if named volume exists
         VolumeExists:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.vol_id
@@ -659,7 +589,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9654c
           help: check if volume not exists
         VolumeStarted:
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.vol_id
@@ -679,7 +609,7 @@ namespace.gluster:
           uuid: 242f6190-9b37-11e6-950d-a24fc0d9656c
           help: check if volume is stopped
         RebalanceNotRunning:
-          enabled: true
+          enabled: false
           help: check if rebalance not running
           inputs:
             mandatory:
@@ -690,7 +620,7 @@ namespace.gluster:
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d96588
         StartRebalance:
-          enabled: true
+          enabled: false
           help: start rebalance
           inputs:
             mandatory:
@@ -704,7 +634,7 @@ namespace.gluster:
           type: Start
           uuid: 242f6190-9b37-11e6-950d-a24fc0d96599
         RebalanceRunning:
-          enabled: true
+          enabled: false
           help: check if rebalance is running
           inputs:
             mandatory:
@@ -715,7 +645,7 @@ namespace.gluster:
           type: Check
           uuid: 242f6190-9b37-11e6-950d-a24fc0d96579
         StopRebalance:
-          enabled: true
+          enabled: false
           help: stop rebalance
           inputs:
             mandatory:
@@ -798,7 +728,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.Delete
           help: "Delete Volume"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -817,7 +747,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.Expand
           help: "expand volume by adding bricks"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -839,7 +769,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.Shrink
           help: "shrink volume by removing bricks"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -863,7 +793,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.Start
           help: "Start Volume"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -881,7 +811,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.Stop
           help: "Stop Volume"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -899,7 +829,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.StartRebalance
           help: "Start Volume Rebalance"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
@@ -921,7 +851,7 @@ namespace.gluster:
           atoms:
             - gluster.objects.Volume.atoms.StopRebalance
           help: "Stop Volume Rebalance"
-          enabled: true
+          enabled: false
           inputs:
             mandatory:
               - Volume.volname
