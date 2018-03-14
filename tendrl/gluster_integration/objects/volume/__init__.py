@@ -31,7 +31,7 @@ class Volume(objects.BaseObject):
         profiling_enabled=None,
         client_count=None,
         rebal_estimated_time=None,
-        deleted=False,
+        deleted=None,
         deleted_at=None,
         current_job=dict(),
         locked_by=dict(),
