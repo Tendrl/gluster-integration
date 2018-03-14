@@ -97,11 +97,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 ).load()
                 if (_cluster.status == "importing" and
                     _cluster.current_job['status'] == 'failed') or \
-                    _cluster.status == "unmanaging":
+                    _cluster.status == "unmanaging" or \
+                    _cluster.status == "expanding":
                     continue
 
-                _cluster.status = "syncing"
-                _cluster.save()
                 _cnc = NS.tendrl.objects.ClusterNodeContext(
                     node_id=NS.node_context.node_id
                 ).load()
@@ -286,7 +285,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 )
                 if _cluster.exists():
                     _cluster = _cluster.load()
-                    _cluster.status = ""
                     _cluster.last_sync = str(tendrl_now())
                     # Mark the first sync done flag
                     _cnc = NS.tendrl.objects.ClusterNodeContext(
