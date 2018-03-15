@@ -97,8 +97,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 ).load()
                 if (_cluster.status == "importing" and
                     _cluster.current_job['status'] == 'failed') or \
-                    _cluster.status == "unmanaging" or \
-                    _cluster.status == "expanding":
+                    _cluster.status == "unmanaging":
                     continue
 
                 _cnc = NS.tendrl.objects.ClusterNodeContext(
