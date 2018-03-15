@@ -112,8 +112,8 @@ namespace.gluster:
     VolumeAlertCounters:
       enabled: True
       attrs:
-        warning_count:
-          help: "Count of warning alerts for the volume"
+        alert_count:
+          help: "Count of alerts for the volume"
           type: int
         integration_id:
           help: "Id of the cluster"
