@@ -672,7 +672,6 @@ namespace.gluster:
           inputs:
             mandatory:
               - Volume.vol_id
-              - Volume.volname
           name: start volume profiling
           run: gluster.objects.Volume.atoms.StartProfiling
           type: Start
@@ -683,7 +682,6 @@ namespace.gluster:
           inputs:
             mandatory:
               - Volume.vol_id
-              - Volume.volname
           name: stop volume profiling
           run: gluster.objects.Volume.atoms.StopProfiling
           type: Stop
