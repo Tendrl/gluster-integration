@@ -423,7 +423,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 return
             stored_volume_status = _volume.status
             current_status = volumes['volume%s.status' % index]
-            if stored_volume_status != "" and \
+            if stored_volume_status not in [None, ""] and \
                 current_status != stored_volume_status:
                 msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
@@ -470,7 +470,15 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
-        volume_profiling_old_value = volume.profiling_enabled
+        if NS.gluster.objects.Volume(
+            vol_id=volumes['volume%s.id' % index]
+        ).exists():
+            existing_vol = NS.gluster.objects.Volume(
+                vol_id=volumes['volume%s.id' % index]
+            ).load()
+            volume_profiling_old_value = existing_vol.profiling_enabled
+        else:
+            volume_profiling_old_value = volume.profiling_enabled
         if ('volume%s.profile_enabled' % index) in volumes:
             value = int(volumes['volume%s.profile_enabled' % index])
             if value == 1:
@@ -479,7 +487,8 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 volume_profiling_new_value = "no"
         else:
             volume_profiling_new_value = None
-        if volume_profiling_old_value != volume_profiling_new_value:
+        if volume_profiling_old_value not in [None, ""] and \
+            volume_profiling_old_value != volume_profiling_new_value:
             volume.profiling_enabled = volume_profiling_new_value
             # Raise alert for the same value change
             msg = ("Value of volume profiling for volume: %s "
