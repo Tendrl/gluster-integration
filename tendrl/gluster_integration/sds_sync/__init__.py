@@ -79,6 +79,20 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     {"message": "Failed to sync cluster network details"}
                 )
 
+        if NS.tendrl_context.integration_id:
+            # Initialize alert node alert count
+            try:
+                key = 'clusters/%s/nodes/%s/alert_counters' % (
+                    NS.tendrl_context.integration_id,
+                    NS.node_context.node_id
+                )
+                etcd_utils.read(key)
+            except(etcd.EtcdException)as ex:
+                if type(ex) == etcd.EtcdKeyNotFound:
+                    NS.tendrl.objects.ClusterNodeAlertCounters(
+                        node_id=NS.node_context.node_id,
+                        integration_id=NS.tendrl_context.integration_id
+                    ).save()
         _sleep = 0
         while not self._complete.is_set():
             # To detect out of band deletes
