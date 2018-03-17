@@ -27,12 +27,24 @@ class StopProfiling(objects.BaseAtom):
                     err
                 )
             )
+        loop_count = 0
         while True:
-            volume = NS.gluster.objects.Volume(
-                vol_id=vol_id
-            ).load()
-            if volume.profiling_enabled == "no":
+            if loop_count >= 24:
+                raise AtomExecutionFailedError(
+                    "Volume profiling not yet marked disabled "
+                    "for volume: %s in cluster: %s. Timing out" % (
+                        volume.name,
+                        NS.tendrl_context.integration_id
+                    )
+                )
+            out, err, rc = cmd_utils.Command(
+                "gluster volume profile %s info" % volume.name
+            ).run()
+            if rc == 1:
                 break
-            time.sleep(5)
-
+            else:
+                time.sleep(5)
+                loop_count += 1
+        volume.profiling_enabled = "no"
+        volume.save()
         return True
