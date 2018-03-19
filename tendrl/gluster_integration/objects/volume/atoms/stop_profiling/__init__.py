@@ -31,8 +31,8 @@ class StopProfiling(objects.BaseAtom):
         while True:
             if loop_count >= 24:
                 raise AtomExecutionFailedError(
-                    "Volume profiling not yet marked disabled "
-                    "for volume: %s in cluster: %s. Timing out" % (
+                    "Could not disable for volume: %s "
+                    "under cluster: %s. Timed out" % (
                         volume.name,
                         NS.tendrl_context.integration_id
                     )

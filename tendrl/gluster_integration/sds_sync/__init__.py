@@ -97,7 +97,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 ).load()
                 if (_cluster.status == "importing" and
                     _cluster.current_job['status'] == 'failed') or \
-                    _cluster.status == "unmanaging":
+                    _cluster.status == "unmanaging" or \
+                    _cluster.status == "set_volume_profiling":
                     continue
 
                 _cnc = NS.tendrl.objects.ClusterNodeContext(
@@ -347,8 +348,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         # volume level values
         first_sync_done = etcd_utils.read(
             "/clusters/%s/nodes/%s/NodeContext/first_sync_done" %
-            (NS.tendrl_context.integration_id,
-             NS.node_context.node_id)
+            (NS.tendrl_context.integration_id, NS.node_context.node_id)
         ).value
         if first_sync_done in [None, "no", ""]:
             failed_vols = []

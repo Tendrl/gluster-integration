@@ -23,11 +23,31 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
             raise FlowExecutionFailedError(
                 "Invalid value of Cluster.volume_profiling_flag "
                 "(%s) while enable/disable volume profiling for"
-                "cluster (%s)" % (
+                "cluster (%s). Valid values are enable/disable" %
+                (
                     action,
                     NS.tendrl_context.integration_id
                 )
             )
+
+        _cluster = NS.tendrl.objects.Cluster(
+            integration_id=NS.tendrl_context.integration_id
+        ).load()
+        _lock_details = {
+            'node_id': NS.node_context.node_id,
+            'tags': NS.node_context.tags,
+            'type': NS.type,
+            'job_name': self.__class__.__name__,
+            'job_id': self.job_id
+        }
+        _cluster.locked_by = _lock_details
+        _cluster.status = "set_volume_profiling"
+        _cluster.current_job = {
+            'job_id': self.job_id,
+            'job_name': self.__class__.__name__,
+            'status': 'in_progress'
+        }
+        _cluster.save()
 
         volumes = NS.gluster.objects.Volume().load_all() or []
         failed_vols = []
@@ -36,16 +56,16 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
                 "gluster volume profile %s %s" %
                 (volume.name, VOL_PROFILE_ACTIONS[action])
             ).run()
-            if err or rc != 0:
+            if err != "" or rc != 0:
                 logger.log(
-                    "INFO",
+                    "error",
                     NS.publisher_id,
                     {
                         "message": "%s profiling failed for volume: %s" %
                         (action, volume.name)
                     },
-                    flow_id=self.parameters["flow_id"],
-                    job_id=self.parameters["job_id"]
+                    job_id=self.parameters["job_id"],
+                    flow_id=self.parameters["flow_id"]
                 )
                 failed_vols.append(volume.name)
             else:
@@ -55,11 +75,26 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
                     volume.profiling_enabled = "no"
                 volume.save()
         if len(failed_vols) > 0:
-            raise FlowExecutionFailedError(
-                "%s profiling failed for volumes %s" % (
-                    action,
-                    str(failed_vols)
-                )
+            logger.log(
+                "error",
+                NS.publisher_id,
+                {
+                    "message": "%s profiling failed for "
+                    "volumes: %s" % (action, str(failed_vols))
+                },
+                job_id=self.parameters['job_id'],
+                flow_id=self.parameters["flow_id"]
             )
 
+        _cluster = NS.tendrl.objects.Cluster(
+            integration_id=NS.tendrl_context.integration_id
+        ).load()
+        _cluster.status = ""
+        _cluster.locked_by = {}
+        _cluster.current_job = {
+            'status': "finished",
+            'job_name': self.__class__.__name__,
+            'job_id': self.job_id
+        }
+        _cluster.save()
         return True
