@@ -8,9 +8,19 @@ RESOURCE_TYPE_VOLUME = "volume"
 
 
 def sync_cluster_status(volumes, sync_ttl):
-    # Calculate status based on volumes status
     degraded_count = 0
     is_healthy = True
+
+    # Check if there is a failed import cluster
+    # flow, mark the cluster status as unhealthy
+    _cluster = NS.tendrl.objects.Cluster(
+        integration_id=NS.tendrl_context.integration_id
+    ).load()
+    if _cluster.current_job.get('job_name', '') == "ImportCluster" and \
+        _cluster.current_job.get('status', '') == "failed":
+        is_healthy = False
+
+    # Calculate status based on volumes status
     if len(volumes) > 0:
         volume_states = _derive_volume_states(volumes)
         for vol_id, state in volume_states.iteritems():
