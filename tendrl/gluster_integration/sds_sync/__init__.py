@@ -276,7 +276,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     all_volumes = NS.gluster.objects.Volume().load_all() or []
                     volumes = []
                     for volume in all_volumes:
-                        if not str(volume.deleted).lower() == "true":
+                        if not str(volume.deleted).lower() == "true" or \
+                            volume.current_job.get('status', '') \
+                            in ['', 'finished', 'failed']:
                             volumes.append(volume)
                     cluster_status.sync_cluster_status(volumes, SYNC_TTL + 350)
                     utilization.sync_utilization_details(volumes)
@@ -312,7 +314,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     if _cnc.first_sync_done in [None, "no"]:
                         _cnc.first_sync_done = "yes"
                         _cnc.save()
-                    _cluster.save()
+                    if _cluster.current_job.get('status', '') in \
+                        ['', 'finished', 'failed']:
+                        _cluster.save()
                     # Initialize alert count
                     try:
                         alerts_count_key = '/clusters/%s/alert_counters' % (
