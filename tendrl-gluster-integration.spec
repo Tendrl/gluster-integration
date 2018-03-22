@@ -1,5 +1,5 @@
 Name: tendrl-gluster-integration
-Version: 1.6.1
+Version: 1.6.2
 Release: 1%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
@@ -63,6 +63,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Thu Mar 22 2018 Rohan Kanade <rkanade@redhat.com> - 1.6.2-1
+- Bugfixes (https://github.com/Tendrl/gluster-integration/milestone/4)
+
 * Wed Mar 07 2018 Rohan Kanade <rkanade@redhat.com> - 1.6.1-1
 - Auto expand clusters managed by Tendrl
 
