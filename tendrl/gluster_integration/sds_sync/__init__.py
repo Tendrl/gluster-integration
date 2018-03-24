@@ -314,8 +314,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     if _cnc.first_sync_done in [None, "no"]:
                         _cnc.first_sync_done = "yes"
                         _cnc.save()
-                    if _cluster.current_job.get('status', '') in \
-                        ['', 'finished', 'failed']:
+                    if _cluster.current_job.get(
+                        'status', ''
+                    ) in ['', 'finished', 'failed'] and \
+                        _cluster.status in [None, ""]:
                         _cluster.save()
                     # Initialize alert count
                     try:
