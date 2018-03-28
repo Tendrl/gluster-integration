@@ -76,21 +76,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     NS.publisher_id,
                     {"message": "Failed to sync cluster network details"}
                 )
-
-        if NS.tendrl_context.integration_id:
-            # Initialize alert node alert count
-            try:
-                key = 'clusters/%s/nodes/%s/alert_counters' % (
-                    NS.tendrl_context.integration_id,
-                    NS.node_context.node_id
-                )
-                etcd_utils.read(key)
-            except(etcd.EtcdException)as ex:
-                if type(ex) == etcd.EtcdKeyNotFound:
-                    NS.tendrl.objects.ClusterNodeAlertCounters(
-                        node_id=NS.node_context.node_id,
-                        integration_id=NS.tendrl_context.integration_id
-                    ).save()
         _sleep = 0
         while not self._complete.is_set():
             # To detect out of band deletes
@@ -294,7 +279,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             "sync_interval", 10
                         )) + len(volumes) * 4
                     )
-
+                    # update alert count
+                    update_cluster_alert_count()
                 # check and enable volume profiling
                 if "provisioner/%s" % NS.tendrl_context.integration_id in \
                     NS.node_context.tags:
@@ -318,17 +304,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     ) in ['', 'finished', 'failed'] and \
                         _cluster.status in [None, ""]:
                         _cluster.save()
-                    # Initialize alert count
-                    try:
-                        alerts_count_key = '/clusters/%s/alert_counters' % (
-                            NS.tendrl_context.integration_id)
-                        etcd_utils.read(alerts_count_key)
-                    except(etcd.EtcdException)as ex:
-                        if type(ex) == etcd.EtcdKeyNotFound:
-                            NS.tendrl.objects.ClusterAlertCounters(
-                                integration_id=NS.tendrl_context.integration_id
-                            ).save()
-
             except Exception as ex:
                 Event(
                     ExceptionMessage(
@@ -542,21 +517,6 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 }
             )
         volume.save(ttl=sync_ttl)
-
-        # Initialize volume alert count
-        try:
-            volume_alert_count_key = '/clusters/%s/Volumes/%s/'\
-                                     'alert_counters' % (
-                                         NS.tendrl_context.integration_id,
-                                         volumes['volume%s.id' % index]
-                                     )
-            etcd_utils.read(volume_alert_count_key)
-        except(etcd.EtcdException)as ex:
-            if type(ex) == etcd.EtcdKeyNotFound:
-                NS.gluster.objects.VolumeAlertCounters(
-                    integration_id=NS.tendrl_context.integration_id,
-                    volume_id=volumes['volume%s.id' % index]
-                ).save()
         # Save the default values of volume options
         vol_opt_dict = {}
         for opt_count in \
@@ -861,3 +821,59 @@ def brick_status_alert(hostname):
     finally:
         if isinstance(lock, etcd.lock.Lock) and lock.is_acquired:
             lock.release()
+
+
+def update_cluster_alert_count():
+    cluster_alert_count = 0
+    severity = ["WARNING", "CRITICAL"]
+    try:
+        alert_counts = find_volume_id()
+        alerts_arr = NS.tendrl.objects.ClusterAlert(
+            tags={'integration_id': NS.tendrl_context.integration_id}
+        ).load_all()
+        for alert in alerts_arr:
+            alert.tags = json.loads(alert.tags)
+            if alert.severity in severity:
+                cluster_alert_count += 1
+                if alert.resource in NS.gluster.objects.VolumeAlertCounters(
+                        )._defs['relationship'][alert.alert_type.lower()]:
+                    vol_name = alert.tags.get('volume_name', None)
+                    if vol_name:
+                        if vol_name in alert_counts.keys():
+                            alert_counts[vol_name]['alert_count'] += 1
+        # Update cluster alert count
+        NS.tendrl.objects.ClusterAlertCounters(
+            integration_id=NS.tendrl_context.integration_id,
+            alert_count=cluster_alert_count
+        ).save()
+        # Update volume alert count
+        for volume in alert_counts:
+            NS.gluster.objects.VolumeAlertCounters(
+                integration_id=NS.tendrl_context.integration_id,
+                alert_count=alert_counts[volume]['alert_count'],
+                volume_id=alert_counts[volume]['vol_id']
+            ).save()
+    except etcd.EtcdException as ex:
+        logger.log(
+            "debug",
+            NS.publisher_id,
+            {"message": "Unable to update alert count.err: %s" % ex}
+        )
+
+
+def find_volume_id():
+    alert_counts = {}
+    volumes = etcd_utils.read(
+        "clusters/%s/Volumes" % NS.tendrl_context.integration_id
+    )
+    for volume in volumes.leaves:
+        try:
+            volume_id = volume.key.split("/")[-1]
+            key = volume.key + "/name"
+            vol_name = etcd_utils.read(key).value
+            alert_counts[vol_name] = {}
+            alert_counts[vol_name]['vol_id'] = volume_id
+            alert_counts[vol_name]['alert_count'] = 0
+        except etcd.EtcdKeyNotFound:
+            continue
+    return alert_counts
