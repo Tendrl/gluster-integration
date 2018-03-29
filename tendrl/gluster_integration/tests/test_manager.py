@@ -66,16 +66,6 @@ def test_constructor(monkeypatch):
     mock.Mock(return_value=None)
 )
 @mock.patch(
-    'tendrl.gluster_integration.gdeploy_wrapper.manager'
-    '.ProvisioningManager.__init__',
-    mock.Mock(return_value=None)
-)
-@mock.patch(
-    'tendrl.gluster_integration.gdeploy_wrapper.manager'
-    '.ProvisioningManager.get_plugin',
-    mock.Mock(return_value=None)
-)
-@mock.patch(
     'tendrl.gluster_integration.sds_sync'
     '.GlusterIntegrationSdsSyncStateThread.__init__',
     mock.Mock(return_value=None)
@@ -113,7 +103,6 @@ def test_main(monkeypatch):
     assert NS.publisher_id == "gluster_integration"
     assert NS.state_sync_thread is not None
     assert NS.message_handler_thread is not None
-    assert NS.gdeploy_plugin is None
 
     with mock.patch.object(GlusterIntegrationManager, 'start') \
         as manager_start:
