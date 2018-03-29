@@ -827,7 +827,7 @@ def update_cluster_alert_count():
     cluster_alert_count = 0
     severity = ["WARNING", "CRITICAL"]
     try:
-        alert_counts = find_volume_id()
+        alert_counts = get_volume_alert_counts()
         alerts_arr = NS.tendrl.objects.ClusterAlert(
             tags={'integration_id': NS.tendrl_context.integration_id}
         ).load_all()
@@ -838,22 +838,21 @@ def update_cluster_alert_count():
                 if alert.resource in NS.gluster.objects.VolumeAlertCounters(
                         )._defs['relationship'][alert.alert_type.lower()]:
                     vol_name = alert.tags.get('volume_name', None)
-                    if vol_name:
-                        if vol_name in alert_counts.keys():
-                            alert_counts[vol_name]['alert_count'] += 1
+                    if vol_name and vol_name in alert_counts.keys():
+                        alert_counts[vol_name]['alert_count'] += 1
         # Update cluster alert count
         NS.tendrl.objects.ClusterAlertCounters(
             integration_id=NS.tendrl_context.integration_id,
             alert_count=cluster_alert_count
         ).save()
         # Update volume alert count
-        for volume in alert_counts:
+        for volume, vol_dict in alert_counts.iteritems():
             NS.gluster.objects.VolumeAlertCounters(
                 integration_id=NS.tendrl_context.integration_id,
-                alert_count=alert_counts[volume]['alert_count'],
-                volume_id=alert_counts[volume]['vol_id']
+                alert_count=vol_dict['alert_count'],
+                volume_id=vol_dict['vol_id']
             ).save()
-    except etcd.EtcdException as ex:
+    except (etcd.EtcdException, AttributeError) as ex:
         logger.log(
             "debug",
             NS.publisher_id,
@@ -861,19 +860,11 @@ def update_cluster_alert_count():
         )
 
 
-def find_volume_id():
+def get_volume_alert_counts():
     alert_counts = {}
-    volumes = etcd_utils.read(
-        "clusters/%s/Volumes" % NS.tendrl_context.integration_id
-    )
-    for volume in volumes.leaves:
-        try:
-            volume_id = volume.key.split("/")[-1]
-            key = volume.key + "/name"
-            vol_name = etcd_utils.read(key).value
-            alert_counts[vol_name] = {}
-            alert_counts[vol_name]['vol_id'] = volume_id
-            alert_counts[vol_name]['alert_count'] = 0
-        except etcd.EtcdKeyNotFound:
-            continue
+    volumes = NS.gluster.objects.Volume().load_all()
+    for volume in volumes:
+        alert_counts[volume.name] = {'vol_id': volume.vol_id,
+                                     'alert_count': 0
+                                     }
     return alert_counts
