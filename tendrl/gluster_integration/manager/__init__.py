@@ -8,8 +8,6 @@ from tendrl.commons import TendrlNS
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import log_utils as logger
 from tendrl import gluster_integration
-from tendrl.gluster_integration.gdeploy_wrapper.manager import \
-    ProvisioningManager
 from tendrl.gluster_integration.message.gluster_native_message_handler\
     import GlusterNativeMessageHandler
 from tendrl.gluster_integration import sds_sync
@@ -63,8 +61,6 @@ def main():
     NS.gluster.definitions.save()
     NS.gluster.config.save()
 
-    pm = ProvisioningManager("GdeployPlugin")
-    NS.gdeploy_plugin = pm.get_plugin()
     if NS.config.data.get("with_internal_profiling", False):
         from tendrl.commons import profiler
         profiler.start()
