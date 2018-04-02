@@ -168,8 +168,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     disconnected_hosts = []
                     while True:
                         try:
-                            peer = NS.gluster.\
-                                objects.Peer(
+                            peer = NS.tendrl.\
+                                objects.GlusterPeer(
                                     peer_uuid=peers['peer%s.uuid' % index],
                                     hostname=peers[
                                         'peer%s.primary_hostname' % index
@@ -178,17 +178,18 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     connected=peers['peer%s.connected' % index]
                                 )
                             try:
-                                stored_peer_status = NS._int.client.read(
-                                    "clusters/%s/Peers/%s/connected" % (
-                                        NS.tendrl_context.integration_id,
-                                        peers['peer%s.uuid' % index]
-                                    )
+                                stored_peer_status = etcd_utils.read(
+                                    "clusters/%s/nodes/%s/Peers/%s/connected"
+                                    % (NS.tendrl_context.integration_id,
+                                       NS.node_context.node_id,
+                                       peers['peer%s.uuid' % index]
+                                       )
                                 ).value
                                 current_status = peers[
                                     'peer%s.connected' % index
                                 ]
                                 if stored_peer_status != "" and \
-                                    current_status != stored_peer_status:
+                                        current_status != stored_peer_status:
                                     msg = (
                                         "Status of peer: %s in cluster %s "
                                         "changed from %s to %s"
@@ -216,7 +217,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     # Disconnected host name to
                                     # raise brick alert
                                     if current_status.lower() == \
-                                        "disconnected":
+                                            "disconnected":
                                         disconnected_hosts.append(
                                             peers[
                                                 'peer%s.primary_hostname' %
