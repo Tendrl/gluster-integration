@@ -2,7 +2,6 @@ import etcd
 
 from tendrl.commons import objects
 from tendrl.commons.utils import log_utils as logger
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class Shrink(objects.BaseAtom):
@@ -11,7 +10,9 @@ class Shrink(objects.BaseAtom):
 
     def run(self):
         args = {}
-        vol = Volume(vol_id=self.parameters['Volume.vol_id']).load()
+        vol = NS.gluster.objects.Volume(
+            vol_id=self.parameters['Volume.vol_id']
+        ).load()
         if self.parameters.get('Volume.replica_count') is not None:
             args.update({
                 "replica_count": self.parameters.get('Volume.replica_count')

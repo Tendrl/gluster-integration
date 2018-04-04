@@ -2,7 +2,6 @@ import etcd
 
 from tendrl.commons import objects
 from tendrl.commons.utils import log_utils as logger
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class NamedVolumeNotExists(objects.BaseAtom):
@@ -28,7 +27,7 @@ class NamedVolumeNotExists(objects.BaseAtom):
             return True
 
         for volume in volumes._children:
-            fetched_volume = Volume(
+            fetched_volume = NS.gluster.objects.Volume(
                 vol_id=volume['key'].split('/')[-1]
             ).load()
             if fetched_volume.name == \

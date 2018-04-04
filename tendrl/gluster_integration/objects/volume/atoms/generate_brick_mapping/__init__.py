@@ -1,7 +1,6 @@
 import json
 
 from tendrl.commons import objects
-from tendrl.commons.objects.job import Job
 from tendrl.commons.utils import log_utils as logger
 
 
@@ -64,7 +63,9 @@ class GenerateBrickMapping(objects.BaseAtom):
                               len(value),
                               brick_count
                           )
-                job = Job(job_id=self.parameters["job_id"]).load()
+                job = NS.tendrl.objects.Job(
+                    job_id=self.parameters["job_id"]
+                ).load()
                 res = {"message": message, "result": [[]], "optimal": False}
                 job.output["GenerateBrickMapping"] = json.dumps(res)
                 job.save()
@@ -81,7 +82,9 @@ class GenerateBrickMapping(objects.BaseAtom):
             message = "Total bricks available %s less than subvol_size %s" % (
                 len(brick_list), subvol_size
             )
-            job = Job(job_id=self.parameters["job_id"]).load()
+            job = NS.tendrl.objects.Job(
+                job_id=self.parameters["job_id"]
+            ).load()
             res = {"message": message, "result": [[]], "optimal": False}
             job.output["GenerateBrickMapping"] = json.dumps(res)
             job.save()
@@ -112,7 +115,9 @@ class GenerateBrickMapping(objects.BaseAtom):
 
         # Write the result back to the job
 
-        job = Job(job_id=self.parameters["job_id"]).load()
+        job = NS.tendrl.objects.Job(
+            job_id=self.parameters["job_id"]
+        ).load()
         res = {"message": message, "result": result, "optimal": optimal}
         job.output["GenerateBrickMapping"] = json.dumps(res)
         job.save()
