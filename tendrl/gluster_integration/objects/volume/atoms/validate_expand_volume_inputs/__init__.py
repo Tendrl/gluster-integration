@@ -2,7 +2,6 @@ import etcd
 
 from tendrl.commons import objects
 from tendrl.commons.utils import log_utils as logger
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class ValidateExpandVolumeInputs(objects.BaseAtom):
@@ -22,7 +21,7 @@ class ValidateExpandVolumeInputs(objects.BaseAtom):
             integration_id=NS.tendrl_context.integration_id
         )
         try:
-            fetched_volume = Volume(
+            fetched_volume = NS.gluster.objects.Volume(
                 vol_id=self.parameters['Volume.vol_id']
             ).load()
         except etcd.EtcdKeyNotFound:

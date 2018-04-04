@@ -5,7 +5,6 @@ import etcd
 from tendrl.commons import objects
 from tendrl.commons.objects import AtomExecutionFailedError
 from tendrl.commons.utils import log_utils as logger
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class CheckVolumeAvailable(objects.BaseAtom):
@@ -26,7 +25,7 @@ class CheckVolumeAvailable(objects.BaseAtom):
 
             if volumes:
                 for entry in volumes.leaves:
-                    volume = Volume(
+                    volume = NS.gluster.objects.Volume(
                         vol_id=entry.key.split("Volumes/")[-1]
                     ).load()
                     if volume.name == self.parameters['Volume.volname']:
