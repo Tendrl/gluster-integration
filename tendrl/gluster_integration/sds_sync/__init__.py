@@ -828,10 +828,10 @@ def update_cluster_alert_count():
     severity = ["WARNING", "CRITICAL"]
     try:
         alert_counts = get_volume_alert_counts()
-        alerts_arr = NS.tendrl.objects.ClusterAlert(
+        alerts = NS.tendrl.objects.ClusterAlert(
             tags={'integration_id': NS.tendrl_context.integration_id}
         ).load_all()
-        for alert in alerts_arr:
+        for alert in alerts:
             alert.tags = json.loads(alert.tags)
             if alert.severity in severity:
                 cluster_alert_count += 1
