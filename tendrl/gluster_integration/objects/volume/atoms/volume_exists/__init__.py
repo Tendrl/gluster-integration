@@ -1,6 +1,5 @@
 from tendrl.commons import objects
 from tendrl.commons.utils import log_utils as logger
-from tendrl.gluster_integration.objects.volume import Volume
 
 
 class VolumeExists(objects.BaseAtom):
@@ -17,7 +16,9 @@ class VolumeExists(objects.BaseAtom):
             flow_id=self.parameters["flow_id"],
             integration_id=NS.tendrl_context.integration_id
         )
-        if Volume(vol_id=self.parameters['Volume.vol_id']).exists():
+        if NS.gluster.objects.Volume(
+            vol_id=self.parameters['Volume.vol_id']
+        ).exists():
             return True
         else:
             logger.log(

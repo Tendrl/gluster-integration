@@ -9,8 +9,6 @@ import etcd
 
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
-from tendrl.commons.objects.cluster_alert_counters import \
-    ClusterAlertCounters
 from tendrl.commons import sds_sync
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
@@ -327,7 +325,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                         etcd_utils.read(alerts_count_key)
                     except(etcd.EtcdException)as ex:
                         if type(ex) == etcd.EtcdKeyNotFound:
-                            ClusterAlertCounters(
+                            NS.tendrl.objects.ClusterAlertCounters(
                                 integration_id=NS.tendrl_context.integration_id
                             ).save()
 

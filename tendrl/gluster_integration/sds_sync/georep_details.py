@@ -1,10 +1,6 @@
 import etcd
 
 from tendrl.commons.utils import event_utils
-from tendrl.gluster_integration.objects.geo_replication_pair\
-    import GeoReplicationPair
-from tendrl.gluster_integration.objects.geo_replication_session\
-    import GeoReplicationSession
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSessionStatus
 
@@ -215,7 +211,7 @@ def aggregate_session_status():
                 paused_count = 0
                 created_count = 0
                 for element in pairs.leaves:
-                    pair = GeoReplicationPair(
+                    pair = NS.gluster.objects.GeoReplicationPair(
                         vol_id=vol_id,
                         session_id=session_id,
                         pair=element.key.split("pairs/")[-1]
@@ -243,9 +239,10 @@ def aggregate_session_status():
                     session_status = georep_status.PAUSED
                 else:
                     session_status = georep_status.PARTIAL
-                geo_replication_session = GeoReplicationSession(
-                    vol_id=vol_id,
-                    session_id=session_id,
-                    session_status=session_status
-                )
+                geo_replication_session = \
+                    NS.gluster.objects.GeoReplicationSession(
+                        vol_id=vol_id,
+                        session_id=session_id,
+                        session_status=session_status
+                    )
                 geo_replication_session.save()
