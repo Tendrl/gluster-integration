@@ -1,5 +1,7 @@
 import etcd
 
+from tendrl.commons.utils import etcd_utils
+
 
 def sync_volume_connections(volumes):
     for volume in volumes:
@@ -7,7 +9,7 @@ def sync_volume_connections(volumes):
         vol_connections = 0
         while True:
             try:
-                subvol = NS._int.client.read(
+                subvol = etcd_utils.read(
                     "clusters/%s/Volumes/%s/Bricks/subvolume%s" % (
                         NS.tendrl_context.integration_id,
                         volume.vol_id,

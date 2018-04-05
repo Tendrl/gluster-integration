@@ -1,6 +1,7 @@
 import etcd
 
 from tendrl.commons.utils import cmd_utils
+from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import event_utils
 
 
@@ -47,7 +48,9 @@ def sync_cluster_status(volumes, sync_ttl):
         if not connected:
             is_healthy = False
 
-    cluster_gd = NS.gluster.objects.GlobalDetails().load()
+    cluster_gd = NS.gluster.objects.GlobalDetails(
+        integration_id=NS.tendrl_context.integration_id
+    ).load()
     old_status = cluster_gd.status or 'unhealthy'
     curr_status = 'healthy' if is_healthy else 'unhealthy'
     if curr_status != old_status:
@@ -67,6 +70,7 @@ def sync_cluster_status(volumes, sync_ttl):
 
     # Persist the cluster status
     NS.gluster.objects.GlobalDetails(
+        integration_id=NS.tendrl_context.integration_id,
         status='healthy' if is_healthy else 'unhealthy',
         peer_count=peer_count,
         vol_count=len(volumes),
@@ -85,7 +89,7 @@ def _derive_volume_states(volumes):
             subvol_states = []
             while True:
                 try:
-                    subvol = NS._int.client.read(
+                    subvol = etcd_utils.read(
                         "clusters/%s/Volumes/%s/Bricks/subvolume%s" % (
                             NS.tendrl_context.integration_id,
                             volume.vol_id,

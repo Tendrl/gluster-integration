@@ -91,3 +91,6 @@ class Brick(objects.BaseObject):
             self.brick_dir
         )
         return super(Brick, self).render()
+
+    def on_change(self, attr, prev_value, current_value):
+        return
