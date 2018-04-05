@@ -69,33 +69,6 @@ namespace.gluster:
       list: clusters/$TendrlContext.integration_id/Utilization
       value: clusters/$TendrlContext.integration_id/Utilization
       help: Cluster utilization
-    Peer:
-      enabled: true
-      attrs:
-        hostname:
-          help: "Gluster Peer hostname"
-          type: String
-        peer_uuid:
-          help: "Gluster Peer uuid"
-          type: String
-        state:
-          help: "Gluster Peer state"
-          type: String
-        connected:
-          help: Connected status of peer
-          type: String
-        update:
-          help: "Last Peer update time"
-          type: String
-        deleted:
-          help: if the entity is deleted
-          type: Boolean
-        deleted_at:
-          help: deletion time
-          type: String
-      value: clusters/$TendrlContext.integration_id/Peers/$Peer.peer_uuid
-      list: clusters/$TendrlContext.integration_id/Peers
-      help: Gluster cluster peers
     SyncObject:
       attrs:
         cluster_id:
@@ -105,7 +78,7 @@ namespace.gluster:
           help: raw data
           type: String
       enabled: true
-      value: clusters/$TendrlContext.integration_id/raw_map/
+      value: clusters/$TendrlContext.integration_id/nodes/$NodeContext.node_id/raw_map/
       list: clusters/TendrlContext.integration_id/TendrlContext/raw_map/
       help: gluster cluster details
     VolumeOptions:
