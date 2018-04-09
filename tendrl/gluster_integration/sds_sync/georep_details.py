@@ -64,8 +64,8 @@ def save_georep_details(volumes, index):
                 ]
                 if fetched_pair_status != pair_status and \
                     pair_status.lower() == 'faulty':
-                    msg = ("georep status of pair: %s "
-                           "of volume %s is faulty") % (
+                    msg = ("Geo-replication between %s "
+                           "and %s is faulty") % (
                                readable_pair_name,
                                volumes['volume%s.name' % index])
                     instance = "volume_%s|georep_%s" % (
@@ -84,8 +84,8 @@ def save_georep_details(volumes, index):
                     )
                 if fetched_pair_status.lower() == 'faulty' and \
                     pair_status.lower() in ['active', 'passive']:
-                    msg = ("georep status of pair: %s "
-                           "of volume %s is %s now") % (
+                    msg = ("Geo-replication between %s "
+                           "and %s is %s") % (
                                readable_pair_name,
                                volumes['volume%s.name' % index],
                                pair_status)
