@@ -2,6 +2,7 @@ import blivet
 import json
 import re
 import subprocess
+import socket
 import threading
 import time
 
@@ -581,8 +582,8 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             hostname = volumes[
                 'volume%s.brick%s.hostname' % (index, b_index)
             ]
-            if (NS.node_context.fqdn != hostname) and (
-                hostname not in network_ip):
+            if socket.gethostbyname(NS.node_context.fqdn) != \
+                    socket.gethostbyname(hostname):
                 b_index += 1
                 continue
             sub_vol_size = (int(
