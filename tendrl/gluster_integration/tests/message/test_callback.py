@@ -2,6 +2,7 @@ import maps
 from mock import MagicMock
 from mock import patch
 import os
+import socket
 import subprocess
 import time
 
@@ -512,11 +513,13 @@ def test_peer_detach(sleep):
 @patch.object(time, "sleep")
 @patch.object(BaseObject, "load_all")
 @patch.object(BaseObject, "save")
-def test_volume_delete(save, load_all, sleep):
+@patch.object(BaseObject, "load")
+def test_volume_delete(load, save, load_all, sleep):
     init()
     keys = maps.NamedDict(
         key="sub_vol1/dhcp123-12.lab.abc.com:|gluster|b1"
     )
+    load.return_value = maps.NamedDict(brick_path="/gluster/b1")
     save.return_value = True
     obj = NS.gluster.objects.Volume()
     obj.name = "v1"
@@ -530,7 +533,7 @@ def test_volume_delete(save, load_all, sleep):
              "ts": 1486634392,
              "nodeid": "0f5b4b99-fa4a-4b8f-be52-770b42879d67"
              }
-    with patch.object(NS._int.client, "read") as read:
+    with patch.object(etcd_utils, "read") as read:
         read.return_value = maps.NamedDict(leaves=[keys], value="/gluster/b1")
         with patch.object(NS._int.wclient, "delete") as delete:
             delete.return_value = True
@@ -553,12 +556,25 @@ def test_volume_delete(save, load_all, sleep):
 @patch.object(etcd_utils, "write")
 @patch.object(etcd_utils, "refresh")
 @patch.object(BaseObject, "load")
-def test_volume_remove_brick_commit(load, refresh, write, sleep):
+@patch.object(etcd_utils, "read")
+@patch.object(socket, "gethostbyname")
+def test_volume_remove_brick_commit(
+    hostbyname, read, load, refresh, write, sleep
+):
+    hostbyname.return_value = "127.0.0.1"
+    read.return_value = maps.NamedDict(
+        value="0f5b4b99-fa4a-4b8f-be52-770b42879d67"
+    )
     sleep.return_value = True
     write.return_value = True
     refresh.return_value = True
     obj = NS.gluster.objects.Brick("dhcp123-12.lab.abc.com")
     obj.vol_id = "0f5b4b99-fa4a-4b8f-be52-770b42879d67"
+    obj.fqdn = "127.0.0.1"
+    obj.ipv4_addr = "127.0.0.1"
+    obj.tags = "127.0.0.1"
+    obj.sync_status = ""
+    obj.last_sync = ""
     load.return_value = obj
     event = {"message": {"bricks": "dhcp123-12.lab.abc.com"
                          ":/gluster/b1",
@@ -573,13 +589,13 @@ def test_volume_remove_brick_commit(load, refresh, write, sleep):
         delete.return_value = True
         Callback().volume_remove_brick_commit(event)
     monitoring_utils.delete_resource_from_graphite.assert_called_with(
-        'v1|dhcp123-12.lab.abc.com:/gluster/b1',
+        'v1|127.0.0.1:/gluster/b1',
         'brick',
         '77deef29-b8e5-4dc5-8247-21e2a409a66a',
         'delete'
     )
     monitoring_utils.update_dashboard.assert_called_with(
-        'v1|dhcp123-12.lab.abc.com:/gluster/b1',
+        'v1|127.0.0.1:/gluster/b1',
         'brick',
         '77deef29-b8e5-4dc5-8247-21e2a409a66a',
         'delete'

@@ -8,6 +8,7 @@
 # will be invoked
 
 import etcd
+import socket
 import subprocess
 
 from tendrl.commons.utils import etcd_utils
@@ -484,7 +485,7 @@ class Callback(object):
                 fetched_volume.deleted_at = time_utils.now()
                 fetched_volume.save()
                 try:
-                    sub_volumes = NS._int.client.read(
+                    sub_volumes = etcd_utils.read(
                         "/clusters/{0}/Volumes/{1}/Bricks".format(
                             NS.tendrl_context.integration_id,
                             fetched_volume.vol_id
@@ -492,28 +493,30 @@ class Callback(object):
                     )
 
                     for sub_volume in sub_volumes.leaves:
-                        bricks = NS._int.client.read(
+                        bricks = etcd_utils.read(
                             sub_volume.key
                         )
                         for brick in bricks.leaves:
                             fqdn = brick.key.split('/')[-1].split(':')[0]
                             path = brick.key.split('/')[-1].split(':')[-1][1:]
-
+                            # Delete brick dashboard from grafana
+                            brick_obj = NS.gluster.objects.Brick(
+                                fqdn,
+                                path
+                            ).load()
+                            # Delete brick
                             brick_path = "clusters/{0}/Bricks/"\
                                          "all/{1}/{2}".format(
                                              NS.tendrl_context.integration_id,
                                              fqdn,
                                              path
                                          )
-                            # fetch brick_path to remove dashboard
-                            brick_full_path = NS._int.wclient.read(
-                                "%s/brick_path" % brick_path
-                            ).value
                             NS._int.wclient.delete(
                                 brick_path,
                                 recursive=True
                             )
-                            # Delete brick dashboard from grafana
+                            brick_full_path = fqdn + ":" + brick_obj.\
+                                brick_path.split(":")[-1]
                             job_id = monitoring_utils.update_dashboard(
                                 "%s|%s" % (
                                     event['message']['name'],
@@ -597,13 +600,21 @@ class Callback(object):
         time.sleep(self.sync_interval)
         # Event returns bricks list as space separated single string
         bricks = event['message']['bricks'].split(" ")
-        for brick in bricks:
-            fetched_brick = NS.gluster.objects.Brick(
-                fqdn=brick.split(":/")[0],
-                brick_dir=brick.split(":/")[1].replace('/', '_')
-            ).load()
+        try:
+            for brick in bricks:
+                # find fqdn using ip
+                ip = socket.gethostbyname(brick.split(":/")[0])
+                node_id = etcd_utils.read("indexes/ip/%s" % ip).value
+                fqdn = NS.tendrl.objects.ClusterNodeContext(
+                    node_id=node_id
+                ).load().fqdn
+                brick = fqdn + ":" + brick.split(":")[-1]
+                fetched_brick = NS.gluster.objects.Brick(
+                    fqdn=brick.split(":/")[0],
+                    brick_dir=brick.split(":/")[1].replace('/', '_')
+                ).load()
 
-            try:
+                # delete brick
                 NS._int.wclient.delete(
                     "clusters/{0}/Bricks/all/{1}/{2}".format(
                         NS.tendrl_context.integration_id,
@@ -612,60 +623,65 @@ class Callback(object):
                     ),
                     recursive=True,
                 )
-            except etcd.EtcdKeyNotFound:
-                pass
 
-            job_id = monitoring_utils.update_dashboard(
-                "%s|%s" % (event['message']['volume'], brick),
-                RESOURCE_TYPE_BRICK,
-                NS.tendrl_context.integration_id,
-                "delete"
-            )
-            logger.log(
-                "debug",
-                NS.publisher_id,
-                {
-                    "message": "Update dashboard job %s "
-                    "created" % job_id
-                }
-            )
+                # delete alert dashbaord
+                job_id = monitoring_utils.update_dashboard(
+                    "%s|%s" % (event['message']['volume'], brick),
+                    RESOURCE_TYPE_BRICK,
+                    NS.tendrl_context.integration_id,
+                    "delete"
+                )
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Update dashboard job %s "
+                        "created" % job_id
+                    }
+                )
 
-            job_id = monitoring_utils.delete_resource_from_graphite(
-                "%s|%s" % (event['message']['volume'], brick),
-                RESOURCE_TYPE_BRICK,
-                NS.tendrl_context.integration_id,
-                "delete"
-            )
-            logger.log(
-                "debug",
-                NS.publisher_id,
-                {
-                    "message": "Delete resource from graphite job %s "
-                    "created" % job_id
-                }
-            )
+                # delete brick details from graphite
+                job_id = monitoring_utils.delete_resource_from_graphite(
+                    "%s|%s" % (event['message']['volume'], brick),
+                    RESOURCE_TYPE_BRICK,
+                    NS.tendrl_context.integration_id,
+                    "delete"
+                )
+                logger.log(
+                    "debug",
+                    NS.publisher_id,
+                    {
+                        "message": "Delete resource from graphite job %s "
+                        "created" % job_id
+                    }
+                )
 
-        volume_brick_path = "clusters/{0}/Volumes/{1}/"\
-                            "Bricks".format(
-                                NS.tendrl_context.integration_id,
-                                fetched_brick.vol_id,
-                            )
+            volume_brick_path = "clusters/{0}/Volumes/{1}/"\
+                                "Bricks".format(
+                                    NS.tendrl_context.integration_id,
+                                    fetched_brick.vol_id,
+                                )
 
-        # remove all the brick infromation under volume as the
-        # subvolume might have changed, let the next sync handle
-        # the updation of brick info
-        try:
+            # remove all the brick infromation under volume as the
+            # subvolume might have changed, let the next sync handle
+            # the updation of brick info
             NS._int.wclient.delete(
                 volume_brick_path,
                 recursive=True
             )
-        except etcd.EtcdKeyNotFound:
-            pass
 
-        _trigger_sync_key = 'clusters/%s/_sync_now' % \
-            NS.tendrl_context.integration_id
-        etcd_utils.write(_trigger_sync_key, 'true')
-        etcd_utils.refresh(_trigger_sync_key, self.sync_interval)
+            _trigger_sync_key = 'clusters/%s/_sync_now' % \
+                NS.tendrl_context.integration_id
+            etcd_utils.write(_trigger_sync_key, 'true')
+            etcd_utils.refresh(_trigger_sync_key, self.sync_interval)
+        except etcd.EtcdKeyNotFound:
+            logger.log(
+                "debug",
+                NS.publisher_id,
+                {
+                    "message": "Unable to delete bricks %s" % bricks
+                }
+            )
 
     def volume_remove_brick_commit(self, event):
         self.volume_remove_brick_force(event)
