@@ -511,7 +511,7 @@ class Callback(object):
                                              fqdn,
                                              path
                                          )
-                            NS._int.wclient.delete(
+                            etcd_utils.delete(
                                 brick_path,
                                 recursive=True
                             )
@@ -615,7 +615,7 @@ class Callback(object):
                 ).load()
 
                 # delete brick
-                NS._int.wclient.delete(
+                etcd_utils.delete(
                     "clusters/{0}/Bricks/all/{1}/{2}".format(
                         NS.tendrl_context.integration_id,
                         brick.split(":/")[0],
@@ -665,7 +665,7 @@ class Callback(object):
             # remove all the brick infromation under volume as the
             # subvolume might have changed, let the next sync handle
             # the updation of brick info
-            NS._int.wclient.delete(
+            etcd_utils.delete(
                 volume_brick_path,
                 recursive=True
             )

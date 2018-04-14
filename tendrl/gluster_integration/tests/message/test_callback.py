@@ -535,7 +535,7 @@ def test_volume_delete(load, save, load_all, sleep):
              }
     with patch.object(etcd_utils, "read") as read:
         read.return_value = maps.NamedDict(leaves=[keys], value="/gluster/b1")
-        with patch.object(NS._int.wclient, "delete") as delete:
+        with patch.object(etcd_utils, "delete") as delete:
             delete.return_value = True
             Callback().volume_delete(event)
             monitoring_utils.delete_resource_from_graphite.assert_called_with(
@@ -585,7 +585,7 @@ def test_volume_remove_brick_commit(
              }
     monitoring_utils.update_dashboard = MagicMock()
     monitoring_utils.delete_resource_from_graphite = MagicMock()
-    with patch.object(NS._int.wclient, "delete") as delete:
+    with patch.object(etcd_utils, "delete") as delete:
         delete.return_value = True
         Callback().volume_remove_brick_commit(event)
     monitoring_utils.delete_resource_from_graphite.assert_called_with(
