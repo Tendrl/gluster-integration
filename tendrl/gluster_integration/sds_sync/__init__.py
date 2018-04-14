@@ -1,8 +1,8 @@
 import blivet
 import json
 import re
-import subprocess
 import socket
+import subprocess
 import threading
 import time
 
