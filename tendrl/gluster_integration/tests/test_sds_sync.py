@@ -128,10 +128,9 @@ def test_brick_status_alert(
                 emit_event.assert_called_with(
                     'brick_status',
                     'Stopped',
-                    'Status of brick: /gluster/b1 under '
-                    'volume v1 in cluster '
-                    '77deef29-b8e5-4dc5-8247-21e2a409a66a '
-                    'changed from Started to Stopped',
+                    'Brick:/gluster/b1 in '
+                    'volume:v1 '
+                    'has Stopped',
                     'volume_v1|brick_/gluster/b1',
                     'WARNING',
                     tags={'node_id': '3c4b48cc-1a61-4c64-90d6-eba840c00081',

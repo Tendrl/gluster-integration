@@ -65,11 +65,9 @@ def sync_volume_rebalance_status(volumes):
 
             if volume.rebal_status != "" and \
                 new_rebal_status != volume.rebal_status:
-                msg = ("Rebalance status of volume: %s "
-                       "changed from %s to %s") % (
-                           volume.name,
-                           volume.rebal_status,
-                           new_rebal_status)
+                msg = ("Volume:%s rebalance status has %s") % (
+                    volume.name,
+                    new_rebal_status)
                 instance = "volume_%s" % volume.name
                 event_utils.emit_event(
                     "rebalance_status",

@@ -175,15 +175,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 if stored_peer_status != "" and \
                                         current_status != stored_peer_status:
                                     msg = (
-                                        "Status of peer: %s in cluster %s "
-                                        "changed from %s to %s"
+                                        "Peer %s in cluster %s "
+                                        "is %s"
                                     ) % (
                                         peers[
                                             'peer%s.primary_hostname' %
                                             index
                                         ],
                                         NS.tendrl_context.integration_id,
-                                        stored_peer_status,
                                         current_status
                                     )
                                     instance = "peer_%s" % peers[
@@ -613,16 +612,13 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                     'volume%s.brick%s.status' % (index, b_index)
                 )
                 if current_status != sbs:
-                    msg = ("Status of brick: %s "
-                           "under volume %s in cluster %s chan"
-                           "ged from %s to %s") % (
+                    msg = ("Brick:%s in volume:%s has %s"
+                           ) % (
                                volumes['volume%s.brick%s' '.path' % (
                                    index,
                                    b_index
                                )],
                                volumes['volume%s.' 'name' % index],
-                               NS.tendrl_context.integration_id,
-                               sbs,
                                current_status)
                     instance = "volume_%s|brick_%s" % (
                         volumes['volume%s.name' % index],
@@ -773,13 +769,9 @@ def brick_status_alert(hostname):
                 if brick.status.lower() == BRICK_STARTED:
                     # raise an alert for brick
                     msg = (
-                        "Status of brick: %s "
-                        "under volume %s in cluster %s chan"
-                        "ged from %s to %s") % (
+                        "Brick:%s in volume:%s has %s") % (
                             brick.brick_path,
                             brick.vol_name,
-                            NS.tendrl_context.integration_id,
-                            BRICK_STARTED.title(),
                             BRICK_STOPPED.title()
                         )
                     instance = "volume_%s|brick_%s" % (
