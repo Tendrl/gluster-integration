@@ -51,9 +51,9 @@ def sync_cluster_status(volumes, sync_ttl):
     old_status = cluster_gd.status or 'unhealthy'
     curr_status = 'healthy' if is_healthy else 'unhealthy'
     if curr_status != old_status:
-        msg = ("%s is %s"
+        msg = ("Cluster:%s is %s"
                ) % (
-                   NS.tendrl_context.integration_id,
+                   _cluster.short_name,
                    curr_status)
         instance = "cluster_%s" % NS.tendrl_context.integration_id
         event_utils.emit_event(
@@ -148,7 +148,7 @@ def _derive_volume_states(volumes):
         # Raise the alert if volume state changes
         if volume.state != "" and \
             out_dict[volume.vol_id] != volume.state:
-            msg = "%s is %s" % (volume.name, out_dict[volume.vol_id])
+            msg = "Volume:%s is %s" % (volume.name, out_dict[volume.vol_id])
             instance = "volume_%s" % volume.name
             event_utils.emit_event(
                 "volume_state",

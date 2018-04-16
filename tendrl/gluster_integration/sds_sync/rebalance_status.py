@@ -65,7 +65,7 @@ def sync_volume_rebalance_status(volumes):
 
             if volume.rebal_status != "" and \
                 new_rebal_status != volume.rebal_status:
-                msg = ("%s rebalance status has %s") % (
+                msg = ("Volume:%s rebalance status has %s") % (
                     volume.name,
                     new_rebal_status)
                 instance = "volume_%s" % volume.name

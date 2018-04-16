@@ -651,7 +651,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                     'volume%s.brick%s.status' % (index, b_index)
                 )
                 if current_status != sbs:
-                    msg = ("%s in %s has %s"
+                    msg = ("Brick:%s in volume:%s has %s"
                            ) % (
                                volumes['volume%s.brick%s' '.path' % (
                                    index,
@@ -808,7 +808,7 @@ def brick_status_alert(hostname):
                 if brick.status.lower() == BRICK_STARTED:
                     # raise an alert for brick
                     msg = (
-                        "%s in %s has %s") % (
+                        "Brick:%s in volume:%s has %s") % (
                             brick.brick_path,
                             brick.vol_name,
                             BRICK_STOPPED.title()

@@ -123,8 +123,8 @@ def test_brick_status_alert(
                 emit_event.assert_called_with(
                     'brick_status',
                     'Stopped',
-                    '/gluster/b1 in '
-                    'volume v1 '
+                    'Brick:/gluster/b1 in '
+                    'volume:v1 '
                     'has Stopped',
                     'volume_v1|brick_/gluster/b1',
                     'WARNING',

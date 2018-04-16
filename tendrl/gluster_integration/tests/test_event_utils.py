@@ -61,7 +61,7 @@ def test_emit_event_with_brick_resource():
     event_utils.emit_event(
         "brick_status",
         "stopped",
-        "brick1 in vol1 has stopped",
+        "Brick:brick1 in volume:vol1 has stopped",
         "volume_vol1|brick_path1",
         "WARNING",
         tags={"entity_type": "brick", "volume_name": "vol1"}
