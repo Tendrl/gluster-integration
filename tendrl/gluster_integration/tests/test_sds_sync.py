@@ -5,6 +5,7 @@ import mock
 from mock import MagicMock
 from mock import patch
 import os
+import socket
 
 from tendrl.commons.objects import BaseObject
 from tendrl.commons.objects import node_context
@@ -33,8 +34,12 @@ def read(param):
 @patch.object(BaseObject, "hash_compare_with_central_store")
 @patch.object(event_utils, "emit_event")
 @patch.object(etcd_utils, "refresh")
-def test_sync_volumes(refresh, emit_event, compare, save, load, blivet):
+@patch.object(socket, 'gethostbyname')
+def test_sync_volumes(
+    get_host, refresh, emit_event, compare, save, load, blivet
+):
     init()
+    get_host.return_value = "127.0.0.1"
     refresh.return_value = True
     compare.return_value = True
     save.return_value = True

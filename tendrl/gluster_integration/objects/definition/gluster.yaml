@@ -108,6 +108,18 @@ namespace.gluster:
         volume_id:
           help: "Id of the volume"
           type: String
+      relationship:
+        utilization:
+          - volume_utilization
+        status:
+          - volume_status
+          - volume_state
+          - brick_status
+          - quorum
+          - ec_min_bricks_up
+          - afr_quorum_state
+          - afr_subvol_state
+          - georep_status
       value: /clusters/{0}/Volumes/{1}
       list: /clusters/{0}/Volumes/{1}
       help: "Volume Alert Counter"
