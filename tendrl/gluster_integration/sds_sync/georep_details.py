@@ -168,7 +168,9 @@ def save_georep_details(volumes, index):
 
 
 def aggregate_session_status():
-    volumes = NS.tendrl.objects.GlusterVolume().load_all()
+    volumes = NS.tendrl.objects.GlusterVolume(
+        NS.tendrl_context.integration_id
+    ).load_all()
     georep_status = GeoReplicationSessionStatus()
     if volumes:
         for volume in volumes:

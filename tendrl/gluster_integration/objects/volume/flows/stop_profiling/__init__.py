@@ -9,6 +9,7 @@ class StopProfiling(flows.BaseFlow):
 
     def run(self):
         volume = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id,
             vol_id=self.parameters['Volume.vol_id']
         ).load()
         if 'job_id' in volume.locked_by \
@@ -46,6 +47,7 @@ class StopProfiling(flows.BaseFlow):
                 AtomExecutionFailedError,
                 Exception) as ex:
             volume = NS.tendrl.objects.GlusterVolume(
+                NS.tendrl_context.integration_id,
                 vol_id=self.parameters['Volume.vol_id']
             ).load()
             volume.current_job = {
@@ -58,6 +60,7 @@ class StopProfiling(flows.BaseFlow):
             raise ex
 
         volume = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id,
             vol_id=self.parameters['Volume.vol_id']
         ).load()
         volume.current_job = {

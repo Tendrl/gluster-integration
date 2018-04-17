@@ -49,7 +49,9 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
         }
         _cluster.save()
 
-        volumes = NS.tendrl.objects.GlusterVolume().load_all() or []
+        volumes = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id
+        ).load_all() or []
         failed_vols = []
         for volume in volumes:
             out, err, rc = cmd_utils.Command(
