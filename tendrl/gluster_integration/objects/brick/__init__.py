@@ -77,7 +77,7 @@ class Brick(objects.BaseObject):
             _volume = NS.tendrl.objects.GlusterVolume(
                 NS.tendrl_context.integration_id,
                 vol_id=self.vol_id
-            )
+            ).load()
             _volume.invalidate_hash()
 
         super(Brick, self).save(update)
