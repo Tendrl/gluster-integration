@@ -234,7 +234,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
-                        volume = NS.gluster.objects.Volume(
+                        volume = NS.tendrl.objects.GlusterVolume(
                             vol_id=vol_id
                         ).load()
                         dest = dict(volume.options)
@@ -245,7 +245,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 # Sync cluster global details
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
                     in NS.node_context.tags:
-                    all_volumes = NS.gluster.objects.Volume().load_all() or []
+                    all_volumes = NS.tendrl.objects.GlusterVolume(
+                    ).load_all() or []
                     volumes = []
                     for volume in all_volumes:
                         if not str(volume.deleted).lower() == "true" or \
@@ -326,7 +327,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster = NS.tendrl.objects.Cluster(
             integration_id=NS.tendrl_context.integration_id
         ).load()
-        volumes = NS.gluster.objects.Volume().load_all() or []
+        volumes = NS.tendrl.objects.GlusterVolume().load_all() or []
         # Enable / disable based on cluster flag volume_profiling_flag
         # should be done only once while first sync. Later the volume
         # level volume_profiling_state should be set based on individual
@@ -408,7 +409,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
     cluster_provisioner = "provisioner/%s" % NS.tendrl_context.integration_id
     if cluster_provisioner in tag_list:
         try:
-            _volume = NS.gluster.objects.Volume(
+            _volume = NS.tendrl.objects.GlusterVolume(
                 vol_id=volumes['volume%s.id' % index]
             ).load()
             if _volume.locked_by and 'job_id' in _volume.locked_by and \
@@ -444,7 +445,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 raise ex
             pass
 
-        volume = NS.gluster.objects.Volume(
+        volume = NS.tendrl.objects.GlusterVolume(
             vol_id=volumes['volume%s.id' % index],
             vol_type="arbiter"
             if int(volumes['volume%s.arbiter_count' % index]) > 0
@@ -464,10 +465,10 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
-        if NS.gluster.objects.Volume(
+        if NS.tendrl.objects.GlusterVolume(
             vol_id=volumes['volume%s.id' % index]
         ).exists():
-            existing_vol = NS.gluster.objects.Volume(
+            existing_vol = NS.tendrl.objects.GlusterVolume(
                 vol_id=volumes['volume%s.id' % index]
             ).load()
             volume_profiling_old_value = existing_vol.profiling_enabled
@@ -580,7 +581,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
 
             # Raise alerts if the brick path changes
             try:
-                stored_brick = NS.gluster.objects.Brick(
+                stored_brick = NS.tendrl.objects.GlusterBrick(
                     NS.node_context.fqdn,
                     brick_dir=brick_name.split(":_")[-1]
                 ).load()
@@ -631,7 +632,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
 
             etcd_utils.write(vol_brick_path, "")
 
-            brick = NS.gluster.objects.Brick(
+            brick = NS.tendrl.objects.GlusterBrick(
                 NS.node_context.fqdn,
                 brick_name.split(":_")[-1],
                 name=brick_name,
@@ -739,7 +740,7 @@ def brick_status_alert(hostname):
             lock_ttl=60
         )
         if lock.is_acquired:
-            bricks = NS.gluster.objects.Brick(
+            bricks = NS.tendrl.objects.GlusterBrick(
                 fqdn=hostname
             ).load_all()
             for brick in bricks:
@@ -832,7 +833,7 @@ def update_cluster_alert_count():
 
 def get_volume_alert_counts():
     alert_counts = {}
-    volumes = NS.gluster.objects.Volume().load_all()
+    volumes = NS.tendrl.objects.GlusterVolume().load_all()
     for volume in volumes:
         alert_counts[volume.name] = {'vol_id': volume.vol_id,
                                      'alert_count': 0

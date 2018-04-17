@@ -168,14 +168,14 @@ def save_georep_details(volumes, index):
 
 
 def aggregate_session_status():
-    volumes = NS.gluster.objects.Volume().load_all()
+    volumes = NS.tendrl.objects.GlusterVolume().load_all()
     georep_status = GeoReplicationSessionStatus()
     if volumes:
         for volume in volumes:
             vol_id = volume.vol_id
             sessions = None
             try:
-                sessions = NS.gluster.objects.GeoReplicationSession(
+                sessions = NS.tendrl.objects.GeoReplicationSession(
                     vol_id=volume.vol_id
                 ).load_all()
             except etcd.EtcdKeyNotFound:
@@ -218,7 +218,7 @@ def aggregate_session_status():
                     session_status = georep_status.PAUSED
                 else:
                     session_status = georep_status.PARTIAL
-                NS.gluster.objects.GeoReplicationSession(
+                NS.tendrl.objects.GeoReplicationSession(
                     vol_id=vol_id,
                     session_id=session_id,
                     session_status=session_status

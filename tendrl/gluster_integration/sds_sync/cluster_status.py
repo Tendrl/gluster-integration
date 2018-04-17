@@ -48,7 +48,7 @@ def sync_cluster_status(volumes, sync_ttl):
         if not connected:
             is_healthy = False
 
-    cluster_gd = NS.gluster.objects.GlobalDetails(
+    cluster_gd = NS.tendrl.objects.GlobalDetails(
         integration_id=NS.tendrl_context.integration_id
     ).load()
     old_status = cluster_gd.status or 'unhealthy'
@@ -69,7 +69,7 @@ def sync_cluster_status(volumes, sync_ttl):
         )
 
     # Persist the cluster status
-    NS.gluster.objects.GlobalDetails(
+    NS.tendrl.objects.GlobalDetails(
         integration_id=NS.tendrl_context.integration_id,
         status='healthy' if is_healthy else 'unhealthy',
         peer_count=peer_count,
@@ -99,7 +99,7 @@ def _derive_volume_states(volumes):
                     state = 0
                     for entry in subvol.leaves:
                         brick_name = entry.key.split("/")[-1]
-                        fetched_brick = NS.gluster.objects.Brick(
+                        fetched_brick = NS.tendrl.objects.GlusterBrick(
                             brick_name.split(":")[0],
                             brick_name.split(":_")[-1]
                         ).load()

@@ -8,7 +8,7 @@ class StopProfiling(flows.BaseFlow):
         super(StopProfiling, self).__init__(*args, **kwargs)
 
     def run(self):
-        volume = NS.gluster.objects.Volume(
+        volume = NS.tendrl.objects.GlusterVolume(
             vol_id=self.parameters['Volume.vol_id']
         ).load()
         if 'job_id' in volume.locked_by \
@@ -45,7 +45,7 @@ class StopProfiling(flows.BaseFlow):
         except (FlowExecutionFailedError,
                 AtomExecutionFailedError,
                 Exception) as ex:
-            volume = NS.gluster.objects.Volume(
+            volume = NS.tendrl.objects.GlusterVolume(
                 vol_id=self.parameters['Volume.vol_id']
             ).load()
             volume.current_job = {
@@ -57,7 +57,7 @@ class StopProfiling(flows.BaseFlow):
             volume.save(update=False)
             raise ex
 
-        volume = NS.gluster.objects.Volume(
+        volume = NS.tendrl.objects.GlusterVolume(
             vol_id=self.parameters['Volume.vol_id']
         ).load()
         volume.current_job = {

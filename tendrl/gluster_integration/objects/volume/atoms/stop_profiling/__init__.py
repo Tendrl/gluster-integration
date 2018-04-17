@@ -11,7 +11,7 @@ class StopProfiling(objects.BaseAtom):
 
     def run(self):
         vol_id = self.parameters['Volume.vol_id']
-        volume = NS.gluster.objects.Volume(
+        volume = NS.tendrl.objects.GlusterVolume(
             vol_id=vol_id
         ).load()
 

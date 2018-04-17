@@ -568,7 +568,7 @@ def test_volume_remove_brick_commit(
     sleep.return_value = True
     write.return_value = True
     refresh.return_value = True
-    obj = NS.gluster.objects.Brick("dhcp123-12.lab.abc.com")
+    obj = NS.tendrl.objects.GlusterBrick("dhcp123-12.lab.abc.com")
     obj.vol_id = "0f5b4b99-fa4a-4b8f-be52-770b42879d67"
     obj.fqdn = "127.0.0.1"
     obj.ipv4_addr = "127.0.0.1"

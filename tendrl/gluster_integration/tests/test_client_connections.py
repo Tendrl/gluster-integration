@@ -27,7 +27,7 @@ def test_sync_volume_connections(blivet, save, load):
         'tendrl.gluster_integration.sds_sync.client_connections'
     )
     init()
-    obj = NS.gluster.objects.Brick(
+    obj = NS.tendrl.objects.GlusterBrick(
         "dhcp123-12.lab.abc.com",
         "_gluster_b1"
     )
