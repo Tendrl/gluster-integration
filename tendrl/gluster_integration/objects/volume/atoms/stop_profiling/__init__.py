@@ -12,6 +12,7 @@ class StopProfiling(objects.BaseAtom):
     def run(self):
         vol_id = self.parameters['Volume.vol_id']
         volume = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id,
             vol_id=vol_id
         ).load()
 

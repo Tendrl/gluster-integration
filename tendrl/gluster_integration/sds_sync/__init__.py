@@ -235,6 +235,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
                         volume = NS.tendrl.objects.GlusterVolume(
+                            NS.tendrl_context.integration_id,
                             vol_id=vol_id
                         ).load()
                         dest = dict(volume.options)
@@ -246,6 +247,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
                     in NS.node_context.tags:
                     all_volumes = NS.tendrl.objects.GlusterVolume(
+                        NS.tendrl_context.integration_id
                     ).load_all() or []
                     volumes = []
                     for volume in all_volumes:
@@ -327,7 +329,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster = NS.tendrl.objects.Cluster(
             integration_id=NS.tendrl_context.integration_id
         ).load()
-        volumes = NS.tendrl.objects.GlusterVolume().load_all() or []
+        volumes = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id
+        ).load_all() or []
         # Enable / disable based on cluster flag volume_profiling_flag
         # should be done only once while first sync. Later the volume
         # level volume_profiling_state should be set based on individual
@@ -410,6 +414,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
     if cluster_provisioner in tag_list:
         try:
             _volume = NS.tendrl.objects.GlusterVolume(
+                NS.tendrl_context.integration_id,
                 vol_id=volumes['volume%s.id' % index]
             ).load()
             if _volume.locked_by and 'job_id' in _volume.locked_by and \
@@ -446,6 +451,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             pass
 
         volume = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id,
             vol_id=volumes['volume%s.id' % index],
             vol_type="arbiter"
             if int(volumes['volume%s.arbiter_count' % index]) > 0
@@ -466,9 +472,11 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
         )
         if NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id,
             vol_id=volumes['volume%s.id' % index]
         ).exists():
             existing_vol = NS.tendrl.objects.GlusterVolume(
+                NS.tendrl_context.integration_id,
                 vol_id=volumes['volume%s.id' % index]
             ).load()
             volume_profiling_old_value = existing_vol.profiling_enabled
@@ -582,6 +590,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             # Raise alerts if the brick path changes
             try:
                 stored_brick = NS.tendrl.objects.GlusterBrick(
+                    NS.tendrl_context.integration_id,
                     NS.node_context.fqdn,
                     brick_dir=brick_name.split(":_")[-1]
                 ).load()
@@ -633,6 +642,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             etcd_utils.write(vol_brick_path, "")
 
             brick = NS.tendrl.objects.GlusterBrick(
+                NS.tendrl_context.integration_id,
                 NS.node_context.fqdn,
                 brick_name.split(":_")[-1],
                 name=brick_name,
@@ -741,6 +751,7 @@ def brick_status_alert(hostname):
         )
         if lock.is_acquired:
             bricks = NS.tendrl.objects.GlusterBrick(
+                NS.tendrl_context.integration_id,
                 fqdn=hostname
             ).load_all()
             for brick in bricks:
@@ -833,7 +844,9 @@ def update_cluster_alert_count():
 
 def get_volume_alert_counts():
     alert_counts = {}
-    volumes = NS.tendrl.objects.GlusterVolume().load_all()
+    volumes = NS.tendrl.objects.GlusterVolume(
+        NS.tendrl_context.integration_id
+    ).load_all()
     for volume in volumes:
         alert_counts[volume.name] = {'vol_id': volume.vol_id,
                                      'alert_count': 0

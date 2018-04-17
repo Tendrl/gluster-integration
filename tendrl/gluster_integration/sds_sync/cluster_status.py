@@ -100,6 +100,7 @@ def _derive_volume_states(volumes):
                     for entry in subvol.leaves:
                         brick_name = entry.key.split("/")[-1]
                         fetched_brick = NS.tendrl.objects.GlusterBrick(
+                            NS.tendrl_context.integration_id,
                             brick_name.split(":")[0],
                             brick_name.split(":_")[-1]
                         ).load()

@@ -61,6 +61,7 @@ def update_brick_device_details(brick_name, brick_path, devicetree, sync_ttl):
         pvs = [str(dev.path) for dev in device.disks]
 
     brick = NS.tendrl.objects.GlusterBrick(
+        NS.tendrl_context.integration_id,
         NS.node_context.fqdn,
         brick_dir=brick_name.split(":_")[-1]
     ).load()
