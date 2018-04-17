@@ -96,7 +96,7 @@ def test_brick_status_alert(
     compare.return_value = True
     refresh.return_value = True
     save.return_value = True
-    obj = NS.gluster.objects.Brick(
+    obj = NS.tendrl.objects.GlusterBrick(
         fqdn="dhcp12-12.lab.abc.com",
         hostname="dhcp12-12.lab.abc.com",
         status="started",

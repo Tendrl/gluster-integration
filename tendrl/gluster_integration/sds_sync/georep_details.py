@@ -50,19 +50,19 @@ def save_georep_details(volumes, index):
             )
 
             try:
-                fetched_pair_status = NS._int.client.read(
-                    "clusters/%s/Volumes/%s/GeoRepSessions/"
-                    "%s/pairs/%s/status" % (
-                        NS.tendrl_context.integration_id,
-                        volumes['volume%s.id' % index],
-                        session_id,
-                        pair_name
-                    )
-                ).value
+                pair = NS.gluster.objects.GeoReplicationPair(
+                    vol_id=volumes['volume%s.id' % index],
+                    session_id=session_id,
+                    pair=pair_name
+                ).load()
+                fetched_pair_status = None
+                if pair:
+                    fetched_pair_status = pair.status
                 pair_status = volumes[
                     'volume%s.pair%s.status' % (index, pair_index)
                 ]
-                if fetched_pair_status != pair_status and \
+                if fetched_pair_status and \
+                    fetched_pair_status != pair_status and \
                     pair_status.lower() == 'faulty':
                     msg = ("Geo-replication between %s "
                            "and %s is faulty") % (
@@ -82,7 +82,8 @@ def save_georep_details(volumes, index):
                               "volume_name": volumes['volume%s.name' % index]
                               }
                     )
-                if fetched_pair_status.lower() == 'faulty' and \
+                if fetched_pair_status and \
+                    fetched_pair_status.lower() == 'faulty' and \
                     pair_status.lower() in ['active', 'passive']:
                     msg = ("Geo-replication between %s "
                            "and %s is %s") % (
@@ -167,55 +168,33 @@ def save_georep_details(volumes, index):
 
 
 def aggregate_session_status():
-    volumes = None
-    try:
-        volumes = NS._int.client.read(
-            "clusters/%s/Volumes" % NS.tendrl_context.integration_id
-        )
-    except etcd.EtcdKeyNotFound:
-        # ignore as no volumes available till now
-        return
+    volumes = NS.tendrl.objects.GlusterVolume().load_all()
     georep_status = GeoReplicationSessionStatus()
     if volumes:
-        for entry in volumes.leaves:
-            vol_id = entry.key.split("Volumes/")[-1]
+        for volume in volumes:
+            vol_id = volume.vol_id
+            sessions = None
             try:
-                sessions = NS._int.client.read(
-                    "clusters/%s/Volumes/%s/GeoRepSessions" % (
-                        NS.tendrl_context.integration_id,
-                        vol_id,
-                    )
-                )
+                sessions = NS.tendrl.objects.GeoReplicationSession(
+                    vol_id=volume.vol_id
+                ).load_all()
             except etcd.EtcdKeyNotFound:
-                continue
-            volume = NS.gluster.objects.Volume(vol_id=vol_id).load()
-            if volume is None:
-                continue
+                pass
             pair_count = int(volume.brick_count)
-            for session in sessions.leaves:
+            if sessions is None:
+                sessions = []
+            for session in sessions:
                 session_status = None
                 session_id = session.key.split("GeoRepSessions/")[-1]
-                try:
-                    pairs = NS._int.client.read(
-                        "clusters/%s/Volumes/%s/GeoRepSessions"
-                        "/%s/pairs" % (
-                            NS.tendrl_context.integration_id,
-                            vol_id,
-                            session_id
-                        )
-                    )
-                except etcd.EtcdKeyNotFound:
-                    continue
+                pairs = NS.gluster.objects.GeoReplicationPair(
+                    vol_id=vol_id,
+                    session_id=session.session_id
+                ).load_all()
                 faulty_count = 0
                 stopped_count = 0
                 paused_count = 0
                 created_count = 0
-                for element in pairs.leaves:
-                    pair = NS.gluster.objects.GeoReplicationPair(
-                        vol_id=vol_id,
-                        session_id=session_id,
-                        pair=element.key.split("pairs/")[-1]
-                    ).load()
+                for pair in pairs:
                     if pair.status.lower() == "faulty":
                         faulty_count += 1
                     elif pair.status.lower() == "created":
@@ -239,10 +218,8 @@ def aggregate_session_status():
                     session_status = georep_status.PAUSED
                 else:
                     session_status = georep_status.PARTIAL
-                geo_replication_session = \
-                    NS.gluster.objects.GeoReplicationSession(
-                        vol_id=vol_id,
-                        session_id=session_id,
-                        session_status=session_status
-                    )
-                geo_replication_session.save()
+                NS.tendrl.objects.GeoReplicationSession(
+                    vol_id=vol_id,
+                    session_id=session_id,
+                    session_status=session_status
+                ).save()

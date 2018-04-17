@@ -14,8 +14,8 @@ class GeoReplicationSession(objects.BaseObject):
     def __init__(
         self,
         vol_id,
-        session_id,
-        session_status,
+        session_id=None,
+        session_status=None,
         pairs=None,
         *args,
         **kwargs

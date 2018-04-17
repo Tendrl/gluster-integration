@@ -478,7 +478,7 @@ class Callback(object):
 
     def volume_delete(self, event):
         time.sleep(self.sync_interval)
-        fetched_volumes = NS.gluster.objects.Volume().load_all()
+        fetched_volumes = NS.tendrl.objects.GlusterVolume().load_all()
         for fetched_volume in fetched_volumes:
             if fetched_volume.name == event['message']['name']:
                 fetched_volume.deleted = True
@@ -500,7 +500,7 @@ class Callback(object):
                             fqdn = brick.key.split('/')[-1].split(':')[0]
                             path = brick.key.split('/')[-1].split(':')[-1][1:]
                             # Delete brick dashboard from grafana
-                            brick_obj = NS.gluster.objects.Brick(
+                            brick_obj = NS.tendrl.objects.GlusterBrick(
                                 fqdn,
                                 path
                             ).load()
@@ -609,7 +609,7 @@ class Callback(object):
                     node_id=node_id
                 ).load().fqdn
                 brick = fqdn + ":" + brick.split(":")[-1]
-                fetched_brick = NS.gluster.objects.Brick(
+                fetched_brick = NS.tendrl.objects.GlusterBrick(
                     fqdn=brick.split(":/")[0],
                     brick_dir=brick.split(":/")[1].replace('/', '_')
                 ).load()

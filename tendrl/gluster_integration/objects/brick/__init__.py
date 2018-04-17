@@ -74,7 +74,7 @@ class Brick(objects.BaseObject):
 
     def save(self, update=True, ttl=None):
         if not self.hash_compare_with_central_store():
-            _volume = NS.gluster.objects.Volume(vol_id=self.vol_id)
+            _volume = NS.tendrl.objects.GlusterVolume(vol_id=self.vol_id)
             _volume.invalidate_hash()
 
         super(Brick, self).save(update)
@@ -91,3 +91,6 @@ class Brick(objects.BaseObject):
             self.brick_dir
         )
         return super(Brick, self).render()
+
+    def on_change(self, attr, prev_value, current_value):
+        return

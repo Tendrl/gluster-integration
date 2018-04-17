@@ -60,18 +60,16 @@ def update_brick_device_details(brick_name, brick_path, devicetree, sync_ttl):
         vg = device.vg.name
         pvs = [str(dev.path) for dev in device.disks]
 
-    brick = NS.gluster.objects.Brick(
-        brick_name.split(":")[0],
-        brick_name.split(":_")[-1],
-        name=brick_name,
-        devices=disks,
-        partitions=partitions,
-        mount_path=mount_point,
-        lv=lv,
-        vg=vg,
-        pool=pool,
-        pv=pvs,
-        size=size
-    )
-
+    brick = NS.tendrl.objects.GlusterBrick(
+        NS.node_context.fqdn,
+        brick_dir=brick_name.split(":_")[-1]
+    ).load()
+    brick.devices = disks
+    brick.partitions = partitions
+    brick.mount_path = mount_point
+    brick.lv = lv
+    brick.vg = vg
+    brick.pool = pool
+    brick.pv = pvs
+    brick.size = size
     brick.save(ttl=sync_ttl)

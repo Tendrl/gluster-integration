@@ -35,6 +35,7 @@ class Volume(objects.BaseObject):
         deleted_at=None,
         current_job=dict(),
         locked_by=dict(),
+        options=None,
         *args,
         **kwargs
     ):
@@ -71,6 +72,7 @@ class Volume(objects.BaseObject):
         self.deleted_at = deleted_at
         self.current_job = current_job
         self.locked_by = locked_by
+        self.options = options
         self.value = 'clusters/{0}/Volumes/{1}'
 
     def render(self):

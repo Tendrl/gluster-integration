@@ -6,7 +6,7 @@ class GeoReplicationPair(objects.BaseObject):
         self,
         vol_id,
         session_id,
-        pair,
+        pair=None,
         master_node=None,
         master_volume=None,
         master_brick=None,
