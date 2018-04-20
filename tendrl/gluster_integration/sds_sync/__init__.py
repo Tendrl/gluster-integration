@@ -452,25 +452,25 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
 
         volume = NS.tendrl.objects.GlusterVolume(
             NS.tendrl_context.integration_id,
-            vol_id=volumes['volume%s.id' % index],
-            vol_type="arbiter"
-            if int(volumes['volume%s.arbiter_count' % index]) > 0
-            else volumes['volume%s.type' % index],
-            name=volumes['volume%s.name' % index],
-            transport_type=volumes['volume%s.transport_type' % index],
-            status=volumes['volume%s.status' % index],
-            brick_count=volumes['volume%s.brickcount' % index],
-            snap_count=volumes['volume%s.snap_count' % index],
-            stripe_count=volumes['volume%s.stripe_count' % index],
-            replica_count=volumes['volume%s.replica_count' % index],
-            subvol_count=volumes['volume%s.subvol_count' % index],
-            arbiter_count=volumes['volume%s.arbiter_count' % index],
-            disperse_count=volumes['volume%s.disperse_count' % index],
-            redundancy_count=volumes['volume%s.redundancy_count' % index],
-            quorum_status=volumes['volume%s.quorum_status' % index],
-            snapd_status=volumes['volume%s.snapd_svc.online_status' % index],
-            snapd_inited=volumes['volume%s.snapd_svc.inited' % index],
-        )
+            vol_id=volumes['volume%s.id' % index]
+        ).load()
+        volume.vol_type = "arbiter" \
+            if int(volumes['volume%s.arbiter_count' % index]) > 0 \
+            else volumes['volume%s.type' % index]
+        volume.name = volumes['volume%s.name' % index]
+        volume.transport_type = volumes['volume%s.transport_type' % index]
+        volume.status = volumes['volume%s.status' % index]
+        volume.brick_count = volumes['volume%s.brickcount' % index]
+        volume.snap_count = volumes['volume%s.snap_count' % index]
+        volume.stripe_count = volumes['volume%s.stripe_count' % index]
+        volume.replica_count = volumes['volume%s.replica_count' % index]
+        volume.subvol_count = volumes['volume%s.subvol_count' % index]
+        volume.arbiter_count = volumes['volume%s.arbiter_count' % index]
+        volume.disperse_count = volumes['volume%s.disperse_count' % index]
+        volume.redundancy_count = volumes['volume%s.redundancy_count' % index]
+        volume.quorum_status = volumes['volume%s.quorum_status' % index]
+        volume.snapd_status = volumes['volume%s.snapd_svc.online_status' % index]
+        volume.snapd_inited = volumes['volume%s.snapd_svc.inited' % index]
         if NS.tendrl.objects.GlusterVolume(
             NS.tendrl_context.integration_id,
             vol_id=volumes['volume%s.id' % index]
