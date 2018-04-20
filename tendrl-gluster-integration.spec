@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
 Version: 1.6.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -63,6 +63,9 @@ py.test -v tendrl/gluster_integration/tests || :
 
 
 %changelog
+* Fri Apr 20 2018 Rohan Kanade <rkanade@redhat.com> - 1.6.3-2
+- Bugfixes (https://github.com/Tendrl/gluster-integration/milestone/5)
+
 * Wed Apr 18 2018 Rohan Kanade <rkanade@redhat.com> - 1.6.3-1
 - Support gluster nodes/bricks with fqdn, IP, short name
 - Serialization of Tendrl objects
