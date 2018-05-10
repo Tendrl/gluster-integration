@@ -1,7 +1,9 @@
 import threading
 
+import cherrypy
 from flask import Flask
 from flask import request
+from paste.translogger import TransLogger
 
 from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import log_utils as logger
@@ -104,5 +106,21 @@ class GlusterNativeMessageHandler(threading.Thread):
                 {"message": "gluster native message reciever setup failed"}
             )
             return
-        # TODO(rohan) find better way to run/cleanup
-        app.run(self.host, self.port, threaded=True)
+        
+        # Enable WSGI access logging via Paste
+        app_logged = TransLogger(app)
+
+        # Mount the WSGI callable object (app) on the root directory
+        cherrypy.tree.graft(app_logged, '/')
+        # Set the configuration of the web server
+        cherrypy.config.update({
+            'engine.autoreload_on': False,
+            'log.screen': True,
+            'server.socket_port': self.port,
+            'server.socket_host': self.host,
+            'log.access_file': '',
+            'log.error_file': ''
+        })
+        # Start the CherryPy WSGI web server
+        cherrypy.engine.start()
+        cherrypy.engine.block()
