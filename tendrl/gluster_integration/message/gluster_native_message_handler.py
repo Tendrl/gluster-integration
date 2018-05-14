@@ -106,7 +106,7 @@ class GlusterNativeMessageHandler(threading.Thread):
                 {"message": "gluster native message reciever setup failed"}
             )
             return
-        
+
         # Enable WSGI access logging via Paste
         app_logged = TransLogger(app)
 
