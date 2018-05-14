@@ -98,6 +98,8 @@ class GlusterNativeMessageHandler(threading.Thread):
                 {"message": "gluster native message reciever cleanup failed"}
             )
 
+        cherrypy.engine.exit()
+    
     def run(self):
         if not self._setup_gluster_native_message_reciever():
             logger.log(
