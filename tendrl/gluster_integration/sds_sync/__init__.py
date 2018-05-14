@@ -469,7 +469,8 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
         volume.disperse_count = volumes['volume%s.disperse_count' % index]
         volume.redundancy_count = volumes['volume%s.redundancy_count' % index]
         volume.quorum_status = volumes['volume%s.quorum_status' % index]
-        volume.snapd_status = volumes['volume%s.snapd_svc.online_status' % index]
+        volume.snapd_status = volumes[
+            'volume%s.snapd_svc.online_status' % index]
         volume.snapd_inited = volumes['volume%s.snapd_svc.inited' % index]
         if NS.tendrl.objects.GlusterVolume(
             NS.tendrl_context.integration_id,
