@@ -17,6 +17,8 @@ Requires: tendrl-commons
 Requires: systemd
 Requires: python-blivet
 Requires: python-flask
+Requires: python-cherrypy
+Requires: python-paste
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.

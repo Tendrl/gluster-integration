@@ -104,7 +104,9 @@ setup(
         "tendrl-commons",
         "blivet",
         "flask",
-        "netifaces"
+        "netifaces",
+        "cherrypy",
+        "paste"
         ],
     entry_points={
         'console_scripts': [
