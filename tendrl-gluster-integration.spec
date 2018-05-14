@@ -17,7 +17,7 @@ Requires: tendrl-commons
 Requires: systemd
 Requires: python-blivet
 Requires: python-flask
-Requires: python-cherry
+Requires: python-cherrypy
 Requires: python-paste
 
 %description
