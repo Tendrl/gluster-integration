@@ -60,11 +60,12 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
             ).run()
             if err != "" or rc != 0:
                 logger.log(
-                    "error",
+                    "info",
                     NS.publisher_id,
                     {
-                        "message": "%s profiling failed for volume: %s" %
-                        (action, volume.name)
+                        "message": "%s profiling failed for volume: %s."
+                        " Error: %s" %
+                        (action, volume.name, err)
                     },
                     job_id=self.parameters["job_id"],
                     flow_id=self.parameters["flow_id"]
@@ -78,7 +79,7 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
                 volume.save()
         if len(failed_vols) > 0:
             logger.log(
-                "error",
+                "info",
                 NS.publisher_id,
                 {
                     "message": "%s profiling failed for "
