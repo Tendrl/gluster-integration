@@ -99,5 +99,6 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
             'job_name': self.__class__.__name__,
             'job_id': self.job_id
         }
+        _cluster.volume_profiling_state = "%sd" % action
         _cluster.save()
         return True
