@@ -572,8 +572,22 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             hostname = volumes[
                 'volume%s.brick%s.hostname' % (index, b_index)
             ]
-            if socket.gethostbyname(NS.node_context.fqdn) != \
-                    socket.gethostbyname(hostname):
+            ip = socket.gethostbyname(hostname)
+            try:
+                node_id = etcd_utils.read("indexes/ip/%s" % ip).value
+                fqdn = NS.tendrl.objects.ClusterNodeContext(
+                    node_id=node_id
+                ).load().fqdn
+                cluster_node_ids = etcd_utils.read(
+                    "indexes/tags/tendrl/integration/%s" %
+                    NS.tendrl_context.integration_id
+                ).value
+                cluster_node_ids = json.loads(cluster_node_ids)
+                if NS.node_context.fqdn != fqdn or \
+                        node_id not in cluster_node_ids:
+                    b_index += 1
+                    continue
+            except(TypeError, etcd.EtcdKeyNotFound):
                 b_index += 1
                 continue
             sub_vol_size = (int(
