@@ -386,9 +386,17 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 cluster.volume_profiling_state = "disabled"
         profiling_enabled_count = 0
+        profiling_unknown_count = 0
         for volume in volumes:
             if volume.profiling_enabled == "yes":
                 profiling_enabled_count += 1
+            if volume.profiling_enabled in [None, ""]:
+                profiling_unknown_count += 1
+
+        if profiling_unknown_count == len(volumes):
+            cluster.save()
+            return
+
         if profiling_enabled_count == 0:
             cluster.volume_profiling_state = "disabled"
         elif profiling_enabled_count == len(volumes):
@@ -572,8 +580,22 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             hostname = volumes[
                 'volume%s.brick%s.hostname' % (index, b_index)
             ]
-            if socket.gethostbyname(NS.node_context.fqdn) != \
-                    socket.gethostbyname(hostname):
+            ip = socket.gethostbyname(hostname)
+            try:
+                node_id = etcd_utils.read("indexes/ip/%s" % ip).value
+                fqdn = NS.tendrl.objects.ClusterNodeContext(
+                    node_id=node_id
+                ).load().fqdn
+                cluster_node_ids = etcd_utils.read(
+                    "indexes/tags/tendrl/integration/%s" %
+                    NS.tendrl_context.integration_id
+                ).value
+                cluster_node_ids = json.loads(cluster_node_ids)
+                if NS.node_context.fqdn != fqdn or \
+                        node_id not in cluster_node_ids:
+                    b_index += 1
+                    continue
+            except(TypeError, etcd.EtcdKeyNotFound):
                 b_index += 1
                 continue
             sub_vol_size = (int(
