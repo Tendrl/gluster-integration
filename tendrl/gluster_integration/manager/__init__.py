@@ -88,7 +88,7 @@ def main():
                 "/indexes/tags/gluster/server",
                 json.dumps(gl_srvr_list)
             )
-            node_tags = json.loads(NS.node_context.tags)
+            node_tags = NS.node_context.tags
             if 'provisioner/%s' % NS.tendrl_context.integration_id \
                 in node_tags:
                 etcd_utils.delete(
