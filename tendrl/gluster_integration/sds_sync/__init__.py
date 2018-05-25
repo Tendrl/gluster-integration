@@ -157,7 +157,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 current_status = peers[
                                     'peer%s.connected' % index
                                 ]
-                                if stored_peer_status != "" and \
+                                if stored_peer_status and \
                                     current_status != stored_peer_status:
                                     msg = (
                                         "Peer %s in cluster %s "
