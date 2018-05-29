@@ -239,10 +239,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             NS.tendrl_context.integration_id,
                             vol_id=vol_id
                         ).load()
-                        dest = dict(volume.options)
-                        dest.update(dict1)
-                        volume.options = dest
-                        volume.save()
+                        if volume.options != None:
+                            dest = dict(volume.options)
+                            dest.update(dict1)
+                            volume.options = dest
+                            volume.save()
 
                 # Sync cluster global details
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
