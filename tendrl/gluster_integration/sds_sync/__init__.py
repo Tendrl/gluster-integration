@@ -167,7 +167,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             'peer%s.primary_hostname' %
                                             index
                                         ],
-                                        NS.tendrl_context.integration_id,
+                                        _cluster.short_name,
                                         current_status
                                     )
                                     instance = "peer_%s" % peers[
@@ -214,7 +214,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
                                 # sync_interval + 100 + no of peers + 350
-                                SYNC_TTL + 350
+                                SYNC_TTL + 350,
+                                _cluster.short_name
                             )
                             index += 1
                             SYNC_TTL += 1
@@ -406,7 +407,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster.save()
 
 
-def sync_volumes(volumes, index, vol_options, sync_ttl):
+def sync_volumes(volumes, index, vol_options, sync_ttl, cluster_short_name):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
     b = blivet.Blivet()
@@ -436,7 +437,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
                            volumes['volume%s.name' % index],
-                           NS.tendrl_context.integration_id,
+                           cluster_short_name,
                            stored_volume_status,
                            current_status)
                 instance = "volume_%s" % volumes[
@@ -506,7 +507,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             msg = ("Value of volume profiling for volume: %s "
                    "of cluster %s changed from %s to %s" % (
                        volumes['volume%s.name' % index],
-                       NS.tendrl_context.integration_id,
+                       cluster_short_name,
                        volume_profiling_old_value,
                        volume_profiling_new_value))
             instance = "volume_%s" % \

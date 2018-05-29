@@ -29,12 +29,16 @@ RESOURCE_TYPE_VOLUME = "volume"
 class Callback(object):
     def __init__(self):
         self.sync_interval = NS.config.data.get("sync_interval", 10)
+        _cluster = NS.tendrl.objects.Cluster(
+            integration_id=NS.tendrl_context.integration_id
+        ).load()
+        self.cluster_short_name = _cluster.short_name
 
     def quorum_lost(self, event):
         context = "quorum|" + event['message']['volume']
         message = "Quorum of volume: {0} is lost in cluster {1}".format(
             event['message']['volume'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -51,7 +55,7 @@ class Callback(object):
         context = "quorum|" + event['message']['volume']
         message = "Quorum of volume: {0} is regained in cluster {1}".format(
             event['message']['volume'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -72,7 +76,7 @@ class Callback(object):
 
         message = "Service: {0} is connected in cluster {1}".format(
             event['message']['svc_name'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -90,7 +94,7 @@ class Callback(object):
 
         message = "Service: {0} is disconnected in cluster {1}".format(
             event['message']['svc_name'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -105,7 +109,7 @@ class Callback(object):
         message = "Minimum number of bricks not up in EC subvolume" \
                   ": {0} in cluster {1}".format(
                       event['message']['subvol'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -124,7 +128,7 @@ class Callback(object):
         message = "Minimum number of bricks back online " \
                   "in EC subvolume: {0} in cluster {1}".format(
                       event['message']['subvol'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -142,7 +146,7 @@ class Callback(object):
         context = "afr_quorum_state|" + event['message']['subvol']
         message = "Afr quorum is met for subvolume: {0} in cluster {1}".format(
             event['message']['subvol'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -161,7 +165,7 @@ class Callback(object):
         message = "Afr quorum has failed for subvolume:"\
                   " {0} in cluster {1}".format(
                       event['message']['subvol'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -179,7 +183,7 @@ class Callback(object):
         context = "afr_subvol_state|" + event['message']['subvol']
         message = "Afr subvolume: {0} is back up in cluster {1}".format(
             event['message']['subvol'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -197,7 +201,7 @@ class Callback(object):
         context = "afr_subvol_state|" + event['message']['subvol']
         message = "Afr subvolume: {0} is down in cluster {1}".format(
             event['message']['subvol'],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         volume_name = parse_subvolume(event['message']['subvol'])
         native_event = NS.gluster.objects.NativeEvents(
@@ -215,7 +219,7 @@ class Callback(object):
         context = "unknown_peer|" + event['message']['peer'].split(":")[0]
         message = "Peer {0} has moved to unknown state in cluster {1}".format(
             event['message']['peer'].split(":")[0],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -234,7 +238,7 @@ class Callback(object):
                       event['message']["brick"],
                       event['message']["volume"],
                       event['message']['peer'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -253,7 +257,7 @@ class Callback(object):
                       event['message']['volume'],
                       event['message']['path'],
                       event['message']['usage'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -272,7 +276,7 @@ class Callback(object):
                       event['message']['gfid'],
                       event['message']['brick'],
                       event['message']['path'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -289,7 +293,7 @@ class Callback(object):
                   "replicated files in the volume might"\
                   " be divergent in cluster {1}".format(
                       event['message']['subvol'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -306,7 +310,7 @@ class Callback(object):
         message = "Snapshot soft limit reached for"\
                   " volume: {0} in cluster {1}".format(
                       event['message']['volume_name'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -323,7 +327,7 @@ class Callback(object):
         message = "Snapshot hard limit reached for"\
                   " volume: {0} in cluster {1}".format(
                       event['message']['volume_name'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -339,7 +343,7 @@ class Callback(object):
         message = "Compare friend volume failed for volume:"\
                   " {0} in cluster {1}".format(
                       event['message']['volume'],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -358,7 +362,7 @@ class Callback(object):
                   ". Error: {3}. op: {4}".format(
                       event['message']["brick"],
                       event['message']["path"],
-                      NS.tendrl_context.integration_id,
+                      self.cluster_short_name,
                       event['message']["error"],
                       event['message']["op"],
                   )
@@ -375,7 +379,7 @@ class Callback(object):
         context = "peer_reject|" + event['message']['peer'].split(":")[0]
         message = "Peer: {0} is rejected in cluster {1}".format(
             event['message']['peer'].split(":")[0],
-            NS.tendrl_context.integration_id
+            self.cluster_short_name
         )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -392,7 +396,7 @@ class Callback(object):
         message = "Rebalance status update failed for"\
                   " volume: {0} in cluster {1}".format(
                       event['message']["volume"],
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
@@ -448,7 +452,7 @@ class Callback(object):
                       georep_pair,
                       cp_creation_time,
                       cp_completion_time,
-                      NS.tendrl_context.integration_id
+                      self.cluster_short_name
                   )
         native_event = NS.gluster.objects.NativeEvents(
             context,
