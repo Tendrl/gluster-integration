@@ -99,7 +99,7 @@ class GlusterNativeMessageHandler(threading.Thread):
             )
 
         cherrypy.engine.exit()
-    
+
     def run(self):
         if not self._setup_gluster_native_message_reciever():
             logger.log(

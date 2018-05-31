@@ -43,7 +43,7 @@ def update_brick_device_details(brick_name, brick_path, devicetree, sync_ttl):
     lv = None
     pool = None
     vg = None
-    pvs = None
+    pvs = []
     disks = [str(
         d.path
     ) for d in device.ancestors if d.isDisk and not d.parents]

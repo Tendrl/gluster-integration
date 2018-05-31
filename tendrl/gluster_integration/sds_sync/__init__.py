@@ -157,7 +157,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 current_status = peers[
                                     'peer%s.connected' % index
                                 ]
-                                if stored_peer_status != "" and \
+                                if stored_peer_status and \
                                     current_status != stored_peer_status:
                                     msg = (
                                         "Peer %s in cluster %s "
@@ -167,7 +167,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                             'peer%s.primary_hostname' %
                                             index
                                         ],
-                                        NS.tendrl_context.integration_id,
+                                        _cluster.short_name,
                                         current_status
                                     )
                                     instance = "peer_%s" % peers[
@@ -214,7 +214,8 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
                                 # sync_interval + 100 + no of peers + 350
-                                SYNC_TTL + 350
+                                SYNC_TTL + 350,
+                                _cluster.short_name
                             )
                             index += 1
                             SYNC_TTL += 1
@@ -238,10 +239,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             NS.tendrl_context.integration_id,
                             vol_id=vol_id
                         ).load()
-                        dest = dict(volume.options)
-                        dest.update(dict1)
-                        volume.options = dest
-                        volume.save()
+                        if volume.options != None:
+                            dest = dict(volume.options)
+                            dest.update(dict1)
+                            volume.options = dest
+                            volume.save()
 
                 # Sync cluster global details
                 if "provisioner/%s" % NS.tendrl_context.integration_id \
@@ -386,9 +388,17 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     )
                 cluster.volume_profiling_state = "disabled"
         profiling_enabled_count = 0
+        profiling_unknown_count = 0
         for volume in volumes:
             if volume.profiling_enabled == "yes":
                 profiling_enabled_count += 1
+            if volume.profiling_enabled in [None, ""]:
+                profiling_unknown_count += 1
+
+        if profiling_unknown_count == len(volumes):
+            cluster.save()
+            return
+
         if profiling_enabled_count == 0:
             cluster.volume_profiling_state = "disabled"
         elif profiling_enabled_count == len(volumes):
@@ -398,7 +408,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster.save()
 
 
-def sync_volumes(volumes, index, vol_options, sync_ttl):
+def sync_volumes(volumes, index, vol_options, sync_ttl, cluster_short_name):
     # instantiating blivet class, this will be used for
     # getting brick_device_details
     b = blivet.Blivet()
@@ -428,7 +438,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
                 msg = ("Status of volume: %s in cluster %s "
                        "changed from %s to %s") % (
                            volumes['volume%s.name' % index],
-                           NS.tendrl_context.integration_id,
+                           cluster_short_name,
                            stored_volume_status,
                            current_status)
                 instance = "volume_%s" % volumes[
@@ -498,7 +508,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             msg = ("Value of volume profiling for volume: %s "
                    "of cluster %s changed from %s to %s" % (
                        volumes['volume%s.name' % index],
-                       NS.tendrl_context.integration_id,
+                       cluster_short_name,
                        volume_profiling_old_value,
                        volume_profiling_new_value))
             instance = "volume_%s" % \
@@ -572,8 +582,22 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             hostname = volumes[
                 'volume%s.brick%s.hostname' % (index, b_index)
             ]
-            if socket.gethostbyname(NS.node_context.fqdn) != \
-                    socket.gethostbyname(hostname):
+            ip = socket.gethostbyname(hostname)
+            try:
+                node_id = etcd_utils.read("indexes/ip/%s" % ip).value
+                fqdn = NS.tendrl.objects.ClusterNodeContext(
+                    node_id=node_id
+                ).load().fqdn
+                cluster_node_ids = etcd_utils.read(
+                    "indexes/tags/tendrl/integration/%s" %
+                    NS.tendrl_context.integration_id
+                ).value
+                cluster_node_ids = json.loads(cluster_node_ids)
+                if NS.node_context.fqdn != fqdn or \
+                        node_id not in cluster_node_ids:
+                    b_index += 1
+                    continue
+            except(TypeError, etcd.EtcdKeyNotFound):
                 b_index += 1
                 continue
             sub_vol_size = (int(
@@ -641,44 +665,46 @@ def sync_volumes(volumes, index, vol_options, sync_ttl):
             )
 
             etcd_utils.write(vol_brick_path, "")
-
             brick = NS.tendrl.objects.GlusterBrick(
                 NS.tendrl_context.integration_id,
                 NS.node_context.fqdn,
-                brick_name.split(":_")[-1],
-                name=brick_name,
-                vol_id=volumes['volume%s.id' % index],
-                sequence_number=b_index,
-                brick_path=volumes[
-                    'volume%s.brick%s.path' % (index, b_index)
-                ],
-                hostname=volumes.get(
-                    'volume%s.brick%s.hostname' % (index, b_index)
-                ),
-                port=volumes.get(
-                    'volume%s.brick%s.port' % (index, b_index)
-                ),
-                vol_name=volumes['volume%s.name' % index],
-                used=True,
-                node_id=NS.node_context.node_id,
-                status=volumes.get(
-                    'volume%s.brick%s.status' % (index, b_index)
-                ),
-                filesystem_type=volumes.get(
-                    'volume%s.brick%s.filesystem_type' % (index, b_index)
-                ),
-                mount_opts=volumes.get(
-                    'volume%s.brick%s.mount_options' % (index, b_index)
-                ),
-                utilization=brick_utilization.brick_utilization(
-                    volumes['volume%s.brick%s.path' % (index, b_index)]
-                ),
-                client_count=volumes.get(
-                    'volume%s.brick%s.client_count' % (index, b_index)
-                ),
-                is_arbiter=volumes.get(
-                    'volume%s.brick%s.is_arbiter' % (index, b_index)
-                ),
+                brick_dir=brick_name.split(":_")[-1]
+            ).load()
+            brick.integration_id = NS.tendrl_context.integration_id
+            brick.fqdn = NS.node_context.fqdn
+            brick.brick_dir = brick_name.split(":_")[-1]
+            brick.name = brick_name
+            brick.vol_id = volumes['volume%s.id' % index]
+            brick.sequence_number = b_index
+            brick.brick_path = volumes[
+                'volume%s.brick%s.path' % (index, b_index)
+            ]
+            brick.hostname = volumes.get(
+                'volume%s.brick%s.hostname' % (index, b_index)
+            )
+            brick.port = volumes.get(
+                'volume%s.brick%s.port' % (index, b_index)
+            )
+            brick.vol_name = volumes['volume%s.name' % index]
+            brick.used = True
+            brick.node_id = NS.node_context.node_id
+            brick.status = volumes.get(
+                'volume%s.brick%s.status' % (index, b_index)
+            )
+            brick.filesystem_type = volumes.get(
+                'volume%s.brick%s.filesystem_type' % (index, b_index)
+            )
+            brick.mount_opts = volumes.get(
+                'volume%s.brick%s.mount_options' % (index, b_index)
+            )
+            brick.utilization = brick_utilization.brick_utilization(
+                volumes['volume%s.brick%s.path' % (index, b_index)]
+            )
+            brick.client_count = volumes.get(
+                'volume%s.brick%s.client_count' % (index, b_index)
+            )
+            brick.is_arbiter = volumes.get(
+                'volume%s.brick%s.is_arbiter' % (index, b_index)
             )
             brick.save(ttl=sync_ttl)
             # sync brick device details
