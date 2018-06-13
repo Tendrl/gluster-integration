@@ -239,7 +239,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             NS.tendrl_context.integration_id,
                             vol_id=vol_id
                         ).load()
-                        if volume.options != None:
+                        if volume.options is not None:
                             dest = dict(volume.options)
                             dest.update(dict1)
                             volume.options = dest

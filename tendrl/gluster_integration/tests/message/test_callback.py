@@ -1,3 +1,4 @@
+import json
 import maps
 from mock import MagicMock
 from mock import patch
@@ -14,8 +15,12 @@ from tendrl.gluster_integration.message.callback import Callback
 from tendrl.gluster_integration.tests.test_init import init
 
 
-def test_quorum_lost():
+@patch.object(BaseObject, "load")
+def test_quorum_lost(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "v1"},
              "event": "QUORUM_LOST",
              "ts": 1486634392,
@@ -35,8 +40,12 @@ def test_quorum_lost():
     )
 
 
-def test_quorum_regained():
+@patch.object(BaseObject, "load")
+def test_quorum_regained(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "v1"},
              "event": "QUORUM_REGAINED",
              "ts": 1486634392,
@@ -56,8 +65,12 @@ def test_quorum_regained():
     )
 
 
-def test_svc_connected():
+@patch.object(BaseObject, "load")
+def test_svc_connected(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "v1", "svc_name": "test"},
              "event": "SVC_CONNECTED",
              "ts": 1486634392,
@@ -74,8 +87,12 @@ def test_svc_connected():
     )
 
 
-def test_svc_disconnected():
+@patch.object(BaseObject, "load")
+def test_svc_disconnected(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "v1", "svc_name": "test"},
              "event": "SVC_DISCONNECTED",
              "ts": 1486634392,
@@ -92,8 +109,12 @@ def test_svc_disconnected():
     )
 
 
-def test_ec_min_bricks_not_up():
+@patch.object(BaseObject, "load")
+def test_ec_min_bricks_not_up(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "sub_vol"},
              "event": "EC_MIN_BRICKS_NOT_UP",
              "ts": 1486634392,
@@ -111,8 +132,12 @@ def test_ec_min_bricks_not_up():
     )
 
 
-def test_ec_min_bricks_up():
+@patch.object(BaseObject, "load")
+def test_ec_min_bricks_up(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "sub_vol"},
              "event": "EC_MIN_BRICKS_UP",
              "ts": 1486634392,
@@ -130,8 +155,12 @@ def test_ec_min_bricks_up():
     )
 
 
-def test_afr_quorum_met():
+@patch.object(BaseObject, "load")
+def test_afr_quorum_met(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "sub_vol"},
              "event": "AFR_QUORUM_MET",
              "ts": 1486634392,
@@ -149,8 +178,12 @@ def test_afr_quorum_met():
     )
 
 
-def test_afr_quorum_fail():
+@patch.object(BaseObject, "load")
+def test_afr_quorum_fail(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "sub_vol"},
              "event": "AFR_QUORUM_FAIL",
              "ts": 1486634392,
@@ -168,8 +201,12 @@ def test_afr_quorum_fail():
     )
 
 
-def test_afr_subvol_up():
+@patch.object(BaseObject, "load")
+def test_afr_subvol_up(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "sub_vol"},
              "event": "AFR_SUBVOL_UP",
              "ts": 1486634392,
@@ -187,8 +224,12 @@ def test_afr_subvol_up():
     )
 
 
-def test_afr_subvols_down():
+@patch.object(BaseObject, "load")
+def test_afr_subvols_down(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "volume1-replica-2"},
              "event": "AFR_SUBVOLS_DOWN",
              "ts": 1486634392,
@@ -206,8 +247,12 @@ def test_afr_subvols_down():
     )
 
 
-def test_unknown_peer():
+@patch.object(BaseObject, "load")
+def test_unknown_peer(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"peer": "dhcp123-12.lab.abc.com"},
              "event": "UNKNOWN_PEER",
              "ts": 1486634392,
@@ -226,8 +271,12 @@ def test_unknown_peer():
     )
 
 
-def test_brickpath_resolve_failed():
+@patch.object(BaseObject, "load")
+def test_brickpath_resolve_failed(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"peer": "dhcp123-12.lab.abc.com",
                          "volume": "v1",
                          "brick": "b1"
@@ -249,8 +298,12 @@ def test_brickpath_resolve_failed():
     )
 
 
-def test_quota_crossed_soft_limit():
+@patch.object(BaseObject, "load")
+def test_quota_crossed_soft_limit(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"path": "/gluster/b1",
                          "volume": "v1",
                          "usage": "70%"
@@ -272,8 +325,12 @@ def test_quota_crossed_soft_limit():
     )
 
 
-def test_bitrot_bad_file():
+@patch.object(BaseObject, "load")
+def test_bitrot_bad_file(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"path": "/gluster/b1",
                          "brick": "b1",
                          "gfid": "1"
@@ -295,8 +352,12 @@ def test_bitrot_bad_file():
     )
 
 
-def test_afr_split_brain():
+@patch.object(BaseObject, "load")
+def test_afr_split_brain(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"subvol": "volume1-replica-2"},
              "event": "AFR_SPLIT_BRAIN",
              "ts": 1486634392,
@@ -316,8 +377,12 @@ def test_afr_split_brain():
     )
 
 
-def test_snapshot_soft_limit_reached():
+@patch.object(BaseObject, "load")
+def test_snapshot_soft_limit_reached(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume_name": "volume1"},
              "event": "SNAPSHOT_SOFT_LIMIT_REACHED",
              "ts": 1486634392,
@@ -336,8 +401,12 @@ def test_snapshot_soft_limit_reached():
     )
 
 
-def test_snapshot_hard_limit_reached():
+@patch.object(BaseObject, "load")
+def test_snapshot_hard_limit_reached(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume_name": "volume1"},
              "event": "SNAPSHOT_HARD_LIMIT_REACHED",
              "ts": 1486634392,
@@ -356,8 +425,12 @@ def test_snapshot_hard_limit_reached():
     )
 
 
-def test_compare_friend_volume_failed():
+@patch.object(BaseObject, "load")
+def test_compare_friend_volume_failed(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "volume1"},
              "event": "COMPARE_FRIEND_VOLUME_FAILED",
              "ts": 1486634392,
@@ -376,8 +449,12 @@ def test_compare_friend_volume_failed():
     )
 
 
-def test_posix_health_check_failed():
+@patch.object(BaseObject, "load")
+def test_posix_health_check_failed(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"brick": "b1",
                          "path": "/gluster",
                          "error": "test_error",
@@ -401,8 +478,12 @@ def test_posix_health_check_failed():
     )
 
 
-def test_peer_reject():
+@patch.object(BaseObject, "load")
+def test_peer_reject(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"peer": "dhcp123-12.lab.abc.com"},
              "event": "PEER_REJECT",
              "ts": 1486634392,
@@ -420,8 +501,12 @@ def test_peer_reject():
     )
 
 
-def test_rebalance_status_update_failed():
+@patch.object(BaseObject, "load")
+def test_rebalance_status_update_failed(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"volume": "v1"},
              "event": "REBALANCE_STATUS_UPDATE_FAILED",
              "ts": 1486634392,
@@ -440,8 +525,12 @@ def test_rebalance_status_update_failed():
     )
 
 
-def test_svc_reconfigure_failed():
+@patch.object(BaseObject, "load")
+def test_svc_reconfigure_failed(load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     event = {"message": {"service": "testing",
                          "volume": "v1",
                          "svc_name": "test"},
@@ -460,9 +549,13 @@ def test_svc_reconfigure_failed():
     )
 
 
+@patch.object(BaseObject, "load")
 @patch.object(time, "strftime")
-def test_georep_checkpoint_completed(strftime):
+def test_georep_checkpoint_completed(strftime, load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     strftime.return_value = "01 Jan 1970 05:50:34"
     event = {"message": {"master_node": "node1",
                          "master_volume": "v1",
@@ -492,9 +585,13 @@ def test_georep_checkpoint_completed(strftime):
     )
 
 
+@patch.object(BaseObject, "load")
 @patch.object(time, "sleep")
-def test_peer_detach(sleep):
+def test_peer_detach(sleep, load):
     init()
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     sleep.return_value = True
     event = {"message": {"host": "dhcp123-12.lab.abc.com"},
              "event": "PEER_DISCONNECT",
@@ -519,7 +616,10 @@ def test_volume_delete(load, save, load_all, sleep):
     keys = maps.NamedDict(
         key="sub_vol1/dhcp123-12.lab.abc.com:|gluster|b1"
     )
-    load.return_value = maps.NamedDict(brick_path="/gluster/b1")
+    load.return_value = maps.NamedDict(
+        brick_path="/gluster/b1",
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     save.return_value = True
     obj = NS.gluster.objects.Volume()
     obj.name = "v1"
@@ -552,29 +652,49 @@ def test_volume_delete(load, save, load_all, sleep):
             )
 
 
+def utils_read(param):
+    if "indexes/ip" in param:
+        return maps.NamedDict(
+            value="0f5b4b99-fa4a-4b8f-be52-770b42879d67"
+        )
+    elif "NodeContext" in param:
+        node_context = {"node_id": "0f5b4b99-fa4a-4b8f-be52-770b42879d67",
+                        "fqdn": "127.0.0.1",
+                        "tags": [],
+                        "ipv4_addr": "127.0.0.1",
+                        "status": "UP",
+                        "sync_status": "processing",
+                        "last_sync": "",
+                        "pkey": ""}
+        return maps.NamedDict(
+            value=json.dumps(node_context)
+        )
+
+
 @patch.object(time, "sleep")
 @patch.object(etcd_utils, "write")
 @patch.object(etcd_utils, "refresh")
 @patch.object(BaseObject, "load")
-@patch.object(etcd_utils, "read")
+@patch.object(etcd_utils, "read", utils_read)
 @patch.object(socket, "gethostbyname")
 def test_volume_remove_brick_commit(
-    hostbyname, read, load, refresh, write, sleep
+    hostbyname, load, refresh, write, sleep
 ):
     hostbyname.return_value = "127.0.0.1"
-    read.return_value = maps.NamedDict(
-        value="0f5b4b99-fa4a-4b8f-be52-770b42879d67"
-    )
     sleep.return_value = True
     write.return_value = True
     refresh.return_value = True
-    obj = NS.tendrl.objects.GlusterBrick("dhcp123-12.lab.abc.com")
+    obj = NS.tendrl.objects.GlusterBrick(
+        "77deef29-b8e5-4dc5-8247-21e2a409a66a",
+        "dhcp123-12.lab.abc.com"
+    )
     obj.vol_id = "0f5b4b99-fa4a-4b8f-be52-770b42879d67"
     obj.fqdn = "127.0.0.1"
     obj.ipv4_addr = "127.0.0.1"
     obj.tags = "127.0.0.1"
     obj.sync_status = ""
     obj.last_sync = ""
+    obj.short_name = "77deef29-b8e5-4dc5-8247-21e2a409a66a"
     load.return_value = obj
     event = {"message": {"bricks": "dhcp123-12.lab.abc.com"
                          ":/gluster/b1",
@@ -602,10 +722,14 @@ def test_volume_remove_brick_commit(
     )
 
 
+@patch.object(BaseObject, "load")
 @patch.object(time, "sleep")
 @patch.object(subprocess, "call")
 @patch.object(etcd_utils, "read")
-def test_snapshot_restored(read, call, sleep):
+def test_snapshot_restored(read, call, sleep, load):
+    load.return_value = maps.NamedDict(
+        short_name="77deef29-b8e5-4dc5-8247-21e2a409a66a"
+    )
     sleep.return_value = True
     call.return_value = True
     keys = maps.NamedDict(
