@@ -5,6 +5,7 @@ import mock
 from mock import patch
 
 from tendrl.commons.objects import BaseObject
+from tendrl.commons.utils import etcd_utils
 from tendrl.gluster_integration.tests.test_init import init
 
 
@@ -33,7 +34,7 @@ def test_sync_volume_connections(blivet, save, load):
     )
     obj.client_count = 1
     load.return_value = obj
-    with patch.object(NS._int.client, "read", read):
+    with patch.object(etcd_utils, "read", read):
         client_connections.sync_volume_connections(
             [NS.gluster.objects.Volume()]
         )

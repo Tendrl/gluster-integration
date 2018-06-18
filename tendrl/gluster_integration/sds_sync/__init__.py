@@ -150,8 +150,17 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     connected=peers['peer%s.connected' % index]
                                 )
                             try:
+                                stored_peer_status = None
+                                # find peer detail using hostname
+                                ip = socket.gethostbyname(
+                                    peers['peer%s.primary_hostname' % index]
+                                )
+                                node_id = etcd_utils.read(
+                                    "/indexes/ip/%s" % ip
+                                ).value
                                 stored_peer = NS.tendrl.objects.GlusterPeer(
-                                    peer_uuid=peers['peer%s.uuid' % index]
+                                    peer_uuid=peers['peer%s.uuid' % index],
+                                    node_id=node_id
                                 ).load()
                                 stored_peer_status = stored_peer.connected
                                 current_status = peers[
@@ -182,6 +191,10 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                         'Connected'
                                         else 'INFO'
                                     )
+                                    # save current status in actual peer
+                                    # directory also
+                                    stored_peer.connected = current_status
+                                    stored_peer.save()
                                     # Disconnected host name to
                                     # raise brick alert
                                     if current_status.lower() == \
@@ -239,7 +252,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             NS.tendrl_context.integration_id,
                             vol_id=vol_id
                         ).load()
-                        if volume.options != None:
+                        if volume.options is not None:
                             dest = dict(volume.options)
                             dest.update(dict1)
                             volume.options = dest
@@ -875,7 +888,9 @@ def get_volume_alert_counts():
         NS.tendrl_context.integration_id
     ).load_all()
     for volume in volumes:
-        alert_counts[volume.name] = {'vol_id': volume.vol_id,
-                                     'alert_count': 0
-                                     }
+        if volume and volume.vol_id not in [None, ''] and \
+                volume.name not in [None, '']:
+            alert_counts[volume.name] = {'vol_id': volume.vol_id,
+                                         'alert_count': 0
+                                         }
     return alert_counts
