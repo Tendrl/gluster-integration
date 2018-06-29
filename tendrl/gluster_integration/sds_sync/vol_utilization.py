@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import argparse
-import json
 import sys
 
 from tendrl.gluster_integration import gfapi
@@ -37,7 +36,7 @@ def showVolumeUtilization(vname):
     used_inode = data.f_files - data.f_ffree
     total_inode = data.f_files
     pcnt_inode_used = (float(used_inode) / total_inode) * 100
-    print (json.dumps(
+    return (
         {
             'total': total_size,
             'free': free_size,
@@ -47,7 +46,7 @@ def showVolumeUtilization(vname):
             'used_inode': used_inode,
             'pcnt_inode_used': pcnt_inode_used
         }
-    ))
+    )
 
 
 def parse_input():
@@ -58,13 +57,3 @@ def parse_input():
                         help="Name of the volume to get the Utilization")
     args = parser.parse_args()
     return args
-
-
-def main():
-    args = parse_input()
-    showVolumeUtilization(args.volume)
-    sys.exit(0)
-
-
-if __name__ == '__main__':
-    main()
