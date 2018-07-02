@@ -12,11 +12,13 @@ import shutil
 import sys
 import tempfile
 
+sys.modules['tendrl.gluster_integration.sds_sync.vol_utilization'] = MagicMock()
 sys.modules['tendrl.gluster_integration.sds_sync.blivet'] = MagicMock()
 
 from tendrl.gluster_integration import manager
 
 del sys.modules['tendrl.gluster_integration.sds_sync.blivet']
+del sys.modules['tendrl.gluster_integration.sds_sync.vol_utilization']
 
 from tendrl.gluster_integration.tests.test_init import init
 

@@ -489,7 +489,8 @@ class Callback(object):
             if fetched_volume.name == event['message']['name']:
                 fetched_volume.deleted = True
                 fetched_volume.deleted_at = time_utils.now()
-                fetched_volume.save()
+                sync_ttl = int(NS.config.data.get("sync_interval", 10))
+                fetched_volume.save(ttl=sync_ttl)
                 try:
                     sub_volumes = etcd_utils.read(
                         "/clusters/{0}/Volumes/{1}/Bricks".format(
