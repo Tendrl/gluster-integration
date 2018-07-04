@@ -282,9 +282,11 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     ).load_all() or []
                     volumes = []
                     for volume in all_volumes:
-                        if not str(volume.deleted).lower() == "true" or \
+                        if not str(volume.deleted).lower() == "true" and \
                             volume.current_job.get('status', '') \
-                            in ['', 'finished', 'failed']:
+                            in ['', 'finished', 'failed'] and \
+                            volume.vol_id not in [None, ''] and \
+                            volume.name not in [None, '']:
                             # only for first sync refresh volume TTL
                             # It will increase TTL based on no.of volumes
                             if _cnc.first_sync_done in [None, "no", ""]:
@@ -292,7 +294,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     volume.value,
                                     SYNC_TTL + VOLUME_TTL
                                 )
-                                volumes.append(volume)
+                            volumes.append(volume)
                     cluster_status.sync_cluster_status(
                         volumes, SYNC_TTL + VOLUME_TTL
                     )
