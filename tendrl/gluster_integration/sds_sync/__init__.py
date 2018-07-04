@@ -231,24 +231,32 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # about storage devices in the machine
                     b.reset()
                     devicetree = b.devicetree
+                    total_brick_count = 0
                     while True:
                         try:
-                            sync_volumes(
+                            b_count = sync_volumes(
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
-                                # sync_interval + 100 + no of peers + 350
                                 SYNC_TTL + VOLUME_TTL,
                                 _cluster.short_name,
                                 devicetree
                             )
                             index += 1
                             SYNC_TTL += 1
+                            total_brick_count += b_count - 1
                         except KeyError:
                             global VOLUME_TTL
                             # from second sync volume ttl is
-                            # SYNC_TTL + (no.volumes) * 30
+                            # SYNC_TTL + (no.volumes) * 20 +
+                            # (no.of.bricks) * 10 + 160
                             if index > 1:
-                                VOLUME_TTL = (index - 1) * 30
+                                volume_count = index -1
+                                # When all nodes are down we are updating all
+                                # volumes are down, node status TTL is 160,
+                                # So make sure volumes are present in etcd
+                                # while raising volume down alert
+                                VOLUME_TTL = (volume_count * 20) + (
+                                    total_brick_count * 10) + 160
                             break
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
@@ -292,7 +300,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                                     volume.value,
                                     SYNC_TTL + VOLUME_TTL
                                 )
-                                volumes.append(volume)
+                            volumes.append(volume)
                     cluster_status.sync_cluster_status(
                         volumes, SYNC_TTL + VOLUME_TTL
                     )
@@ -794,6 +802,7 @@ def sync_volumes(
             b_index += 1
         except KeyError:
             break
+    return b_index
 
 
 def brick_status_alert(hostname):
