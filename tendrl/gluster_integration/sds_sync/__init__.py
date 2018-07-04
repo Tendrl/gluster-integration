@@ -11,7 +11,6 @@ import etcd
 from tendrl.commons.event import Event
 from tendrl.commons.message import ExceptionMessage
 from tendrl.commons import sds_sync
-from tendrl.commons.utils import cmd_utils
 from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import event_utils
 from tendrl.commons.utils import log_utils as logger
@@ -33,6 +32,9 @@ RESOURCE_TYPE_PEER = "host"
 RESOURCE_TYPE_VOLUME = "volume"
 BRICK_STOPPED = "stopped"
 BRICK_STARTED = "started"
+
+
+VOLUME_TTL = 350
 
 
 class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
@@ -221,18 +223,40 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                 if "Volumes" in raw_data:
                     index = 1
                     volumes = raw_data['Volumes']
+                    # instantiating blivet class, this will be used for
+                    # getting brick_device_details
+                    b = blivet.Blivet()
+
+                    # reset blivet during every sync to get latest information
+                    # about storage devices in the machine
+                    b.reset()
+                    devicetree = b.devicetree
+                    total_brick_count = 0
                     while True:
                         try:
-                            sync_volumes(
+                            b_count = sync_volumes(
                                 volumes, index,
                                 raw_data_options.get('Volume Options'),
-                                # sync_interval + 100 + no of peers + 350
-                                SYNC_TTL + 350,
-                                _cluster.short_name
+                                SYNC_TTL + VOLUME_TTL,
+                                _cluster.short_name,
+                                devicetree
                             )
                             index += 1
                             SYNC_TTL += 1
+                            total_brick_count += b_count - 1
                         except KeyError:
+                            global VOLUME_TTL
+                            # from second sync volume ttl is
+                            # SYNC_TTL + (no.volumes) * 20 +
+                            # (no.of.bricks) * 10 + 160
+                            if index > 1:
+                                volume_count = index -1
+                                # When all nodes are down we are updating all
+                                # volumes are down, node status TTL is 160,
+                                # So make sure volumes are present in etcd
+                                # while raising volume down alert
+                                VOLUME_TTL = (volume_count * 20) + (
+                                    total_brick_count * 10) + 160
                             break
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
@@ -266,11 +290,22 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     ).load_all() or []
                     volumes = []
                     for volume in all_volumes:
-                        if not str(volume.deleted).lower() == "true" or \
+                        if not str(volume.deleted).lower() == "true" and \
                             volume.current_job.get('status', '') \
-                            in ['', 'finished', 'failed']:
+                            in ['', 'finished', 'failed'] and \
+                            volume.vol_id not in [None, ''] and \
+                            volume.name not in [None, '']:
+                            # only for first sync refresh volume TTL
+                            # It will increase TTL based on no.of volumes
+                            if _cnc.first_sync_done in [None, "no", ""]:
+                                etcd_utils.refresh(
+                                    volume.value,
+                                    SYNC_TTL + VOLUME_TTL
+                                )
                             volumes.append(volume)
-                    cluster_status.sync_cluster_status(volumes, SYNC_TTL + 350)
+                    cluster_status.sync_cluster_status(
+                        volumes, SYNC_TTL + VOLUME_TTL
+                    )
                     utilization.sync_utilization_details(volumes)
                     client_connections.sync_volume_connections(volumes)
                     georep_details.aggregate_session_status()
@@ -355,63 +390,63 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             node_id=NS.node_context.node_id
         ).load()
         if _cnc.first_sync_done in [None, "no", ""]:
-            failed_vols = []
             if cluster.volume_profiling_flag == "enable":
                 for volume in volumes:
                     if volume.profiling_enabled == "yes":
                         continue
-                    out, err, rc = cmd_utils.Command(
-                        "gluster volume profile %s start" %
-                        volume.name
-                    ).run()
-                    if (err or rc != 0) and \
-                        "already started" in err:
-                        failed_vols.append(volume.name)
-                if len(failed_vols) > 0:
-                    logger.log(
-                        "debug",
-                        NS.publisher_id,
-                        {
-                            "message": "Profiling already "
-                            "enabled for volumes: %s" %
-                            str(failed_vols)
-                        }
+                    p = subprocess.Popen(
+                        ["gluster",
+                         "volume",
+                         "profile",
+                         volume.name,
+                         "start"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
                     )
-                cluster.volume_profiling_state = "enabled"
+                    retry = 1
+                    while True:
+                        if p.poll() is not None:
+                            break
+                        elif retry > 10 and p.poll() is None:
+                            p.kill()
+                            break
+                        retry += 1
+                        time.sleep(0.5)
             if cluster.volume_profiling_flag == "disable":
                 for volume in volumes:
                     if volume.profiling_enabled == "no":
                         continue
-                    out, err, rc = cmd_utils.Command(
-                        "gluster volume profile %s stop" %
-                        volume.name
-                    ).run()
-                    if (err or rc != 0) and \
-                        "not started" in err:
-                        failed_vols.append(volume.name)
-                if len(failed_vols) > 0:
-                    logger.log(
-                        "debug",
-                        NS.publisher_id,
-                        {
-                            "message": "Profiling not "
-                            "enabled for volumes: %s" %
-                            str(failed_vols)
-                        }
+                    p = subprocess.Popen(
+                        ["gluster",
+                         "volume",
+                         "profile",
+                         volume.name,
+                         "start"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
                     )
-                cluster.volume_profiling_state = "disabled"
+                    retry = 1
+                    while True:
+                        if p.poll() is not None:
+                            break
+                        elif retry > 10 and p.poll() is None:
+                            p.kill()
+                            break
+                        retry += 1
+                        time.sleep(0.5)
         profiling_enabled_count = 0
         profiling_unknown_count = 0
+        volumes = NS.tendrl.objects.GlusterVolume(
+            NS.tendrl_context.integration_id
+        ).load_all()
         for volume in volumes:
             if volume.profiling_enabled == "yes":
                 profiling_enabled_count += 1
             if volume.profiling_enabled in [None, ""]:
                 profiling_unknown_count += 1
-
         if profiling_unknown_count == len(volumes):
             cluster.save()
             return
-
         if profiling_enabled_count == 0:
             cluster.volume_profiling_state = "disabled"
         elif profiling_enabled_count == len(volumes):
@@ -421,15 +456,13 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         cluster.save()
 
 
-def sync_volumes(volumes, index, vol_options, sync_ttl, cluster_short_name):
-    # instantiating blivet class, this will be used for
-    # getting brick_device_details
-    b = blivet.Blivet()
-
-    # reset blivet during every sync to get latest information
-    # about storage devices in the machine
-    b.reset()
-    devicetree = b.devicetree
+def sync_volumes(
+    volumes, index,
+    vol_options,
+    sync_ttl,
+    cluster_short_name,
+    devicetree
+):
     NS.node_context = NS.tendrl.objects.NodeContext().load()
     tag_list = NS.node_context.tags
     # Raise alerts for volume state change.
@@ -771,6 +804,7 @@ def sync_volumes(volumes, index, vol_options, sync_ttl, cluster_short_name):
             b_index += 1
         except KeyError:
             break
+    return b_index
 
 
 def brick_status_alert(hostname):

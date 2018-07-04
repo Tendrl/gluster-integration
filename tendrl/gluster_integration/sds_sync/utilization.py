@@ -1,8 +1,6 @@
-import json
-import os
-import subprocess
-
 from tendrl.commons.utils import log_utils as logger
+from tendrl.gluster_integration.sds_sync.vol_utilization import \
+    showVolumeUtilization
 
 
 def sync_utilization_details(volumes):
@@ -19,17 +17,10 @@ def sync_utilization_details(volumes):
                 }
             )
             continue
-        cmd = subprocess.Popen(
-            "tendrl-gluster-vol-utilization %s" % volume.name,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=open(os.devnull, "r"),
-            close_fds=True
+        util_det = showVolumeUtilization(
+            volume.name
         )
-        out, err = cmd.communicate()
-        if err == '':
-            util_det = json.loads(out)
+        if util_det:
             volume.usable_capacity = int(util_det['total'])
             volume.used_capacity = int(util_det['used'])
             volume.pcnt_used = str(util_det['pcnt_used'])
@@ -45,7 +36,7 @@ def sync_utilization_details(volumes):
                 NS.publisher_id,
                 {
                     "message": "Error getting utilization of "
-                    "volume: %s. Error: %s" % (volume.name, err)
+                    "volume: %s" % (volume.name)
                 }
             )
     cluster_pcnt_used = 0

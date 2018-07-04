@@ -152,7 +152,7 @@ def _derive_volume_states(volumes):
                         out_dict[volume.vol_id] = '(partial)'
         # Raise the alert if volume state changes
         if volume.state != "" and \
-            out_dict[volume.vol_id] != volume.state:
+            out_dict[volume.vol_id] not in [volume.state, 'unknown']:
             msg = "Volume:%s is %s" % (volume.name, out_dict[volume.vol_id])
             instance = "volume_%s" % volume.name
             event_utils.emit_event(
