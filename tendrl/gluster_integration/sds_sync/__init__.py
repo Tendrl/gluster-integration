@@ -250,7 +250,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             # SYNC_TTL + (no.volumes) * 20 +
                             # (no.of.bricks) * 10 + 160
                             if index > 1:
-                                volume_count = index -1
+                                volume_count = index - 1
                                 # When all nodes are down we are updating all
                                 # volumes are down, node status TTL is 160,
                                 # So make sure volumes are present in etcd

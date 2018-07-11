@@ -110,7 +110,8 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'tendrl-gluster-integration = tendrl.gluster_integration.manager:main'
+            'tendrl-gluster-integration = tendrl.gluster_integration.manager:main',
+            'tendrl-gluster-vol-utilization = tendrl.gluster_integration.sds_sync.vol_utilization:main'
         ]
     },
     include_package_data=True,
