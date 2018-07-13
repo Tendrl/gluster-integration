@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import json
 import sys
 
 from tendrl.gluster_integration import gfapi
@@ -18,42 +19,55 @@ def computeVolumeStats(data):
             'sizeUsed': float(used)}
 
 
-def showVolumeUtilization(vname):
-    try:
-        data = gfapi.getVolumeStatvfs(vname)
-    except gfapi.GlusterLibgfapiException:
-        sys.stderr.write("CRITICAL: Failed to get the "
-                         "Volume Utilization Data\n")
-        sys.exit(-1)
-    volumeCapacity = computeVolumeStats(data)
-    # total size in KB
-    total_size = volumeCapacity['sizeTotal'] / BYTES_IN_KB
-    # Available free size in KB
-    free_size = volumeCapacity['sizeFree'] / BYTES_IN_KB
-    # used size in KB
-    used_size = volumeCapacity['sizeUsed'] / BYTES_IN_KB
-    vol_utilization = (used_size / total_size) * 100
-    used_inode = data.f_files - data.f_ffree
-    total_inode = data.f_files
-    pcnt_inode_used = (float(used_inode) / total_inode) * 100
-    return (
-        {
-            'total': total_size,
-            'free': free_size,
-            'used': used_size,
-            'pcnt_used': vol_utilization,
-            'total_inode': total_inode,
-            'used_inode': used_inode,
-            'pcnt_inode_used': pcnt_inode_used
-        }
-    )
+def showVolumeUtilization(vnames):
+    volumes = vnames.split(',')
+    ret_dict = {}
+    for volume in volumes:
+        if volume != "":
+            try:
+                data = gfapi.getVolumeStatvfs(volume)
+            except gfapi.GlusterLibgfapiException:
+                sys.stderr.write("CRITICAL: Failed to get the "
+                                 "Volume Utilization Data\n")
+                sys.exit(-1)
+            volumeCapacity = computeVolumeStats(data)
+            # total size in KB
+            total_size = volumeCapacity['sizeTotal'] / BYTES_IN_KB
+            # Available free size in KB
+            free_size = volumeCapacity['sizeFree'] / BYTES_IN_KB
+            # used size in KB
+            used_size = volumeCapacity['sizeUsed'] / BYTES_IN_KB
+            vol_utilization = (used_size / total_size) * 100
+            used_inode = data.f_files - data.f_ffree
+            total_inode = data.f_files
+            pcnt_inode_used = (float(used_inode) / total_inode) * 100
+            ret_dict[volume] = {
+                'total': total_size,
+                'free': free_size,
+                'used': used_size,
+                'pcnt_used': vol_utilization,
+                'total_inode': total_inode,
+                'used_inode': used_inode,
+                'pcnt_inode_used': pcnt_inode_used
+            }
+    print (json.dumps(ret_dict))
 
 
 def parse_input():
 
     parser = argparse.ArgumentParser(
-        usage='%(prog)s [-h] <volume>')
-    parser.add_argument("volume",
-                        help="Name of the volume to get the Utilization")
+        usage='%(prog)s [-h] <volumes>')
+    parser.add_argument("volumes",
+                        help="Names of the volumes to get the Utilization")
     args = parser.parse_args()
     return args
+
+
+def main():
+    args = parse_input()
+    showVolumeUtilization(args.volumes)
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
