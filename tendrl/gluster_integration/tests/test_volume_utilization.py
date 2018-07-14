@@ -9,6 +9,14 @@ from tendrl.gluster_integration.sds_sync import utilization
 
 
 @mock.patch(
+    'subprocess.Popen.communicate',
+    mock.Mock(return_value=('{"vol1": {"total": "20000", "used": "5000",\
+        "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
+        "pcnt_inode_used": "20"}, "vol2": {"total": "20000", "used": "5000",\
+        "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
+        "pcnt_inode_used": "20"}}', ""))
+)
+@mock.patch(
     'tendrl.gluster_integration.objects.volume.Volume.save',
     mock.Mock(return_value=None)
 )
@@ -24,24 +32,13 @@ from tendrl.gluster_integration.sds_sync import utilization
     'tendrl.commons.objects.BaseObject.__init__',
     mock.Mock(return_value=None)
 )
-@mock.patch.object(utilization, 'showVolumeUtilization')
-def test_sync_volume_utilization_details_with_started_volume(vol_util):
-    vol_util.return_value = (
-        {"total": "20000",
-         "used": "5000",
-         "pcnt_used": "25",
-         "total_inode": "100",
-         "used_inode": "20",
-         "pcnt_inode_used": "20"
-         }
-    )
+def test_sync_volume_utilization_details_with_started_volume():
     setattr(NS, "publisher_id", "gluster-integration")
     setattr(NS, "gluster", maps.NamedDict())
     NS.gluster["objects"] = maps.NamedDict()
     obj = importlib.import_module(
         'tendrl.gluster_integration.objects.utilization'
     )
-    obj.showVolumeUtilization = mock.MagicMock()
     for obj_cls in inspect.getmembers(obj, inspect.isclass):
         NS.gluster.objects["Utilization"] = obj_cls[1]
     volume = Volume(
@@ -69,6 +66,14 @@ def test_sync_volume_utilization_details_with_started_volume(vol_util):
 
 
 @mock.patch(
+    'subprocess.Popen.communicate',
+    mock.Mock(return_value=('{"vol1": {"total": "20000", "used": "5000",\
+        "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
+        "pcnt_inode_used": "20"}, "vol2": {"total": "20000", "used": "5000",\
+        "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
+        "pcnt_inode_used": "20"}}', ""))
+)
+@mock.patch(
     'tendrl.gluster_integration.objects.volume.Volume.save',
     mock.Mock(return_value=None)
 )
@@ -84,17 +89,7 @@ def test_sync_volume_utilization_details_with_started_volume(vol_util):
     'tendrl.commons.objects.BaseObject.__init__',
     mock.Mock(return_value=None)
 )
-@mock.patch.object(utilization, 'showVolumeUtilization')
-def test_sync_volume_utilization_details_with_started_volume1(vol_util):
-    vol_util.return_value = (
-        {"total": "20000",
-         "used": "5000",
-         "pcnt_used": "25",
-         "total_inode": "100",
-         "used_inode": "20",
-         "pcnt_inode_used": "20"
-         }
-    )
+def test_sync_volume_utilization_details_with_started_volume1():
     setattr(NS, "publisher_id", "gluster-integration")
     setattr(NS, "gluster", maps.NamedDict())
     NS.gluster["objects"] = maps.NamedDict()
