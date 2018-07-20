@@ -1,5 +1,6 @@
 import etcd
 
+from tendrl.commons.utils import etcd_utils
 from tendrl.commons.utils import event_utils
 from tendrl.gluster_integration.objects.geo_replication_session\
     import GeoReplicationSessionStatus
@@ -177,20 +178,21 @@ def aggregate_session_status():
             vol_id = volume.vol_id
             sessions = None
             try:
-                sessions = NS.tendrl.objects.GeoReplicationSession(
-                    vol_id=volume.vol_id
-                ).load_all()
+                sessions = etcd_utils.read(
+                    "clusters/%s/Volumes/%s/GeoRepSessions" % (
+                        NS.tendrl_context.integration_id,
+                        vol_id
+                    )
+                )
             except etcd.EtcdKeyNotFound:
-                pass
+                continue
             pair_count = int(volume.brick_count)
-            if sessions is None:
-                sessions = []
-            for session in sessions:
+            for session in sessions.leaves:
                 session_status = None
                 session_id = session.key.split("GeoRepSessions/")[-1]
                 pairs = NS.gluster.objects.GeoReplicationPair(
                     vol_id=vol_id,
-                    session_id=session.session_id
+                    session_id=session_id
                 ).load_all()
                 faulty_count = 0
                 stopped_count = 0
