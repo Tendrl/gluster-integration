@@ -248,6 +248,9 @@ namespace.gluster:
         session_status:
           help: "aggregated status of geo-replication session"
           type: String
+        integration_id:
+          help: "integration id"
+          type: String
       enabled: true
       value: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions/$GeoReplicationPair.session_id
       list: clusters/$TendrlContext.integration_id/Volumes/$Volume.vol_id/GeoReplicationSessions

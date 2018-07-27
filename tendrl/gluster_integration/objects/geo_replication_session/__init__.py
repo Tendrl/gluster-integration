@@ -17,6 +17,7 @@ class GeoReplicationSession(objects.BaseObject):
         session_id=None,
         session_status=None,
         pairs=None,
+        integration_id=None,
         *args,
         **kwargs
     ):
@@ -25,13 +26,15 @@ class GeoReplicationSession(objects.BaseObject):
         self.vol_id = vol_id
         self.session_id = session_id
         self.session_status = session_status
+        self.integration_id = integration_id or \
+            NS.tendrl_context.integration_id
         if pairs:
             self.pairs = pairs
         self.value = 'clusters/{0}/Volumes/{1}/GeoRepSessions/{2}'
 
     def render(self):
         self.value = self.value.format(
-            NS.tendrl_context.integration_id,
+            self.integration_id or NS.tendrl_context.integration_id,
             self.vol_id,
             self.session_id
         )
