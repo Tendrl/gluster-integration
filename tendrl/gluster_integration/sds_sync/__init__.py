@@ -445,7 +445,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             if volume.profiling_enabled in [None, ""]:
                 profiling_unknown_count += 1
         if profiling_unknown_count == len(volumes):
-            cluster.save()
             return
         if profiling_enabled_count == 0:
             cluster.volume_profiling_state = "disabled"
@@ -453,6 +452,9 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
             cluster.volume_profiling_state = "enabled"
         elif profiling_enabled_count < len(volumes):
             cluster.volume_profiling_state = "mixed"
+        volume_profiling_state = cluster.volume_profiling_state
+        cluster = cluster.load()
+        cluster.volume_profiling_state = volume_profiling_state
         cluster.save()
 
 
