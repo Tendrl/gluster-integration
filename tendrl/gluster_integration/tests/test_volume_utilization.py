@@ -12,8 +12,8 @@ from tendrl.gluster_integration.sds_sync import utilization
     'subprocess.Popen.communicate',
     mock.Mock(return_value=('{"vol1": {"total": "20000", "used": "5000",\
         "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
-        "pcnt_inode_used": "20"}, "vol2": {"total": "20000", "used": "5000",\
-        "pcnt_used": "25", "total_inode": "100", "used_inode": "20",\
+        "pcnt_inode_used": "20"}, "vol2": {"total": "30000", "used": "6000",\
+        "pcnt_used": "50", "total_inode": "100", "used_inode": "20",\
         "pcnt_inode_used": "20"}}', ""))
 )
 @mock.patch(
@@ -41,7 +41,8 @@ def test_sync_volume_utilization_details_with_started_volume():
     )
     for obj_cls in inspect.getmembers(obj, inspect.isclass):
         NS.gluster.objects["Utilization"] = obj_cls[1]
-    volume = Volume(
+    volumes = []
+    volumes.append(Volume(
         vol_id='vol-id',
         vol_type='Replicate',
         name='vol1',
@@ -50,16 +51,35 @@ def test_sync_volume_utilization_details_with_started_volume():
         brick_count=3,
         replica_count=3,
         subvol_count=1,
-    )
-    utilization.sync_utilization_details([volume])
+    ))
+    volumes.append(Volume(
+        vol_id='vol-id',
+        vol_type='Replicate',
+        name='vol2',
+        status='Started',
+        state='up',
+        brick_count=3,
+        replica_count=3,
+        subvol_count=1,
+    ))
+    utilization.sync_utilization_details(volumes)
     with mock.patch.object(Volume, 'save') as vol_save_mock:
         vol_save_mock.assert_called
-        assert volume.usable_capacity == 20000
-        assert volume.used_capacity == 5000
-        assert volume.pcnt_used == '25'
-        assert volume.total_inode_capacity == 100
-        assert volume.used_inode_capacity == 20
-        assert volume.pcnt_inode_used == '20'
+        for volume in volumes:
+            if volume.name == "vol1":
+                assert volume.usable_capacity == 20000
+                assert volume.used_capacity == 5000
+                assert volume.pcnt_used == '25'
+                assert volume.total_inode_capacity == 100
+                assert volume.used_inode_capacity == 20
+                assert volume.pcnt_inode_used == '20'
+            elif volume.name == "vol2":
+                assert volume.usable_capacity == 30000
+                assert volume.used_capacity == 6000
+                assert volume.pcnt_used == '50'
+                assert volume.total_inode_capacity == 100
+                assert volume.used_inode_capacity == 20
+                assert volume.pcnt_inode_used == '20'
 
     with mock.patch.object(Utilization, 'save') as util_save_mock:
         util_save_mock.assert_called
