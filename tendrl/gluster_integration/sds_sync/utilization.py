@@ -40,7 +40,9 @@ def sync_utilization_details(volumes):
     out = ''
     try:
         out, err = cmd.communicate()
-        if err == '':
+        if err == '' or 'failed to load module nvdimm: '\
+                'libbd_nvdimm.so.2: cannot open shared object '\
+                'file: No such file or directory' in err:
             util_det = json.loads(out)
             for k, v in util_det.iteritems():
                 volume = voldict[k]
