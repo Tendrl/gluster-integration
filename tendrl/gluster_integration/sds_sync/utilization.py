@@ -40,35 +40,25 @@ def sync_utilization_details(volumes):
     out = ''
     try:
         out, err = cmd.communicate()
-        if err == '':
-            util_det = json.loads(out)
-            for k, v in util_det.iteritems():
-                volume = voldict[k]
-                volume.usable_capacity = int(v['total'])
-                volume.used_capacity = int(v['used'])
-                volume.pcnt_used = str(v['pcnt_used'])
-                volume.total_inode_capacity = int(v['total_inode'])
-                volume.used_inode_capacity = int(v['used_inode'])
-                volume.pcnt_inode_used = str(v['pcnt_inode_used'])
-                volume.save()
-                cluster_used_capacity += volume.used_capacity
-                cluster_usable_capacity += volume.usable_capacity
-        else:
-            logger.log(
-                "error",
-                NS.publisher_id,
-                {
-                    "message": "Error getting utilization of "
-                    "volumes %s" % volnames
-                }
-            )
-    except(KeyError, TypeError, ValueError):
+        util_det = json.loads(out)
+        for k, v in util_det.iteritems():
+            volume = voldict[k]
+            volume.usable_capacity = int(v['total'])
+            volume.used_capacity = int(v['used'])
+            volume.pcnt_used = str(v['pcnt_used'])
+            volume.total_inode_capacity = int(v['total_inode'])
+            volume.used_inode_capacity = int(v['used_inode'])
+            volume.pcnt_inode_used = str(v['pcnt_inode_used'])
+            volume.save()
+            cluster_used_capacity += volume.used_capacity
+            cluster_usable_capacity += volume.usable_capacity
+    except(KeyError, TypeError, ValueError, AttributeError):
         logger.log(
             "error",
             NS.publisher_id,
             {
                 "message": "Error getting utilization of "
-                "volumes %s . err: %s" % (volnames, out)
+                "volumes %s . result: %s . err: %s" % (volnames, out, err)
             }
         )
     cluster_pcnt_used = 0
