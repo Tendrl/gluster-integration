@@ -36,7 +36,7 @@ def update_brick_device_details(brick_name, brick_path, devicetree, sync_ttl):
                 "message": "Cound not update brick device details"
             }
         )
-    if mount_point in devicetree.keys():
+    if mount_point in list(devicetree.keys()):
         brick = NS.tendrl.objects.GlusterBrick(
             NS.tendrl_context.integration_id,
             NS.node_context.fqdn,

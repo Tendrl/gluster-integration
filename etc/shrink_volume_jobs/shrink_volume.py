@@ -31,7 +31,7 @@ def run():
     client.write("/queue/%s/payload" % job_id, json.dumps(payload))
     client.write("/queue/%s/status" % job_id, "new")
     client.write("/queue/%s/job_id" % job_id, job_id)
-    print job_id
+    print(job_id)
 
 if __name__ == "__main__":
     run()

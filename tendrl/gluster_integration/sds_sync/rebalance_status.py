@@ -37,9 +37,7 @@ def sync_volume_rebalance_status(volumes):
             else:
                 # remove not_stated states from the list as these are
                 # from nodes that are not involved in rebalance
-                rebal_status_list = filter(
-                    lambda state: state != 'not_started', rebal_status_list
-                )
+                rebal_status_list = [state for state in rebal_status_list if state != 'not_started']
                 if "failed" in rebal_status_list:
                     new_rebal_status = "failed"
                 elif "layout_fix_failed" in rebal_status_list:

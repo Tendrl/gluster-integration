@@ -261,14 +261,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
                     options = {}
-                    for key in volumes.keys():
+                    for key in list(volumes.keys()):
                         if reg_ex.match(key):
                             options[key] = volumes[key]
-                    for key in options.keys():
+                    for key in list(options.keys()):
                         volname = key.split('.')[0]
                         vol_id = volumes['%s.id' % volname]
                         dict1 = {}
-                        for k, v in options.items():
+                        for k, v in list(options.items()):
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
@@ -843,7 +843,7 @@ def update_cluster_alert_count():
                 if alert.resource in NS.gluster.objects.VolumeAlertCounters(
                         )._defs['relationship'][alert.alert_type.lower()]:
                     vol_name = alert.tags.get('volume_name', None)
-                    if vol_name and vol_name in alert_counts.keys():
+                    if vol_name and vol_name in list(alert_counts.keys()):
                         alert_counts[vol_name]['alert_count'] += 1
         # Update cluster alert count
         NS.tendrl.objects.ClusterAlertCounters(
@@ -851,7 +851,7 @@ def update_cluster_alert_count():
             alert_count=cluster_alert_count
         ).save()
         # Update volume alert count
-        for volume, vol_dict in alert_counts.iteritems():
+        for volume, vol_dict in alert_counts.items():
             NS.gluster.objects.VolumeAlertCounters(
                 integration_id=NS.tendrl_context.integration_id,
                 alert_count=vol_dict['alert_count'],
@@ -923,10 +923,7 @@ def get_device_tree():
         out, err, rc = cmd.run()
         if not err:
             out = out.encode('utf8')
-            devlist = map(
-                lambda line: dict(zip(keys, line.split(' '))),
-                out.splitlines()
-            )
+            devlist = [dict(list(zip(keys, line.split(' ')))) for line in out.splitlines()]
             block_devices = {}
             for dev_info in devlist:
                 if dev_info["TYPE"] == "disk":
@@ -940,7 +937,7 @@ def get_device_tree():
                     ancestor_details = find_ancestors(
                         block_devices, dev_info["KNAME"]
                     )
-                    if dev_info["MOUNTPOINT"] in devicetree.keys():
+                    if dev_info["MOUNTPOINT"] in list(devicetree.keys()):
                         # if different block device mounted in same mountpoint
                         # then append the disk and partition information under
                         # same mountpoint
@@ -985,7 +982,7 @@ def find_ancestors(block_devices, device_name):
     ancestor_details["disks"] = []
     ancestor_details["partitions"] = []
     while True:
-        if device_name in block_devices.keys():
+        if device_name in list(block_devices.keys()):
             if block_devices[device_name]["TYPE"] == "disk":
                 ancestor_details["disks"].append(
                     block_devices[device_name]["NAME"]
