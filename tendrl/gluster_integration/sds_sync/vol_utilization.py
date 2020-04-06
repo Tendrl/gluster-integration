@@ -27,7 +27,7 @@ def showVolumeUtilization(vnames):
             try:
                 data = gfapi.getVolumeStatvfs(volume)
             except gfapi.GlusterLibgfapiException as e:
-                if 'error' not in list(ret_dict.keys()):
+                if 'error' not in ret_dict.keys():
                     ret_dict['error'] = {}
                 ret_dict['error'][volume] = \
                     {'message': "CRITICAL: Failed to "
@@ -45,7 +45,7 @@ def showVolumeUtilization(vnames):
             used_inode = data.f_files - data.f_ffree
             total_inode = data.f_files
             pcnt_inode_used = (float(used_inode) / total_inode) * 100
-            if 'success' not in list(ret_dict.keys()):
+            if 'success' not in ret_dict.keys():
                 ret_dict['success'] = {}
             ret_dict['success'][volume] = {
                 'total': total_size,

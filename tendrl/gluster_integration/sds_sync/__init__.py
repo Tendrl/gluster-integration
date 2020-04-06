@@ -44,6 +44,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
+        global VOLUME_TTL
         logger.log(
             "info",
             NS.publisher_id,
@@ -245,7 +246,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             SYNC_TTL += 1
                             total_brick_count += b_count - 1
                         except KeyError:
-                            global VOLUME_TTL
                             # from second sync volume ttl is
                             # SYNC_TTL + (no.volumes) * 20 +
                             # (no.of.bricks) * 10 + 160
@@ -261,14 +261,14 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                     # populate the volume specific options
                     reg_ex = re.compile("^volume[0-9]+.options+")
                     options = {}
-                    for key in list(volumes.keys()):
+                    for key in volumes.keys():
                         if reg_ex.match(key):
                             options[key] = volumes[key]
-                    for key in list(options.keys()):
+                    for key in options.keys():
                         volname = key.split('.')[0]
                         vol_id = volumes['%s.id' % volname]
                         dict1 = {}
-                        for k, v in list(options.items()):
+                        for k, v in options.items():
                             if k.startswith('%s.options' % volname):
                                 dict1['.'.join(k.split(".")[2:])] = v
                                 options.pop(k, None)
@@ -843,7 +843,7 @@ def update_cluster_alert_count():
                 if alert.resource in NS.gluster.objects.VolumeAlertCounters(
                         )._defs['relationship'][alert.alert_type.lower()]:
                     vol_name = alert.tags.get('volume_name', None)
-                    if vol_name and vol_name in list(alert_counts.keys()):
+                    if vol_name and vol_name in alert_counts.keys():
                         alert_counts[vol_name]['alert_count'] += 1
         # Update cluster alert count
         NS.tendrl.objects.ClusterAlertCounters(
@@ -937,7 +937,7 @@ def get_device_tree():
                     ancestor_details = find_ancestors(
                         block_devices, dev_info["KNAME"]
                     )
-                    if dev_info["MOUNTPOINT"] in list(devicetree.keys()):
+                    if dev_info["MOUNTPOINT"] in devicetree.keys():
                         # if different block device mounted in same mountpoint
                         # then append the disk and partition information under
                         # same mountpoint
@@ -982,7 +982,7 @@ def find_ancestors(block_devices, device_name):
     ancestor_details["disks"] = []
     ancestor_details["partitions"] = []
     while True:
-        if device_name in list(block_devices.keys()):
+        if device_name in block_devices.keys():
             if block_devices[device_name]["TYPE"] == "disk":
                 ancestor_details["disks"].append(
                     block_devices[device_name]["NAME"]

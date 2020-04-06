@@ -19,7 +19,7 @@ class EnableDisableVolumeProfiling(flows.BaseFlow):
 
     def run(self):
         action = self.parameters["Cluster.volume_profiling_flag"]
-        if action not in list(VOL_PROFILE_ACTIONS.keys()):
+        if action not in VOL_PROFILE_ACTIONS.keys():
             raise FlowExecutionFailedError(
                 "Invalid value of Cluster.volume_profiling_flag "
                 "(%s) while enable/disable volume profiling for"

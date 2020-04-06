@@ -65,7 +65,7 @@ def sync_utilization_details(volumes):
                 {'message': 'Error : %s\n' % err}
             )
         if util_det:
-            if 'error' in list(util_det.keys()):
+            if 'error' in util_det.keys():
                 logger.log(
                     "error",
                     NS.publisher_id,
@@ -73,7 +73,7 @@ def sync_utilization_details(volumes):
                      'volumes\nError: %s\n' % util_det['error']}
                 )
 
-            if 'success' in list(util_det.keys()):
+            if 'success' in util_det.keys():
                 for k, v in util_det['success'].items():
                     try:
                         volume = voldict[k]

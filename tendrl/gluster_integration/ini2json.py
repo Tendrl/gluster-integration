@@ -86,9 +86,9 @@ class StrictConfigParser(ConfigParser):
 
         # join the multi-line values collected while reading
         all_sections = [self._defaults]
-        all_sections.extend(list(self._sections.values()))
+        all_sections.extend(self._sections.values())
         for options in all_sections:
-            for name, val in list(options.items()):
+            for name, val in options.items():
                 if isinstance(val, list):
                     options[name] = '\n'.join(val)
 

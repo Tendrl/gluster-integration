@@ -63,8 +63,9 @@ def get_lvs():
     if str(out) != '':
         try:
             out = out.split('\n')
-            lst = [dict(x) for x in [[e.split('=') for e in x] for x in [x.strip().split('$') for x in out]]]
-
+            lst = list(map(lambda x: dict(x),
+			map(lambda x: [e.split('=') for e in x],
+			   map(lambda x: x.strip().split('$'), out))))
             for i in lst:
                 if i['LVM2_LV_ATTR'][0] == 't':
                     k = "%s/%s" % (i['LVM2_VG_NAME'], i['LVM2_LV_NAME'])

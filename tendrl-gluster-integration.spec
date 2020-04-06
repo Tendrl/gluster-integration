@@ -1,6 +1,6 @@
 Name: tendrl-gluster-integration
 Version: 1.6.3
-Release: 10%{?dist}
+Release: 11%{?dist}
 BuildArch: noarch
 Summary: Module for Gluster Integration
 Source0: %{name}-%{version}.tar.gz
@@ -8,16 +8,16 @@ License: LGPLv2+
 URL: https://github.com/Tendrl/gluster-integration
 
 BuildRequires: systemd
-BuildRequires: python2-devel
-BuildRequires: pytest
-BuildRequires: python-mock
+BuildRequires: python3-devel
+BuildRequires: python3-pytest
+BuildRequires: python3-mock
 
 Requires: glusterfs-events
 Requires: tendrl-commons
 Requires: systemd
-Requires: python-flask
-Requires: python-cherrypy
-Requires: python-paste
+Requires: python3-flask
+Requires: python3-cherrypy
+Requires: python3-paste
 
 %description
 Python module for Tendrl gluster bridge to manage gluster tasks.
@@ -29,13 +29,13 @@ Python module for Tendrl gluster bridge to manage gluster tasks.
 rm -rf %{name}.egg-info
 
 %build
-%{__python} setup.py build
+%{__python3} setup.py build
 
 # remove the sphinx-build leftovers
 rm -rf html/.{doctrees,buildinfo}
 
 %install
-%{__python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
+%{__python3} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 install -m  0755  --directory $RPM_BUILD_ROOT%{_sysconfdir}/tendrl/gluster-integration
 install -Dm 0644 tendrl-gluster-integration.service $RPM_BUILD_ROOT%{_unitdir}/tendrl-gluster-integration.service
 install -Dm 0644 etc/tendrl/gluster-integration/gluster-integration.conf.yaml.sample $RPM_BUILD_ROOT%{_datadir}/tendrl/gluster-integration/gluster-integration.conf.yaml
