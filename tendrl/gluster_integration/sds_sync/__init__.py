@@ -923,7 +923,10 @@ def get_device_tree():
         out, err, rc = cmd.run()
         if not err:
             out = out.encode('utf8')
-            devlist = [dict(list(zip(keys, line.split(' ')))) for line in out.splitlines()]
+            # iterate over the output of lsblk with specific set of columns
+            # and create a list of dictionary mapped with the specific columns.
+            devlist = [dict(zip(keys, line.split(' ')))
+                       for line in out.splitlines()]
             block_devices = {}
             for dev_info in devlist:
                 if dev_info["TYPE"] == "disk":
