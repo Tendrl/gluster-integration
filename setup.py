@@ -3,12 +3,7 @@ from setuptools import Command
 from setuptools import find_packages
 from setuptools import setup
 import subprocess
-try:
-    # Python 2 backwards compat
-    from __builtin__ import raw_input as input
-except ImportError:
-    pass
-
+from builtins import input
 
 def read_module_contents():
     with open('version.py') as app_init:

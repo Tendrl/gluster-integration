@@ -1,7 +1,7 @@
-from ConfigParser import ConfigParser
-from ConfigParser import DEFAULTSECT
-from ConfigParser import MissingSectionHeaderError
-from ConfigParser import ParsingError
+from configparser import ConfigParser
+from configparser import DEFAULTSECT
+from configparser import MissingSectionHeaderError
+from configparser import ParsingError
 
 
 class StrictConfigParser(ConfigParser):

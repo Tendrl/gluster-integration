@@ -44,6 +44,7 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
         self._complete = threading.Event()
 
     def run(self):
+        global VOLUME_TTL
         logger.log(
             "info",
             NS.publisher_id,
@@ -245,7 +246,6 @@ class GlusterIntegrationSdsSyncStateThread(sds_sync.SdsSyncThread):
                             SYNC_TTL += 1
                             total_brick_count += b_count - 1
                         except KeyError:
-                            global VOLUME_TTL
                             # from second sync volume ttl is
                             # SYNC_TTL + (no.volumes) * 20 +
                             # (no.of.bricks) * 10 + 160
@@ -851,7 +851,7 @@ def update_cluster_alert_count():
             alert_count=cluster_alert_count
         ).save()
         # Update volume alert count
-        for volume, vol_dict in alert_counts.iteritems():
+        for volume, vol_dict in alert_counts.items():
             NS.gluster.objects.VolumeAlertCounters(
                 integration_id=NS.tendrl_context.integration_id,
                 alert_count=vol_dict['alert_count'],
@@ -923,10 +923,10 @@ def get_device_tree():
         out, err, rc = cmd.run()
         if not err:
             out = out.encode('utf8')
-            devlist = map(
-                lambda line: dict(zip(keys, line.split(' '))),
-                out.splitlines()
-            )
+            # iterate over the output of lsblk with specific set of columns
+            # and create a list of dictionary mapped with the specific columns.
+            devlist = [dict(zip(keys, line.split(' ')))
+                       for line in out.splitlines()]
             block_devices = {}
             for dev_info in devlist:
                 if dev_info["TYPE"] == "disk":

@@ -63,10 +63,9 @@ def get_lvs():
     if str(out) != '':
         try:
             out = out.split('\n')
-            lst = map(lambda x: dict(x),
-                      map(lambda x: [e.split('=') for e in x],
-                          map(lambda x: x.strip().split('$'), out)))
-
+            lst = list(map(lambda x: dict(x),
+			map(lambda x: [e.split('=') for e in x],
+			   map(lambda x: x.strip().split('$'), out))))
             for i in lst:
                 if i['LVM2_LV_ATTR'][0] == 't':
                     k = "%s/%s" % (i['LVM2_VG_NAME'], i['LVM2_LV_NAME'])
@@ -88,7 +87,7 @@ def get_lvs():
 
 def get_mount_stats(mount_path, lvs):
     def _get_mounts(mount_path=[]):
-        mount_list = map(_get_mount_point, mount_path)
+        mount_list = list(map(_get_mount_point, mount_path))
         mount_points = _parse_proc_mounts()
         outList = set(mount_points).intersection(set(mount_list))
         # list comprehension to build dictionary does not work in python 2.6.6
@@ -129,7 +128,7 @@ def get_mount_stats(mount_path, lvs):
 
     mount_points = _get_mounts(mount_path)
     mount_detail = {}
-    for mount, info in mount_points.iteritems():
+    for mount, info in mount_points.items():
         mount_detail[mount] = _get_stats(mount)
         mount_detail[mount].update(
             _get_thin_pool_stat(os.path.realpath(info['device']))
@@ -179,4 +178,4 @@ def brick_utilization(path, lvs):
     """
     # Below logic will find mount_path from path
     mount_path = [path.split(":")[1]]
-    return get_mount_stats(mount_path, lvs).values()[0]
+    return list(get_mount_stats(mount_path, lvs).values())[0]

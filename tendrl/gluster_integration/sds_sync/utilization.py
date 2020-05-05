@@ -74,7 +74,7 @@ def sync_utilization_details(volumes):
                 )
 
             if 'success' in util_det.keys():
-                for k, v in util_det['success'].iteritems():
+                for k, v in util_det['success'].items():
                     try:
                         volume = voldict[k]
                         volume.usable_capacity = int(v['total'])

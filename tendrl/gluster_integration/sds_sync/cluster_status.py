@@ -24,7 +24,7 @@ def sync_cluster_status(volumes, sync_ttl):
     # Calculate status based on volumes status
     if len(volumes) > 0:
         volume_states = _derive_volume_states(volumes)
-        for vol_id, state in volume_states.iteritems():
+        for vol_id, state in volume_states.items():
             if 'down' in state or 'partial' in state:
                 is_healthy = False
             if 'degraded' in state:
